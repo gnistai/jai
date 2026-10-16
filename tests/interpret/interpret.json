@@ -2429,6 +2429,179 @@
     "invalid-value:seed"
    ],
    "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-aspect-only",
+   "rationale": "No governing ratio: aspect decides.",
+   "document": {
+    "aspect": [
+     "16:9"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-none",
+   "rationale": "No aspect and no governing ratio: the renderer's default (or the preview) decides.",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "interpreted": {
+    "ratio": null
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-governing-no-aspect",
+   "rationale": "The element's shape governs.",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.5
+   },
+   "diagnostics": [],
+   "governing_ratio": 1.5,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-governing-overrides",
+   "rationale": "A sized box or original governs over a different aspect.",
+   "document": {
+    "aspect": [
+     "16:9"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.3333333333333333
+   },
+   "diagnostics": [
+    "ignored-value:aspect"
+   ],
+   "governing_ratio": 1.3333333333333333,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-governing-agrees",
+   "rationale": "Equal ratios: no diagnostic.",
+   "document": {
+    "aspect": [
+     "16:9"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "governing_ratio": 1.7777777777777777,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-governing-within-1pct",
+   "rationale": "Ratios within 1% do not differ.",
+   "document": {
+    "aspect": [
+     "16:9"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.77
+   },
+   "diagnostics": [],
+   "governing_ratio": 1.77,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-governing-beyond-1pct",
+   "rationale": "Ratios more than 1% apart differ.",
+   "document": {
+    "aspect": [
+     "16:9"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.75
+   },
+   "diagnostics": [
+    "ignored-value:aspect"
+   ],
+   "governing_ratio": 1.75,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-landscape-agrees",
+   "rationale": "landscape agrees with any wider-than-tall shape.",
+   "document": {
+    "aspect": [
+     "landscape"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.5
+   },
+   "diagnostics": [],
+   "governing_ratio": 1.5,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-landscape-differs",
+   "rationale": "landscape differs from a tall shape.",
+   "document": {
+    "aspect": [
+     "landscape"
+    ]
+   },
+   "interpreted": {
+    "ratio": 0.75
+   },
+   "diagnostics": [
+    "ignored-value:aspect"
+   ],
+   "governing_ratio": 0.75,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-portrait-square",
+   "rationale": "portrait differs from a square shape.",
+   "document": {
+    "aspect": [
+     "portrait"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.0
+   },
+   "diagnostics": [
+    "ignored-value:aspect"
+   ],
+   "governing_ratio": 1.0,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-ratio-invalid-aspect",
+   "rationale": "An invalid aspect is absent; nothing to ignore.",
+   "document": {
+    "aspect": [
+     "wide"
+    ]
+   },
+   "interpreted": {
+    "ratio": 1.5
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "governing_ratio": 1.5,
+   "since": "1.0-draft"
   }
  ]
 }

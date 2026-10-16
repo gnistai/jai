@@ -545,6 +545,24 @@ for _cls, _cases in ROUND2.items():
 for _lst in _lists.values():
     _lst[:] = [c for c in _lst if c["id"] not in REMOVED]
 
+# ---------------------------------------------------------------- governing ratio (aspect vs layout box)
+def ir(id, doc, gr, ratio, diags=(), rationale=""):
+    c = case(id, rationale, document=doc, interpreted={"ratio": ratio}, diagnostics=list(diags))
+    if gr is not None: c["governing_ratio"] = gr
+    I.append(c)
+
+ir("int-ratio-aspect-only", {"aspect": ["16:9"]}, None, 16/9, rationale="No governing ratio: aspect decides.")
+ir("int-ratio-none", {"prompt": ["x"]}, None, None, rationale="No aspect and no governing ratio: the renderer's default (or the preview) decides.")
+ir("int-ratio-governing-no-aspect", {"prompt": ["x"]}, 1.5, 1.5, rationale="The element's shape governs.")
+ir("int-ratio-governing-overrides", {"aspect": ["16:9"]}, 4/3, 4/3, ["ignored-value:aspect"], rationale="A sized box or original governs over a different aspect.")
+ir("int-ratio-governing-agrees", {"aspect": ["16:9"]}, 1920/1080, 1920/1080, rationale="Equal ratios: no diagnostic.")
+ir("int-ratio-governing-within-1pct", {"aspect": ["16:9"]}, 1.77, 1.77, rationale="Ratios within 1% do not differ.")
+ir("int-ratio-governing-beyond-1pct", {"aspect": ["16:9"]}, 1.75, 1.75, ["ignored-value:aspect"], rationale="Ratios more than 1% apart differ.")
+ir("int-ratio-landscape-agrees", {"aspect": ["landscape"]}, 1.5, 1.5, rationale="landscape agrees with any wider-than-tall shape.")
+ir("int-ratio-landscape-differs", {"aspect": ["landscape"]}, 0.75, 0.75, ["ignored-value:aspect"], rationale="landscape differs from a tall shape.")
+ir("int-ratio-portrait-square", {"aspect": ["portrait"]}, 1.0, 1.0, ["ignored-value:aspect"], rationale="portrait differs from a square shape.")
+ir("int-ratio-invalid-aspect", {"aspect": ["wide"]}, 1.5, 1.5, ["invalid-value:aspect"], rationale="An invalid aspect is absent; nothing to ignore.")
+
 counts = {}
 counts["parse"] = write("parse", P, "input -> document + exact parser diagnostics; advisories are validator codes that must be present when a validator runs.")
 counts["serialize"] = write("serialize", S, "document -> canonical text, bare text, canonical JSON, identity.")

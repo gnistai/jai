@@ -1408,13 +1408,29 @@ renderer, not a document matter.
 
 ## Size and aspect ## {#rendering-size}
 
-In HTML, when the element has an [=original image=], the viewer renders at the
-original's aspect ratio and reports `ignored-value` for `aspect` if it
-differs; the layout box always governs display, and `aspect` only informs
-generation. Otherwise the ratio is, in order: the interpreted `aspect`; the
-ratio of an author-sized layout box (`width` and `height` attributes or CSS
-`aspect-ratio`); the ratio of the `preview`; the renderer's default.
-Renderers snap to the nearest ratio they support ([[#key-aspect]]).
+The <dfn export>governing ratio</dfn> of an element is the aspect ratio of its
+[=original image=] if it has one, and otherwise the ratio of an author-sized
+[=layout box=] (both `width` and `height` attributes, or a CSS `aspect-ratio`)
+if there is one. A standalone document (a `.jai` file opened on its own) has no
+governing ratio.
+
+- When a governing ratio exists, the viewer renders at it, and the interpreted
+    `aspect`, if present and different, is reported with `ignored-value`. A
+    ratio differs when the two ratios differ by more than 1% (|ln(*a*/*g*)| >
+    0.01); `landscape` differs from a governing ratio that is not greater than
+    1, and `portrait` from one that is not less than 1.
+- Otherwise the ratio is, in order: the interpreted `aspect`; the ratio of the
+    `preview`; the renderer's default.
+
+`aspect` therefore shapes renders of unsized elements and standalone files, and
+records the author's intent everywhere. On a page, the shape the author gave
+the element wins: authors who set both make them agree.
+
+Renderers snap to the nearest ratio they support ([[#key-aspect]]). The layout
+box always governs display: when the render's ratio still differs from the box
+(for example after snapping), the viewer honours the page's `object-fit` and
+`object-position`; if the page sets neither, it crops the render to cover the
+box, centred. A viewer MUST NOT stretch a render to a box of a different ratio.
 
 Viewers SHOULD request a render no smaller than the element's displayed CSS
 size multiplied by the device pixel ratio, within the user's cost policy, and
@@ -2153,13 +2169,15 @@ validator codes that it MUST NOT emit.
     entry is the default); optional `families`, the renderer's family list,
     mapping each family name to its spellings in order; optional
     `has_original` (boolean, default `false`: whether the carrier offers an
-    original image) → `interpreted` and `diagnostics`. `interpreted` is
+    original image); optional `governing_ratio` (number: the element's
+    [=governing ratio=], absent for none) → `interpreted` and `diagnostics`. `interpreted` is
     compared only for the members present: `description` (string); `aspect`
     (W/H as a number, `square` as 1, or the string `landscape` or
     `portrait`); `mode` (string, the interpreted value of the `mode` key);
     `strength` (number); `seed`, `source`, `preview` (string); `animate`
     (boolean); `model` (the `id` of the catalog entry that [[#model-matching]]
-    selects). `null` means absent or invalid. `diagnostics` is the exact
+    selects); `ratio` (the ratio to render at under [[#rendering-size]], W/H
+    as a number; `null` when the `preview` or the renderer's default decides). `null` means absent or invalid. `diagnostics` is the exact
     multiset of interpreter codes.
 
 Fixtures are append-only from the first tagged edition: a changed expectation

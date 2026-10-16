@@ -240,7 +240,7 @@ const runners = {
   },
   interpret(c) {
     const doc = J.fromObject(c.document);
-    const r = J.interpret(doc, { catalog: c.catalog || [], families: c.families || {}, hasOriginal: !!c.has_original });
+    const r = J.interpret(doc, { catalog: c.catalog || [], families: c.families || {}, hasOriginal: !!c.has_original, governingRatio: c.governing_ratio ?? null });
     const it = r.interpreted;
     const errs = [];
     for (const [k, want] of Object.entries(c.interpreted)) {

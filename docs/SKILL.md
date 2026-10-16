@@ -236,6 +236,8 @@ The options:
    </picture>
    ```
    Inline instead of a file: `srcset="data:image/jai,A%20magical%20castle%20at%20dusk;style=watercolor"`.
+   On a page, the image's own shape wins: the original's ratio, or `width` and
+   `height`. Make `aspect` agree with them; a differing `aspect` is ignored there.
 2. **HTML where you cannot restructure markup:** `<img src="castle.png" alt="A
    magical castle at dusk" data-jai="A magical castle at dusk;style=watercolor">`.
 3. **A JAI-aware surface with no pixels at all:**

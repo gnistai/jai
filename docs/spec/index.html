@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="eabd619728d4a3ce6685ab8b6f24c0e58f01d8bd" name="revision">
+  <meta content="89a2b9f78be89960c9ad62dd3296b7f7894f28e8" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -4031,13 +4031,30 @@ terms belong early. Provider-side prompt rewriting is a user setting of the
 renderer, not a document matter.
 </div>
    <h3 class="heading settled" data-level="9.3" id="rendering-size"><span class="secno">9.3. </span><span class="content">Size and aspect</span><a class="self-link" href="#rendering-size"></a></h3>
-   <p>In HTML, when the element has an <a data-link-type="dfn" href="#original-image" id="ref-for-original-image④">original image</a>, the viewer renders at the
-original’s aspect ratio and reports <code>ignored-value</code> for <code>aspect</code> if it
-differs; the layout box always governs display, and <code>aspect</code> only informs
-generation. Otherwise the ratio is, in order: the interpreted <code>aspect</code>; the
-ratio of an author-sized layout box (<code>width</code> and <code>height</code> attributes or CSS
-<code>aspect-ratio</code>); the ratio of the <code>preview</code>; the renderer’s default.
-Renderers snap to the nearest ratio they support (<a href="#key-aspect">§ 8.1.3 aspect</a>).</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="governing-ratio">governing ratio</dfn> of an element is the aspect ratio of its
+<a data-link-type="dfn" href="#original-image" id="ref-for-original-image④">original image</a> if it has one, and otherwise the ratio of an author-sized
+<a data-link-type="dfn" href="#layout-box" id="ref-for-layout-box">layout box</a> (both <code>width</code> and <code>height</code> attributes, or a CSS <code>aspect-ratio</code>)
+if there is one. A standalone document (a <code>.jai</code> file opened on its own) has no
+governing ratio.</p>
+   <ul>
+    <li data-md>
+     <p>When a governing ratio exists, the viewer renders at it, and the interpreted
+<code>aspect</code>, if present and different, is reported with <code>ignored-value</code>. A
+ratio differs when the two ratios differ by more than 1% (|ln(<em>a</em>/<em>g</em>)| >
+0.01); <code>landscape</code> differs from a governing ratio that is not greater than
+1, and <code>portrait</code> from one that is not less than 1.</p>
+    <li data-md>
+     <p>Otherwise the ratio is, in order: the interpreted <code>aspect</code>; the ratio of the
+<code>preview</code>; the renderer’s default.</p>
+   </ul>
+   <p><code>aspect</code> therefore shapes renders of unsized elements and standalone files, and
+records the author’s intent everywhere. On a page, the shape the author gave
+the element wins: authors who set both make them agree.</p>
+   <p>Renderers snap to the nearest ratio they support (<a href="#key-aspect">§ 8.1.3 aspect</a>). The layout
+box always governs display: when the render’s ratio still differs from the box
+(for example after snapping), the viewer honours the page’s <code>object-fit</code> and
+<code>object-position</code>; if the page sets neither, it crops the render to cover the
+box, centred. A viewer MUST NOT stretch a render to a box of a different ratio.</p>
    <p>Viewers SHOULD request a render no smaller than the element’s displayed CSS
 size multiplied by the device pixel ratio, within the user’s cost policy, and
 never larger than the user’s configured maximum.</p>
@@ -5138,13 +5155,15 @@ null; <code>default: true</code> marks the user’s default model, otherwise the
 entry is the default); optional <code>families</code>, the renderer’s family list,
 mapping each family name to its spellings in order; optional
 <code>has_original</code> (boolean, default <code>false</code>: whether the carrier offers an
-original image) → <code>interpreted</code> and <code>diagnostics</code>. <code>interpreted</code> is
+original image); optional <code>governing_ratio</code> (number: the element’s
+<a data-link-type="dfn" href="#governing-ratio" id="ref-for-governing-ratio">governing ratio</a>, absent for none) → <code>interpreted</code> and <code>diagnostics</code>. <code>interpreted</code> is
 compared only for the members present: <code>description</code> (string); <code>aspect</code>
 (W/H as a number, <code>square</code> as 1, or the string <code>landscape</code> or
 <code>portrait</code>); <code>mode</code> (string, the interpreted value of the <code>mode</code> key);
 <code>strength</code> (number); <code>seed</code>, <code>source</code>, <code>preview</code> (string); <code>animate</code>
 (boolean); <code>model</code> (the <code>id</code> of the catalog entry that <a href="#model-matching">§ 8.2 Model matching</a>
-selects). <code>null</code> means absent or invalid. <code>diagnostics</code> is the exact
+selects); <code>ratio</code> (the ratio to render at under <a href="#rendering-size">§ 9.3 Size and aspect</a>, W/H
+as a number; <code>null</code> when the <code>preview</code> or the renderer’s default decides). <code>null</code> means absent or invalid. <code>diagnostics</code> is the exact
 multiset of interpreter codes.</p>
    </dl>
    <p>Fixtures are append-only from the first tagged edition: a changed expectation
@@ -5570,6 +5589,7 @@ the repository’s design record.</p>
    <li><a href="#escape-prose">escape-prose</a><span>, in § 5.3</span>
    <li><a href="#escape-value">escape-value</a><span>, in § 5.5</span>
    <li><a href="#file-form">file form</a><span>, in § 3</span>
+   <li><a href="#governing-ratio">governing ratio</a><span>, in § 9.3</span>
    <li><a href="#identity">identity</a><span>, in § 3</span>
    <li><a href="#image-jai">image/jai</a><span>, in § 7.3</span>
    <li><a href="#interpreted-parameters">interpreted parameters</a><span>, in § 8.1</span>
@@ -5882,6 +5902,7 @@ let dfnPanelData = {
 "escape-prose": {"dfnID":"escape-prose","dfnText":"escape-prose","external":false,"refSections":[],"url":"#escape-prose"},
 "escape-value": {"dfnID":"escape-value","dfnText":"escape-value","external":false,"refSections":[{"refs":[{"id":"ref-for-escape-value"}],"title":"5.5. Canonical text serialisation"}],"url":"#escape-value"},
 "file-form": {"dfnID":"file-form","dfnText":"file form","external":false,"refSections":[{"refs":[{"id":"ref-for-file-form"}],"title":"6.2. The jai marker"},{"refs":[{"id":"ref-for-file-form\u2460"}],"title":"7.1. File form"}],"url":"#file-form"},
+"governing-ratio": {"dfnID":"governing-ratio","dfnText":"governing ratio","external":false,"refSections":[{"refs":[{"id":"ref-for-governing-ratio"}],"title":"13.1. Conformance fixtures"}],"url":"#governing-ratio"},
 "identity": {"dfnID":"identity","dfnText":"identity","external":false,"refSections":[{"refs":[{"id":"ref-for-identity"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-identity\u2460"}],"title":"10.5.1. Replacement"},{"refs":[{"id":"ref-for-identity\u2461"}],"title":"12.7. Caches"}],"url":"#identity"},
 "image-jai": {"dfnID":"image-jai","dfnText":"image/jai","external":false,"refSections":[],"url":"#image-jai"},
 "interpreted-parameters": {"dfnID":"interpreted-parameters","dfnText":"interpreted parameters","external":false,"refSections":[],"url":"#interpreted-parameters"},
@@ -5893,7 +5914,7 @@ let dfnPanelData = {
 "json-reading-algorithm": {"dfnID":"json-reading-algorithm","dfnText":"JSON reading algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-json-reading-algorithm"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-json-reading-algorithm\u2460"}],"title":"13.1. Conformance fixtures"}],"url":"#json-reading-algorithm"},
 "key": {"dfnID":"key","dfnText":"key","external":false,"refSections":[{"refs":[{"id":"ref-for-key"}],"title":"4. Data model"},{"refs":[{"id":"ref-for-key\u2460"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-key\u2461"},{"id":"ref-for-key\u2462"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-key\u2463"}],"title":"6.1. Shape"}],"url":"#key"},
 "key-grammar": {"dfnID":"key-grammar","dfnText":"key grammar","external":false,"refSections":[{"refs":[{"id":"ref-for-key-grammar"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-key-grammar\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-key-grammar\u2461"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-key-grammar\u2462"}],"title":"6.3. Reading"}],"url":"#key-grammar"},
-"layout-box": {"dfnID":"layout-box","dfnText":"layout box","external":false,"refSections":[],"url":"#layout-box"},
+"layout-box": {"dfnID":"layout-box","dfnText":"layout box","external":false,"refSections":[{"refs":[{"id":"ref-for-layout-box"}],"title":"9.3. Size and aspect"}],"url":"#layout-box"},
 "original-image": {"dfnID":"original-image","dfnText":"original image","external":false,"refSections":[{"refs":[{"id":"ref-for-original-image"}],"title":"6.5. Identity"},{"refs":[{"id":"ref-for-original-image\u2460"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-original-image\u2461"}],"title":"8.1.7. source"},{"refs":[{"id":"ref-for-original-image\u2462"}],"title":"9.1. Modes and the original image"},{"refs":[{"id":"ref-for-original-image\u2463"}],"title":"9.3. Size and aspect"}],"url":"#original-image"},
 "parameter": {"dfnID":"parameter","dfnText":"parameter","external":false,"refSections":[],"url":"#parameter"},
 "parameter-form": {"dfnID":"parameter-form","dfnText":"parameter form","external":false,"refSections":[],"url":"#parameter-form"},
@@ -6317,6 +6338,7 @@ let refsData = {
 "#encoder": {"displayText":"encoder","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"encoder","type":"dfn","url":"#encoder"},
 "#escape-value": {"displayText":"escape-value","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"escape-value","type":"dfn","url":"#escape-value"},
 "#file-form": {"displayText":"file form","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"file form","type":"dfn","url":"#file-form"},
+"#governing-ratio": {"displayText":"governing ratio","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"governing ratio","type":"dfn","url":"#governing-ratio"},
 "#identity": {"displayText":"identity","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"identity","type":"dfn","url":"#identity"},
 "#interpreter": {"displayText":"interpreter","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"interpreter","type":"dfn","url":"#interpreter"},
 "#jai-context": {"displayText":"jai context","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"jai context","type":"dfn","url":"#jai-context"},
@@ -6325,6 +6347,7 @@ let refsData = {
 "#json-reading-algorithm": {"displayText":"json reading algorithm","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"json reading algorithm","type":"dfn","url":"#json-reading-algorithm"},
 "#key": {"displayText":"key","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"key","type":"dfn","url":"#key"},
 "#key-grammar": {"displayText":"key grammar","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"key grammar","type":"dfn","url":"#key-grammar"},
+"#layout-box": {"displayText":"layout box","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"layout box","type":"dfn","url":"#layout-box"},
 "#original-image": {"displayText":"original image","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"original image","type":"dfn","url":"#original-image"},
 "#scalar-value-string": {"displayText":"scalar value string","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"scalar value string","type":"dfn","url":"#scalar-value-string"},
 "#serialiser": {"displayText":"serialiser","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"serialiser","type":"dfn","url":"#serialiser"},

@@ -163,9 +163,13 @@ reason they lost.
 - **D4.5** `animate`: kept (owner default). Requests a looping animated
   *image*; still frame with `unsupported-parameter` otherwise; viewer motion
   rules apply.
-- **D4.6** `aspect` in HTML: an existing original's ratio governs the render
-  (`ignored-value` if `aspect` differs); otherwise `aspect`, then the layout
-  box, then `preview`, then renderer default.
+- **D4.6** `aspect` in HTML: the element's *governing ratio* (the original's
+  ratio, else an author-sized layout box) governs the render (`ignored-value`
+  if `aspect` differs by more than 1%); otherwise `aspect`, then `preview`, then
+  the renderer default. Renders are never stretched: the page's `object-fit`
+  applies, else a centred cover crop. Changed after the owner asked how
+  `aspect` meets custom dimensions: the earlier order let `aspect` beat a sized
+  box, which stretched renders under the default `object-fit: fill`.
 - **D4.7** Not document intent, ever: output format, candidate count,
   quality/speed tier, safety settings. Vendor keys for these are refused.
 

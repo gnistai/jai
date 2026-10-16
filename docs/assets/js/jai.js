@@ -871,7 +871,7 @@ export function parseAspect(v) {
  * catalog: [{id, aliases: [], family, imageInput|image_input: bool, default: bool}], families: {name: [spellings]}.
  * hasOriginal: whether the carrier offers an original image.
  */
-export function interpret(doc, { catalog = [], families = {}, hasOriginal = false } = {}) {
+export function interpret(doc, { catalog = [], families = {}, hasOriginal = false, governingRatio = null } = {}) {
   const diagnostics = [];
   const out = { prompt: null, description: '', style: [], avoid: [], model: [], aspect: null, mode: 'generate', strength: null, seed: null, source: null, preview: null, animate: false };
   const single = key => {
@@ -928,6 +928,17 @@ export function interpret(doc, { catalog = [], families = {}, hasOriginal = fals
     if (['true', 'yes', '1', 'on'].includes(lv)) out.animate = true;
     else if (['false', 'no', '0', 'off'].includes(lv)) out.animate = false;
     else diagnostics.push(diag('invalid-value', 'animate'));
+  }
+  // Ratio to render at (spec §Size and aspect): the governing ratio wins over aspect.
+  out.ratio = out.aspect ? out.aspect.width / out.aspect.height : null;
+  if (governingRatio !== null && governingRatio > 0) {
+    if (out.aspect) {
+      const differs = out.aspect.keyword === 'landscape' ? !(governingRatio > 1)
+        : out.aspect.keyword === 'portrait' ? !(governingRatio < 1)
+        : Math.abs(Math.log(out.ratio / governingRatio)) > 0.01;
+      if (differs) diagnostics.push(diag('ignored-value', 'aspect'));
+    }
+    out.ratio = governingRatio;
   }
   if (catalog.length) {
     const needsImage = out.mode === 'transform' && (hasOriginal || out.source !== null);
