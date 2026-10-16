@@ -601,6 +601,19 @@
    },
    "diagnostics": [],
    "since": "1.0-draft"
+  },
+  {
+   "id": "url-qualified-escaped",
+   "rationale": "An escaped semicolon before word/word= in a data: URL.",
+   "url": "data:image/jai,A%20ratio\\;%20a/b=c",
+   "kind": "data",
+   "document": {
+    "prompt": [
+     "A ratio; a/b=c"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
   }
  ]
 }

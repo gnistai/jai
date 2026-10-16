@@ -681,7 +681,7 @@ export function encodeURLBody(text) {
   cps.forEach((ch, i) => {
     const c = ch.codePointAt(0);
     const last = i === cps.length - 1;
-    if (c < 0x21 || c === 0x7f || c === 0x25 || c === 0x23 || c === 0x22 || c === 0x27 || c === 0x3c || c === 0x3e || (last && c === 0x2c) || (i === 0 && c === 0x2f)) {
+    if (c < 0x21 || c === 0x7f || c === 0x25 || c === 0x23 || c === 0x22 || c === 0x26 || c === 0x27 || c === 0x3c || c === 0x3e || (last && c === 0x2c) || (i === 0 && c === 0x2f)) {
       out += '%' + c.toString(16).toUpperCase().padStart(2, '0');
     } else out += ch; // everything else, including non-ASCII, stays literal
   });
@@ -958,17 +958,18 @@ export function interpret(doc, { catalog = [], families = {}, hasOriginal = fals
     diagnostics.push(...m.diagnostics);
     if (needsImage && m.model && !(m.model.imageInput || m.model.image_input)) diagnostics.push(diag('mode-degraded', 'mode'));
   }
-  // Per-model refinements (spec §Per-model refinements): core values, then matching qualified values.
-  if (chosen) {
+  // Per-model refinements (spec §Per-model refinements): the selected model receives the core values,
+  // then the values of matching qualified keys. The description (core only) is unchanged: it is what
+  // readers see as fallback text and accessible names; the model description is what the model gets.
+  const extraFor = base => {
+    if (!chosen) return [];
     const names = [chosen.family, chosen.id, ...(chosen.aliases || [])].filter(Boolean).map(asciiLower);
-    const qualified = [...doc.keys()].filter(k => k.includes('/')).sort(byCP);
-    for (const base of QUALIFIABLE) {
-      const extra = qualified.filter(k => k.startsWith(base + '/') && names.includes(k.slice(base.length + 1))).flatMap(k => doc.get(k));
-      if (!extra.length) continue;
-      if (base === 'prompt') { out.prompt = [...(out.prompt || []), ...extra]; out.description = out.prompt.join('\n'); }
-      else out[base] = [...out[base], ...extra];
-    }
-  }
+    return [...doc.keys()].filter(k => k.startsWith(base + '/') && names.includes(asciiLower(k.slice(base.length + 1)))).sort(byCP).flatMap(k => doc.get(k));
+  };
+  out.modelPrompt = [...(out.prompt || []), ...extraFor('prompt')];
+  out.modelDescription = out.modelPrompt.join('\n');
+  out.modelStyle = [...out.style, ...extraFor('style')];
+  out.modelAvoid = [...out.avoid, ...extraFor('avoid')];
   return { interpreted: out, diagnostics };
 }
 
@@ -1031,7 +1032,7 @@ export function matchModel(values, { catalog = [], families = {}, needsImage = f
  * Validator (advisory)
  * ------------------------------------------------------------------ */
 
-const CONFUSABLE_DELIM = new RegExp(`[\\uff1b\\u061b][${WS_CLASS}]*[A-Za-z0-9][A-Za-z0-9_.-]*[${WS_CLASS}]*[=\\uff1d]`);
+const CONFUSABLE_DELIM = new RegExp(`[\\uff1b\\u061b][${WS_CLASS}]*[A-Za-z0-9][A-Za-z0-9_.-]*(?:/[A-Za-z0-9][A-Za-z0-9_-]*)?[${WS_CLASS}]*[=\\uff1d]`);
 const CONFUSABLE_EQ = /[A-Za-z0-9][\t ]*\uff1d/;
 const KNOWN_FOREIGN = /(^|\s)--(ar|no|seed|niji|style|v|q|chaos|stylize)\b|^Negative prompt:|<lora:/i;
 
@@ -1049,7 +1050,7 @@ export function validate(doc, info) {
       if (/[​-‍⁠]|.﻿/s.test(v)) d.push(diag('invisible-char', k));
       if (/[‪-‮⁦-⁩]/.test(v)) d.push(diag('bidi-control', k));
       if (utf8(v) > 8192) d.push(diag('large-payload', k));
-      if (/\n[\t\n\f\r ]*[A-Za-z0-9][A-Za-z0-9_.-]*[\t\n\f\r ]*=/.test(v)) d.push(diag('newline-assignment', k));
+      if (/\n[\t\n\f\r ]*[A-Za-z0-9][A-Za-z0-9_.-]*(?:\/[A-Za-z0-9][A-Za-z0-9_-]*)?[\t\n\f\r ]*=/.test(v)) d.push(diag('newline-assignment', k));
       if (k === 'prompt' && /^jai:/i.test(v)) d.push(diag('prefix-in-prompt', k));
       if (k === 'prompt' && KNOWN_FOREIGN.test(v)) d.push(diag('foreign-syntax', k));
       if (CONFUSABLE_DELIM.test(v)) d.push(diag('confusable-delimiter', k));
@@ -1069,7 +1070,10 @@ export function validate(doc, info) {
   for (const v of doc.get('model') || []) if (/^[a-z][a-z0-9+.-]*:\/\/|^\.?\.?\//i.test(v)) d.push(diag('model-looks-like-locator', 'model'));
   if (info && info.segments) {
     const segs = info.segments;
-    if (segs.length && segs[0].kind === 'assignment' && !stdset.has(segs[0].key) && !segs[0].key.includes('.') && !doc.has('prompt')) d.push(diag('first-segment-assignment', segs[0].key));
+    const first = segs.length && segs[0].kind === 'assignment' ? segs[0].key : null;
+    const firstBase = first ? first.split('/')[0] : null;
+    const firstDefined = first && (first.includes('/') ? QUALIFIABLE.has(firstBase) : stdset.has(first));
+    if (first && !firstDefined && !firstBase.includes('.') && !doc.has('prompt')) d.push(diag('first-segment-assignment', first));
     for (const s of segs) {
       if (s.kind === 'continuation') {
         if (SINGLE_VALUED.has(s.key) && s.key !== 'source' && s.key !== 'preview') d.push(diag('continuation-into-single-valued-key', s.key));

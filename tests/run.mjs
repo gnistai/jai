@@ -247,7 +247,7 @@ const runners = {
       let got;
       if (k === 'aspect') got = it.aspect == null ? null : it.aspect.kind === 'keyword' ? it.aspect.keyword : it.aspect.width / it.aspect.height;
       else if (k === 'model') got = it.matched ?? null;
-      else got = it[k] ?? null;
+      else got = it[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] ?? null;
       const ok = typeof want === 'number' && typeof got === 'number' ? Math.abs(want - got) < 1e-9 : Array.isArray(want) ? JSON.stringify(want) === JSON.stringify(got) : want === got;
       if (!ok) errs.push(`${k}: ${show(got)} != ${show(want)}`);
     }
@@ -280,8 +280,8 @@ for (const cls of classes) {
 if (!flag('--no-fuzz') && (!selected.length || selected.includes('fuzz'))) {
   let seed = 12345;
   const rnd = n => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
-  const atoms = [';', '=', '\\', ' ', '\t', '\n', 'jai:', 'JAI:', 'prompt=', 'style=', 'k =', '\u00a0', '\u3000', '\u2028', '\ufeff', '{', '%', '#', ',', 'a', 'Z', '0', 'é', '魔', '🏰', 'data:image/png;base64,iVBOR=', 'x;charset=utf-8', 'C:\\Users'];
-  const keys = ['prompt', 'style', 'avoid', 'model', 'k', 'a.b', 'x-y', 'z_1', 'comfy.sampler'];
+  const atoms = [';', '=', '\\', ' ', '\t', '\n', 'jai:', 'JAI:', 'prompt=', 'style=', 'k =', '\u00a0', '\u3000', '\u2028', '\ufeff', '{', '%', '#', ',', 'a', 'Z', '0', 'é', '魔', '🏰', 'data:image/png;base64,iVBOR=', 'x;charset=utf-8', 'C:\\Users', '/', 'a/b=', 'Prompt/X =', ' x.y/z='];
+  const keys = ['prompt', 'style', 'avoid', 'model', 'k', 'a.b', 'x-y', 'z_1', 'comfy.sampler', 'prompt/flux', 'style/sdxl', 'x.y/z'];
   let fz = 0;
   const N = 20000;
   for (let n = 0; n < N; n++) {

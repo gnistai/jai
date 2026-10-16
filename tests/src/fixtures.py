@@ -589,31 +589,66 @@ j("json-qualified", '{"jai":1,"prompt":"x","Prompt/FLUX":["a","b"],"style/sdxl":
 j("json-qualified-invalid", '{"jai":1,"prompt":"x","prompt/":"a","prompt/a/b":"b"}', {"prompt": ["x"]}, ["invalid-key", "invalid-key"], rationale="Names that are not keys are dropped.")
 
 i("int-qualified-merge", {"prompt": ["A girl holding a red balloon"], "prompt/flux": ["soft rim light"], "prompt/sdxl": ["35mm photo"], "model": ["flux-schnell"]},
-  {"description": "A girl holding a red balloon\nsoft rim light"}, rationale="The selected model's family qualifier is appended to the core.", catalog=True)
+  {"description": "A girl holding a red balloon", "model_description": "A girl holding a red balloon\nsoft rim light"}, rationale="The selected model's family refinement is appended for the model; the description stays the core.", catalog=True)
 i("int-qualified-alias", {"prompt": ["x"], "prompt/flux-schnell": ["a"], "prompt/flux": ["b"], "model": ["flux-schnell"]},
-  {"description": "x\nb\na"}, rationale="Family and alias both match; matching keys contribute in code point order of the key.", catalog=True)
-i("int-qualified-id", {"prompt": ["x"], "prompt/SDXL": ["a"], "model": ["stability-ai/sdxl"]},
-  {"description": "x\na"}, rationale="Matching is ASCII case-insensitive.", catalog=True)
+  {"model_description": "x\nb\na"}, rationale="Family and alias both match; matching keys contribute in code point order of the key.", catalog=True)
+i("int-qualified-id", {"prompt": ["x"], "prompt/sdxl": ["a"], "model": ["stability-ai/sdxl"]},
+  {"model_description": "x\na"}, rationale="A target matches the family of the selected model.", catalog=True)
+I.append(case("int-qualified-case", "Target matching is ASCII case-insensitive against the catalog's names.",
+  document={"prompt": ["x"], "prompt/sdxl": ["a"], "prompt/sdxl-turbo": ["b"]},
+  catalog=[{"id": "acme/SDXL-Turbo", "aliases": ["SDXL-Turbo"], "family": "SDXL", "image_input": False, "default": True}], families={},
+  interpreted={"model_description": "x\na\nb", "description": "x"}, diagnostics=["no-matching-model:model"]))
 i("int-qualified-unmatched", {"prompt": ["x"], "prompt/midjourney": ["a"], "model": ["stability-ai/sdxl"]},
-  {"description": "x", "model": "stability-ai/sdxl"}, rationale="Unmatched qualifiers are silently unused.", catalog=True)
+  {"model_description": "x", "model": "stability-ai/sdxl"}, rationale="Unmatched qualifiers are silently unused.", catalog=True)
 i("int-qualified-no-select", {"prompt": ["x"], "prompt/sdxl": ["a"]},
-  {"description": "x", "model": "black-forest-labs/flux-schnell"}, ["no-matching-model:model"], rationale="Qualifiers never select a model.", catalog=True)
+  {"model_description": "x", "model": "black-forest-labs/flux-schnell"}, ["no-matching-model:model"], rationale="Qualifiers never select a model.", catalog=True)
 i("int-qualified-style-avoid", {"prompt": ["x"], "style": ["watercolor"], "style/flux": ["loose washes"], "avoid": ["text"], "avoid/sdxl": ["watermark"], "model": ["flux-schnell"]},
-  {"style": ["watercolor", "loose washes"], "avoid": ["text"]}, rationale="style and avoid merge the same way.", catalog=True)
+  {"style": ["watercolor"], "model_style": ["watercolor", "loose washes"], "avoid": ["text"], "model_avoid": ["text"]}, rationale="style and avoid merge the same way; the core values are unchanged.", catalog=True)
 i("int-qualified-no-core", {"prompt/flux": ["a"], "model": ["flux-schnell"]},
-  {"description": "a"}, rationale="A qualified prompt alone still describes the image for that model.", catalog=True)
+  {"description": "", "model_description": "a"}, rationale="A refinement alone is what that model receives; there is no description for readers.", catalog=True)
 i("int-qualified-selected", {"prompt": ["x"], "prompt/sdxl": ["a"], "prompt/flux": ["b"], "model": ["flux-schnell"]},
-  {"description": "x\na", "model": "stability-ai/sdxl"}, rationale="A viewer that imposes the user's chosen model merges that model's qualifiers.", catalog=True, selected="stability-ai/sdxl")
+  {"model_description": "x\na", "model": "stability-ai/sdxl"}, rationale="A viewer that imposes the user's chosen model merges that model's refinements.", catalog=True, selected="stability-ai/sdxl")
 i("int-qualified-seed-ignored", {"prompt": ["x"], "seed/flux": ["7"], "model": ["flux-schnell"]},
-  {"seed": None, "description": "x"}, rationale="Only prompt, style and avoid merge.", catalog=True)
+  {"seed": None, "model_description": "x"}, rationale="Only prompt, style and avoid merge.", catalog=True)
 i("int-qualified-no-catalog", {"prompt": ["x"], "prompt/flux": ["a"]},
-  {"description": "x"}, rationale="Without a selected model nothing merges.")
+  {"description": "x", "model_description": "x"}, rationale="Without a selected model nothing merges.")
+
+# review round 3: escaping before qualified keys (a serialiser that ignores /target corrupts these)
+for id_, doc, text, bare, rat in [
+    ("ser-qualified-escape-semicolon", {"prompt": ["A ratio; a/b=c"]}, T("jai:A ratio¥; a/b=c"), T("A ratio¥; a/b=c"), "A ; before word/word= is escaped."),
+    ("ser-qualified-assignment-first", {"prompt": ["1/2=half on a chalkboard"]}, "jai:prompt=1/2=half on a chalkboard", "prompt=1/2=half on a chalkboard", "A leading word/word= forces prompt=."),
+    ("ser-qualified-escape-case", {"prompt": ["x; Prompt/FLUX = y"]}, T("jai:x¥; Prompt/FLUX = y"), None, "Keys match case-insensitively, with whitespace before =."),
+    ("ser-qualified-escape-vendor", {"prompt": ["x"], "style": ["a;acme.x/flux=b"]}, T("jai:x;style=a¥;acme.x/flux=b"), None, "Dotted names with a target also count."),
+]:
+    s(id_, doc, text, rat, bare=bare)
+    r("rt-" + id_[4:], doc, rat)
+u("url-qualified-escaped", T("data:image/jai,A%20ratio¥;%20a/b=c"), "data", {"prompt": ["A ratio; a/b=c"]}, rationale="An escaped semicolon before word/word= in a data: URL.")
+# review round 3 (independent Go implementation): behaviour the prose now states
+S.append(case("ser-url-ampersand", "The canonical URL form encodes & so that HTML attributes cannot decode character references in it.",
+  document={"prompt": ["Tom &amp; Jerry"]}, text="jai:Tom &amp; Jerry", json=canon_json({"prompt": ["Tom &amp; Jerry"]}), identity=identity({"prompt": ["Tom &amp; Jerry"]}),
+  url="data:image/jai,Tom%20%26amp;%20Jerry"))
+i("int-selected-no-matching-codes", {"prompt": ["x"], "model": ["flux"]}, {"model": "stability-ai/sdxl"}, rationale="When the user chose the model, model matching does not run and reports nothing.", catalog=True, selected="stability-ai/sdxl")
+i("int-selected-degraded", {"prompt": ["x"], "mode": ["transform"]}, {"model": "black-forest-labs/flux-schnell"}, ["mode-degraded:mode"], rationale="A user-chosen model without image input still degrades transform.", catalog=True, has_original=True, selected="black-forest-labs/flux-schnell")
+i("int-selected-unknown", {"prompt": ["x"]}, {"model": "black-forest-labs/flux-schnell"}, ["no-matching-model:model"], rationale="A selected id that is not configured is ignored; matching runs.", catalog=True, selected="acme/missing")
+i("int-strength-without-transform", {"strength": ["0.5"]}, {"strength": 0.5}, rationale="Outside transform, strength draws no interpreter code (validators report strength-without-transform).")
+i("int-strength-binary64", {"mode": ["transform"], "strength": ["33.3%"]}, {"strength": 0.33299999999999996}, rationale="Binary64 arithmetic: 33.3 divided by 100.")
+i("int-aspect-binary64", {"aspect": ["0.1:0.3"]}, {"aspect": 0.33333333333333337}, rationale="Binary64 arithmetic: 0.1 divided by 0.3.")
+ir("int-ratio-landscape-default", {"aspect": ["landscape"]}, None, 4/3, rationale="landscape without a governing ratio renders at 4:3.")
+i("int-source-is-input-image", {"mode": ["transform"], "source": ["https://example.org/a.jpg"], "model": ["flux"]}, {"model": "black-forest-labs/flux-kontext-pro"}, ["substituted-model:model"], rationale="A valid source is an input image for model eligibility.", catalog=True)
+h("html-shadow-before-light-children", '<div><template shadowrootmode="open"><img src="b.png" data-jai="B"></template><img src="c.png" data-jai="C"></div><img src="a.png" data-jai="A">',
+  [{"carrier": 2, "document": {"prompt": ["B"]}, "diagnostics": []}, {"carrier": 2, "document": {"prompt": ["C"]}, "diagnostics": []}, {"carrier": 2, "document": {"prompt": ["A"]}, "diagnostics": []}],
+  "An open shadow root's tree is visited right after its host, before the host's children.")
+
+# validator: qualified keys in first-segment, newline and confusable checks
+P.append(case("parse-qualified-first-segment-ok", "prompt/flux= as the first segment is a defined key, not a mistaken assignment.", input="prompt/flux=A castle", document={"prompt/flux": ["A castle"]}, diagnostics=[], no_advisories=["first-segment-assignment"]))
+p("parse-qualified-newline", "A castle\nprompt/flux=x", {"prompt": ["A castle\nprompt/flux=x"]}, rationale="A new line does not start a parameter, qualified or not.", advisories=["newline-assignment"])
+p("parse-qualified-confusable", "A castle\uff1bprompt/flux=x", {"prompt": ["A castle\uff1bprompt/flux=x"]}, rationale="A full-width semicolon before a qualified key is prose.", advisories=["confusable-delimiter"])
 
 counts = {}
 counts["parse"] = write("parse", P, "input -> document + exact parser diagnostics; advisories are validator codes that must be present when a validator runs.")
 counts["serialize"] = write("serialize", S, "document -> canonical text, bare text, canonical JSON, identity.")
 counts["roundtrip"] = write("roundtrip", R, "parse(serialize(doc)) == doc, serialize is a fixed point; same for canonical JSON.")
-counts["json"] = write("json", JS, "JSON text -> document + exact parser diagnostics; 'optional' codes may or may not be emitted.")
+counts["json"] = write("json", JS, "JSON text -> document + exact parser diagnostics.")
 counts["decode"] = write("decode", D, "base64 bytes -> document + exact parser diagnostics.")
 counts["url"] = write("url", U, "kind data: a data: URL string; query: whole-query form; param: the jai parameter.")
 counts["html"] = write("html", H, "HTML fragment -> discovered carriers in tree order. url entries are resolved by the viewer, not decoded here.")

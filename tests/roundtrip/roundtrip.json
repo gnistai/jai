@@ -198,6 +198,49 @@
     ]
    },
    "since": "1.0-draft"
+  },
+  {
+   "id": "rt-qualified-escape-semicolon",
+   "rationale": "A ; before word/word= is escaped.",
+   "document": {
+    "prompt": [
+     "A ratio; a/b=c"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-qualified-assignment-first",
+   "rationale": "A leading word/word= forces prompt=.",
+   "document": {
+    "prompt": [
+     "1/2=half on a chalkboard"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-qualified-escape-case",
+   "rationale": "Keys match case-insensitively, with whitespace before =.",
+   "document": {
+    "prompt": [
+     "x; Prompt/FLUX = y"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-qualified-escape-vendor",
+   "rationale": "Dotted names with a target also count.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "style": [
+     "a;acme.x/flux=b"
+    ]
+   },
+   "since": "1.0-draft"
   }
  ]
 }

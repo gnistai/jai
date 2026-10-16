@@ -1,7 +1,7 @@
 {
  "class": "json",
  "edition": "1.0-draft",
- "note": "JSON text -> document + exact parser diagnostics; 'optional' codes may or may not be emitted.",
+ "note": "JSON text -> document + exact parser diagnostics.",
  "cases": [
   {
    "id": "json-simple",

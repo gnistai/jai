@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="2c5eb0ce497605b50eb4e505e0d63cbd7644879f" name="revision">
+  <meta content="dacd66b35ec1269ec333665e484414d28740fa7e" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -2408,9 +2408,9 @@ Parts of this work may be from another specification document.  If so, those par
    <p>A JAI document is an image compressed into words: a natural-language
 description and, optionally, a few rendering parameters, from which a
 generative model reconstructs the picture. The description is the code; the
-model is the decoder. Two decoders produce different pixels, but the same
-image in meaning and appearance, in the way two JPEG decoders produce slightly
-different pixels from the same file, only much further along the same curve.</p>
+model is the decoder. Unlike two JPEG decoders, two generative decoders can
+produce visibly different pictures from the same document; a good description
+narrows the difference to what the description leaves open.</p>
    <p>The simplest JAI document is a sentence:</p>
    <div class="example" id="ex-intro-plain">
     <a class="self-link" href="#ex-intro-plain"></a>
@@ -2447,18 +2447,22 @@ File form: the JSON above as a single gzip member, in a file named <code>castle.
    <h4 class="heading settled" data-level="1.1.1" id="intro-compression"><span class="secno">1.1.1. </span><span class="content">A description is compression</span><a class="self-link" href="#intro-compression"></a></h4>
    <p>Every image format trades bits for distortion. JPEG discards detail the eye
 will not miss; JAI keeps only what a person would say about the picture and
-discards the rest. In the terms of rate–distortion theory it sits at the far
-low-rate end of the same curve: a typical document is 50 to 500 bytes for an
-image of any resolution, against tens of kilobytes to megabytes for a raster,
-and its distortion is measured in meaning and appearance (does the result show
-the same things, arranged and lit the same way) rather than in pixel error.</p>
+discards the rest. In rate–distortion terms it operates at a very low rate
+under a semantic rather than a pixel distortion measure: a typical document is
+50 to 500 bytes for an image of any resolution, against tens of kilobytes to
+megabytes for a raster, and its distortion is judged in meaning and appearance
+(does the result show the same things, arranged and lit the same way). Like
+other generative codecs, it trades pixel fidelity for realism, the
+rate–distortion–perception trade-off <a data-link-type="biblio" href="#biblio-blau-michaeli" title="Rethinking Lossy Compression: The Rate-Distortion-Perception Tradeoff">[BLAU-MICHAELI]</a>.</p>
    <p>This works because the decoder carries a prior. A generative model has
 learned what harbours, castles and dusk light look like, so the code only has
 to say which ones, where and how. Speech coding has relied on the same idea for
 decades: a vocoder transmits the parameters of a model of the voice instead of
-the waveform, and a CELP encoder finds those parameters by running the decoder
-inside the encoder and keeping what sounds closest. JAI encoding is the same
-<em>analysis by synthesis</em> (<a href="#image-encoding">§ 10 Encoding images</a>): an <a data-link-type="dfn" href="#image-encoder" id="ref-for-image-encoder">image encoder</a> describes an image, renders the
+the waveform, and a CELP encoder chooses its excitation by running the decoder
+inside the encoder and keeping the closest result. JAI encoding uses the same
+<em>analysis by synthesis</em> (<a href="#image-encoding">§ 10 Encoding images</a>), with one difference: a CELP
+encoder knows the decoder exactly, while a JAI encoder does not know which
+model the reader will use, so it optimises for a set of likely decoders: an <a data-link-type="dfn" href="#image-encoder" id="ref-for-image-encoder">image encoder</a> describes an image, renders the
 description with the target models, compares the renders with the original,
 and revises the description until they match as closely as time and budget
 allow. A document can carry a core description shared by all models plus small
@@ -2471,17 +2475,20 @@ decorative image, a few precise paragraphs for one whose look matters.</p>
 moving one is not.</p>
    <ul>
     <li data-md>
-     <p><strong>Links with little bandwidth and enough compute.</strong> Spacecraft and
-deep-space links, ships, aircraft, satellite connections with data caps,
-rural networks, disaster zones, and text-only channels such as SMS, packet
-radio and mesh networks can carry a sentence where they cannot carry a
-photograph. A receiver with a GPU reconstructs the picture.</p>
+     <p><strong>Links with little bandwidth and enough compute.</strong> Ships, aircraft,
+spacecraft crews, satellite connections with data caps, rural networks,
+disaster zones, and text-only channels such as SMS, packet radio and mesh
+networks can carry a sentence where they cannot carry a photograph. A
+receiver with a GPU reconstructs the picture. This suits illustrative and
+situational images, not measurements: where the pixels are the data, send
+the pixels (<a href="#intro-scope">§ 1.2 What JAI is and is not</a>).</p>
     <li data-md>
      <p><strong>Local generation.</strong> Image generation is moving onto commodity GPUs and
-phones, at well under a second per image. When decoding is local and free,
-a browser can choose the JAI source in a <code>&lt;picture></code> element and never
-download the raster (<a href="#html-carriers">§ 11.1 Carriers</a>); pages get lighter with no change
-to their markup.</p>
+recent phones, in seconds or less with distilled models. If browsers come
+to decode <code>image/jai</code> natively, a browser could choose the JAI source in a
+<code>&lt;picture></code> element and fetch the raster only when rendering fails
+(<a href="#html-carriers">§ 11.1 Carriers</a>), so pages get lighter with no change to their markup.
+Today’s viewers still download the raster (<a href="#viewer-requirements">§ 11.5 Viewer requirements</a>).</p>
     <li data-md>
      <p><strong>An audience of one.</strong> Because the reader’s own decoder produces the
 pixels, the reader can ask for them differently: adapted to their culture,
@@ -2501,8 +2508,10 @@ own text alternative for screen readers and text-only browsers; and
 language models and agents can read and write images in the medium they
 already use.</p>
     <li data-md>
-     <p><strong>Honest provenance.</strong> A JAI image is generated by construction, so it
-cannot be mistaken for a photograph of something that happened.</p>
+     <p><strong>Declared provenance.</strong> A JAI document says it is a description, and
+renderers label their output as generated (<a href="#security-provenance">§ 13.10 Provenance</a>). The
+format never claims that a render records an event, even when the
+description was encoded from a photograph.</p>
    </ul>
    <p>Today, rendering usually runs on hosted providers through an API key. That is
 the stage this edition is published in: good for demonstrations and for
@@ -2680,7 +2689,14 @@ values, describing one image.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="description">description</dfn>
     <dd data-md>
      <p>The textual rendering of a document: its prompt values joined with U+000A
-LINE FEED, in order.</p>
+LINE FEED, in order. Qualified keys are not part of it. It is what readers
+see as fallback text and accessible names.</p>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="model-description">model description</dfn>
+    <dd data-md>
+     <p>What one model receives: the description followed by the values of the
+qualified <code>prompt</code> keys that match the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model">selected model</a>, joined with
+U+000A LINE FEED (<a href="#model-refinements">§ 8.3 Per-model refinements</a>). Without matching refinements it
+equals the description.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="text-form">text form</dfn>
     <dd data-md>
      <p>The human-readable serialisation of a document (<a href="#text">§ 5 Text form</a>):
@@ -2787,9 +2803,9 @@ starts with a lowercase ASCII letter or digit and continues with lowercase
 ASCII letters, digits, <code>_</code> and <code>-</code>. A key with a target, such as
 <code>prompt/flux</code>, is a <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="qualified-key">qualified key</dfn>: it holds refinements for
 the models that target names (<a href="#model-refinements">§ 8.3 Per-model refinements</a>). Only the names
-<code>prompt</code>, <code>style</code> and <code>avoid</code> take a target in this edition; parsers and
-serialisers keep other qualified keys unchanged, and validators report them
-with <code>invalid-qualifier</code>.</p>
+<code>prompt</code>, <code>style</code> and <code>avoid</code> take a target in this edition; parsers, JSON
+readers and serialisers keep other qualified keys unchanged, and validators
+report them with <code>invalid-qualifier</code>.</p>
    <p>Keys are compared for equality after <a data-link-type="dfn" href="#ascii-lowercase" id="ref-for-ascii-lowercase①">ASCII lowercase</a> conversion: readers
 convert every key they receive to ASCII lowercase before anything else, so a
 document never contains two keys that differ only in case.</p>
@@ -2934,7 +2950,7 @@ whitespace inside values is preserved.</p>
 
       <tr>
        <td><code>http://example.org/?a=b</code>
-       <td>prompt = <code>http://example.org/?a=b</code> (<code>:</code> and <code>/</code> are not key characters)
+       <td>prompt = <code>http://example.org/?a=b</code> (<code>:</code> and <code>?</code> are not key characters)
 
       <tr>
        <td><code>Draw a graph\; y=2x</code>
@@ -2971,8 +2987,10 @@ semicolons (<code>data:image/svg+xml\;charset=utf-8,…</code>); the canonical
 serialiser does so. A plain <code>data:…;base64,</code> URL needs nothing, because
 <code>base64,…</code> is not an assignment.</p>
     <li data-md>
-     <p>A word, <code>/</code>, a word and <code>=</code> after a semicolon is a <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key">qualified key</a>:
-<code>A ratio; a/b=c</code> assigns <code>c</code> to <code>a/b</code>. Write <code>a/b\=c</code> to keep it as text.</p>
+     <p>A word (which may contain <code>.</code>), <code>/</code>, a word and <code>=</code>, at the start of the
+text or after a semicolon, is a <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key">qualified key</a>: <code>A ratio; a/b=c</code>
+assigns <code>c</code> to <code>a/b</code>, and <code>1/2=half on a chalkboard</code> assigns to <code>1/2</code>
+and leaves no prompt. Write <code>a/b\=c</code>, or start with <code>prompt=</code>.</p>
    </ol>
    <h3 class="heading settled" data-level="5.3" id="text-escaping"><span class="secno">5.3. </span><span class="content">Escaping arbitrary text</span><a class="self-link" href="#text-escaping"></a></h3>
    <p>An authoring tool or template that places text it did not write into a
@@ -3197,7 +3215,8 @@ delimiter after it);</p>
     <li data-md>
      <p>a <code>;</code> that is the first code point of <em>v</em>, or that is followed by optional
 JAI whitespace and then either the end of <em>v</em>, another <code>;</code>, or a <a data-link-type="dfn" href="#key" id="ref-for-key③">key</a>
-followed by optional JAI whitespace and <code>=</code>.</p>
+(matched <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive①">ASCII case-insensitively</a>) followed by optional JAI whitespace
+and <code>=</code>.</p>
    </ul>
    <p>Each decision looks at the original <em>v</em>, never at text already escaped. As an
 ECMAScript regular expression, with <code>WS</code> standing for the <a data-link-type="dfn" href="#jai-whitespace" id="ref-for-jai-whitespace④">JAI whitespace</a>
@@ -3263,7 +3282,7 @@ point). The conformance suite checks both properties.</p>
 prefix, for contexts that establish JAI and are not displayed as text (the
 body of a <code>data:image/jai</code> URL, a <code>data-jai</code> attribute). It is produced by the
 same algorithm with one more case in step 3: the first prompt value is also
-written as <code>prompt=…</code> when it begins with <code>jai:</code> (<a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive①">ASCII case-insensitively</a>),
+written as <code>prompt=…</code> when it begins with <code>jai:</code> (<a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive②">ASCII case-insensitively</a>),
 with U+FEFF, or with <code>{</code>.</p>
    <div class="note" role="note">
 The <code>{</code> rule keeps the body of a <code>data:image/jai</code> URL from being mistaken for
@@ -3346,8 +3365,11 @@ diagnostic <code>invalid-marker</code>.</p>
 context</em> and returns a document and diagnostics.</p>
    <ol>
     <li data-md>
-     <p>Parse the text as JSON <a data-link-type="biblio" href="#biblio-rfc8259" title="The JavaScript Object Notation (JSON) Data Interchange Format">[RFC8259]</a>. Texts that are not valid RFC 8259 JSON
-(including <code>NaN</code>, <code>Infinity</code>, comments and trailing commas), and texts
+     <p>Parse the text as JSON <a data-link-type="biblio" href="#biblio-rfc8259" title="The JavaScript Object Notation (JSON) Data Interchange Format">[RFC8259]</a>. A leading U+FEFF is not JSON
+whitespace and is not skipped (decoders remove byte order marks before
+calling the reader, <a href="#decoding">§ 7.4 Decoding</a>). Texts that are not valid RFC 8259 JSON
+(including <code>NaN</code>, <code>Infinity</code>, comments, trailing commas and a leading
+U+FEFF), and texts
 containing a number whose value, rounded to the nearest IEEE 754 binary64
 value, is infinite (for example <code>1e400</code>) wherever it occurs, the <code>jai</code>
 member included, yield the empty document with the diagnostic
@@ -3489,11 +3511,14 @@ point, including U+007F, U+2028, U+2029 and all non-ASCII, literally.</p>
    <p>Because values are <a data-link-type="dfn" href="#scalar-value-string" id="ref-for-scalar-value-string①">scalar value strings</a>, canonical JSON never contains
 surrogate escapes.</p>
    <div class="note" role="note">
-This is RFC 8785 (the JSON Canonicalization Scheme) with one deviation: the
-members <code>jai</code> and <code>prompt</code> come first, so that every file begins with the
-bytes <code>{"jai":1</code> followed by <code>,</code> or <code>}</code> after decompression and a reader can
-see the description first. An implementation can run a JCS library and move those two members to
-the front; the string and number rules are identical. In JavaScript the
+This is RFC 8785 (the JSON Canonicalization Scheme) with one deviation in
+member order: <code>jai</code>, then <code>prompt</code>, then the qualified <code>prompt/…</code> members come
+first, so that every file begins with the bytes <code>{"jai":1</code> followed by <code>,</code> or
+<code>}</code> after decompression and a reader can see the description first. An
+implementation can run a JCS library and then move <code>jai</code>, <code>prompt</code> and the
+<code>prompt/…</code> members, in that order, to the front; the string and number rules
+are identical. Fixture <code>ser-qualified-order</code> catches the common mistake of
+moving only <code>jai</code> and <code>prompt</code>. In JavaScript the
 canonical form is <code>JSON.stringify</code> of an object built in this member order;
 in Python, <code>json.dumps(obj, ensure_ascii=False, separators=(',', ':'))</code> with
 members inserted in order; Go callers need <code>SetEscapeHTML(false)</code>.
@@ -3515,7 +3540,7 @@ member, including <code>preview</code>, vendor keys, or the spelling <code>16x9<
 carrier delivered the document, and whatever whitespace, key case or key
 order the author used.</p>
    <p>Identity names a document, not a render. A render cache key MUST include,
-besides the identity, the renderer and its configuration, and the identity of
+besides the identity, the renderer and its configuration, the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model①">selected model</a>, any personalisation (<a href="#viewer-personalisation">§ 11.5.3 Personalisation</a>), and the identity of
 every image input the render used (an explicit <code>source</code> or the carrier’s
 <a data-link-type="dfn" href="#original-image" id="ref-for-original-image">original image</a>). See also <a href="#security-cache">§ 13.7 Caches</a>.</p>
    <p>Identity is public information and MUST NOT be used as a capability or as a
@@ -3527,6 +3552,9 @@ compression method 8 (deflate), followed by nothing, whose decompressed
 content is the <a data-link-type="dfn" href="#canonical-json-form" id="ref-for-canonical-json-form">canonical JSON form</a>. A <code>.jai</code> file contains the file form.</p>
    <p>Decoders MUST reject, as described in <a href="#decoding">§ 7.4 Decoding</a>:</p>
    <ul>
+    <li data-md>
+     <p>a header shorter than 10 bytes, a compression method (CM) other than 8, or
+a member truncated anywhere (header fields, deflate data or trailer);</p>
     <li data-md>
      <p>a member whose reserved FLG bits are set;</p>
     <li data-md>
@@ -3557,7 +3585,11 @@ compressed data that is assigned no symbol, a length symbol 286 or 287, or a
 distance symbol 30 or 31; a distance greater than the number of bytes output
 so far; or a stream that ends before its final block ends. These are exactly
 the streams zlib’s inflate rejects, so <code>DecompressionStream</code>, Node’s <code>zlib</code>
-and Python’s <code>zlib</code> can be used unmodified.</p>
+and Python’s <code>zlib</code> can be used unmodified for the deflate data. Header and
+trailer checks are not always included: Go’s <code>compress/gzip</code>, for
+example, accepts reserved FLG bits, second members and trailing bytes, so
+Go implementations parse the header themselves, inflate with
+<code>compress/flate</code>, and then check the trailer and the end of input.</p>
    </ul>
    <p>The header fields FEXTRA, FNAME, FCOMMENT, MTIME, XFL and OS are read and
 ignored; FNAME is never used as a file name. Byte equality of two <code>.jai</code>
@@ -3584,7 +3616,7 @@ text form in a <code>data:</code> URL instead (<a href="#data-urls">§ 7.5 dat
    <h3 class="heading settled" data-level="7.3" id="media-type"><span class="secno">7.3. </span><span class="content">Media type and file extension</span><a class="self-link" href="#media-type"></a></h3>
    <p>The media type of a JAI document in any of its three serialisations is
 <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="image-jai"><code>image/jai</code></dfn>. The file extension is <code>.jai</code>. The <code>type</code> attribute
-value <code>image/jai</code> (<a href="#html-carriers">§ 11.1 Carriers</a>) is matched by its essence, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive②">ASCII case-insensitively</a>, ignoring parameters. A <code>charset</code> parameter has no
+value <code>image/jai</code> (<a href="#html-carriers">§ 11.1 Carriers</a>) is matched by its essence, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive③">ASCII case-insensitively</a>, ignoring parameters. A <code>charset</code> parameter has no
 meaning: the text and JSON forms are always UTF-8.</p>
    <div class="note" role="note">
 <code>image/jai</code> is used unregistered, as <code>image/webp</code> was for a decade before
@@ -3732,10 +3764,11 @@ control code points, so <code>data:image/jai</code> followed by U+00A0 is not
 <code>data:image/jai,</code> URL it MUST percent-encode every byte of the UTF-8 encoding
 that is a C0 control, U+007F, an ASCII whitespace character (U+0020 as <code>%20</code>,
 U+000A as <code>%0A</code>, U+0009 as <code>%09</code>), <code>%</code> (as <code>%25</code>), <code>#</code> (as <code>%23</code>), <code>"</code> (as <code>%22</code>), <code>'</code> (as <code>%27</code>), <code>&lt;</code> (as <code>%3C</code>),
-<code>></code> (as <code>%3E</code>), and a <code>,</code>
+<code>></code> (as <code>%3E</code>), <code>&amp;</code> (as <code>%26</code>, because HTML decodes character references in
+attribute values), and a <code>,</code>
 that would be the last byte of the URL (as <code>%2C</code>); a body beginning with <code>/</code>
 is written with <code>%2F</code>. Every other byte, including <code>;</code>, <code>=</code>, <code>,</code>, <code>{</code>, <code>}</code>, <code>?</code>, <code>/</code>,
-<code>&amp;</code>, <code>+</code> and non-ASCII, MAY remain literal. The
+<code>+</code> and non-ASCII, MAY remain literal. The
 <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="canonical-url-form">canonical URL form</dfn> of a document is <code>data:image/jai,</code> followed by
 its <a data-link-type="dfn" href="#bare-serialisation" id="ref-for-bare-serialisation①">bare serialisation</a> so encoded, so that the canonical URL form can be
 placed in any quoted HTML attribute without further escaping.</p>
@@ -3851,7 +3884,7 @@ keys out of shared prefixes.</p>
 is at least two code points long, remove both and <a data-link-type="dfn" href="#trim" id="ref-for-trim③">trim</a> the result
 (validators report <code>quoted-value</code>). Then, if <em>v</em> ends with <code>.</code>, remove it.</p>
     <li data-md>
-     <p>Match <em>v</em> against the key’s value grammar below, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive③">ASCII case-insensitively</a> where keywords are involved. On failure emit
+     <p>Match <em>v</em> against the key’s value grammar below, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive④">ASCII case-insensitively</a> where keywords are involved. On failure emit
 <code>invalid-value</code> for the key (for <code>source</code>, <code>invalid-image</code>; for <code>preview</code>,
 <code>unsupported-preview</code>), treat the key as absent, and, where the grammar
 suggests one, offer the corrected spelling in the diagnostic.</p>
@@ -3860,12 +3893,17 @@ suggests one, offer the corrected spelling in the diagnostic.</p>
 appear in the document: no quotation mark or full stop is removed, and
 <a href="#model-matching">§ 8.2 Model matching</a> receives the document’s values.</p>
    <p>Interpreters MUST NOT use lenient or locale-aware number parsers; the
-grammars below are ASCII and exact. Non-ASCII digits, full-width characters
+grammars below are ASCII and exact. Each decimal number is converted to the
+nearest IEEE 754 binary64 value, and arithmetic on it (a percentage divided by
+100, a ratio W/H) is binary64 arithmetic: <code>33.3%</code> is 0.33299999999999996 and
+<code>0.1:0.3</code> is 0.33333333333333337. Fixtures compare these numbers exactly. Non-ASCII digits, full-width characters
 and the decimal comma are invalid (an authoring tool offers <code>0,6</code> → <code>0.6</code>,
 <code>１６：９</code> → <code>16:9</code>).</p>
    <h4 class="heading settled" data-level="8.1.1" id="key-text"><span class="secno">8.1.1. </span><span class="content"><code>prompt</code>, <code>style</code>, <code>avoid</code></span><a class="self-link" href="#key-text"></a></h4>
    <p>Any value is valid. The interpreted prompt is the <a data-link-type="dfn" href="#description" id="ref-for-description①">description</a>: the values
-joined with a single U+000A in order. <code>prompt=a;prompt=b</code> renders as the same
+joined with a single U+000A in order. What a particular model receives is the
+<a data-link-type="dfn" href="#model-description" id="ref-for-model-description">model description</a> and the merged <code>style</code> and <code>avoid</code> values of
+<a href="#model-refinements">§ 8.3 Per-model refinements</a>. <code>prompt=a;prompt=b</code> renders as the same
 input as a single value <code>a</code> U+000A <code>b</code> but is a different document. Renderers
 MAY normalise whitespace for their model.</p>
    <p><code>style</code> values are combined; all apply. <code>avoid</code> values are independent
@@ -3911,7 +3949,8 @@ with <code>adjusted-value</code>. 0 means the source is unchanged, 1 means the s
 constrains nothing. Renderers map this linearly onto the model’s own control;
 a control that measures image influence rather than departure takes
 1 − strength. <code>strength</code> has an effect only in <code>transform</code> mode; validators
-report <code>strength-without-transform</code> otherwise.</p>
+report <code>strength-without-transform</code> otherwise, and interpreters report
+nothing (<code>ignored-value</code> is reserved for <code>aspect</code> and <code>source</code>).</p>
    <h4 class="heading settled" data-level="8.1.6" id="key-seed"><span class="secno">8.1.6. </span><span class="content"><code>seed</code></span><a class="self-link" href="#key-seed"></a></h4>
    <p>One to twenty ASCII digits. Renderers pass the value through when it lies
 within the model’s accepted range and otherwise reduce it deterministically
@@ -3959,7 +3998,7 @@ them as prefixed values without affecting this edition’s viewers.
 ASCII case-insensitively. True requests a looping animated image resource
 (GIF, APNG, animated WebP or animated AVIF) of renderer-chosen length that is
 displayable wherever a still image is; video containers are not JAI render
-results. A renderer that cannot produce one renders a still frame and reports
+results. Absent or invalid: false. A renderer that cannot produce one renders a still frame and reports
 <code>unsupported-parameter</code>. Viewer obligations for motion are in
 <a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>.</p>
    <h3 class="heading settled" data-level="8.2" id="model-matching"><span class="secno">8.2. </span><span class="content">Model matching</span><a class="self-link" href="#model-matching"></a></h3>
@@ -3971,7 +4010,7 @@ part (<a href="#security-selectors">§ 13.3 Selectors, never locators</a>).</p
      <p>For each <code>model</code> value <em>v</em> in document order:</p>
      <ol>
       <li data-md>
-       <p>If <em>v</em> matches, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive④">ASCII case-insensitively</a>, the identifier or an alias
+       <p>If <em>v</em> matches, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑤">ASCII case-insensitively</a>, the identifier or an alias
 of an eligible model, select that model.</p>
       <li data-md>
        <p>Otherwise, unless the renderer pins versions: if the last
@@ -3996,11 +4035,16 @@ lists first. Select that family’s default model and report
 value, use the user’s default model and report <code>no-matching-model</code>.</p>
     <li data-md>
      <p>A model is <em>eligible</em> if it is configured and enabled and, in <code>transform</code>
-mode with an input image, accepts an image input. Step 2 uses the user’s
-default model even when it is not eligible; in <code>transform</code> mode with an
-input image it is then rendered as <code>generate</code> with <code>mode-degraded</code>
-(<a href="#rendering-modes">§ 9.1 Modes and the original image</a>).</p>
+mode with an input image, accepts an image input. An input image exists
+when the carrier offers an <a data-link-type="dfn" href="#original-image" id="ref-for-original-image③">original image</a> or the interpreted <code>source</code>
+is valid; whether it can actually be read is decided later, by the
+renderer (<a href="#security-inputs">§ 13.2 Permitted inputs</a>).</p>
    </ol>
+   <p>An interpreter configured with no models does not perform model matching: it
+selects no model, emits no model-matching code and merges no refinement. Step 2 uses the user’s
+    default model even when it is not eligible; in <code>transform</code> mode with an
+    input image it is then rendered as <code>generate</code> with <code>mode-degraded</code>
+    (<a href="#rendering-modes">§ 9.1 Modes and the original image</a>).</p>
    <p>The <em>known families</em> are the families the renderer lists, in its order,
 followed by the <code>family</code> of every configured model not already listed, in
 configuration order; a family’s name is always one of its spellings. The
@@ -4032,22 +4076,35 @@ refinements for particular models in <a data-link-type="dfn" href="#qualified-ke
 <pre>jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;prompt/imagen=The balloon is glossy;model=flux;model=imagen
 </pre>
    </div>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="selected-model">selected model</dfn> is the model that <a href="#model-matching">§ 8.2 Model matching</a> selects,
-or the model the user chose when a viewer lets the user override the
-document’s preference. Once a model is selected, an interpreter forms the
-values it uses for <code>prompt</code>, <code>style</code> and <code>avoid</code>: the core values of the key,
-followed by the values of every qualified key with that name whose target
-matches the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model">selected model</a>, in ascending code point order of the key. A target
-matches when it equals, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑤">ASCII case-insensitively</a>, the model’s family name,
-its identifier or one of its aliases. The <a data-link-type="dfn" href="#description" id="ref-for-description②">description</a> given to the model is
-formed from these values.</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="selected-model">selected model</dfn> is the model that <a href="#model-matching">§ 8.2 Model matching</a>
+selects, or the configured model the user chose when a viewer lets the user
+override the document’s preference. When the user chose, model matching is not
+run and emits no code, but <code>mode-degraded</code> still applies
+(<a href="#rendering-modes">§ 9.1 Modes and the original image</a>). Once a model is selected, an interpreter forms the
+values the model receives for <code>prompt</code>, <code>style</code> and <code>avoid</code>: the core values
+of the key, followed by the values of every qualified key with that name whose
+target matches the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model②">selected model</a>, in ascending code point order of the
+key. A target matches when it equals, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑥">ASCII case-insensitively</a>, the
+model’s family name, its identifier or one of its aliases. The <a data-link-type="dfn" href="#model-description" id="ref-for-model-description①">model description</a> is formed from the <code>prompt</code> values; the <a data-link-type="dfn" href="#description" id="ref-for-description②">description</a> stays
+the core.</p>
+   <p>A target is a single key segment, so identifiers containing <code>/</code>, <code>.</code>, <code>:</code> or
+<code>@</code> can never be targets, and aliases exist only in each reader’s own
+configuration. Targets SHOULD therefore be family names from Appendix
+<a href="#families">Appendix B. Model family names</a>, and renderers that support a family listed there SHOULD use the
+name listed there. A target that is an alias or an identifier reaches only
+readers whose configuration uses that exact name.</p>
    <p>Qualified keys never select a model: <code>model</code> remains the ordered preference
 list, like a font stack, and the core values are the fallback that every model
-receives. Qualified keys whose target does not match the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model①">selected model</a> are unused,
+receives. Qualified keys whose target does not match the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model③">selected model</a> are unused,
 without a diagnostic.</p>
    <p>Because refinements follow the core, a model that reads only the start of its
 input, such as one with a 77-token text encoder, may never see them. Authors
 who refine for such a model keep the core short, with the essentials first.</p>
+   <p>A refinement can change what the image shows for that model, including
+removing the core subject through <code>avoid/&lt;target></code>. Viewers therefore show the
+refinements that apply wherever they show the core (<a href="#security-consent">§ 13.5 Consent, budgets and cancellation</a>,
+<a href="#security-ui">§ 13.8 Viewer UI hygiene</a>), and renderers never forward a qualified key except through
+this section (<a href="#security-forwarding">§ 13.4 Parameter forwarding</a>).</p>
    <p>An <a data-link-type="dfn" href="#image-encoder" id="ref-for-image-encoder①">image encoder</a> typically
 evolves the core first and then adds refinements for the models in its
 preference list.</p>
@@ -4083,7 +4140,7 @@ it produces pixels is outside this specification.</p>
     </ol>
    </div>
    <h3 class="heading settled" data-level="9.1" id="rendering-modes"><span class="secno">9.1. </span><span class="content">Modes and the original image</span><a class="self-link" href="#rendering-modes"></a></h3>
-   <p>The <a data-link-type="dfn" href="#original-image" id="ref-for-original-image③">original image</a> is the carrier’s own image (an <code>&lt;img></code> element’s
+   <p>The <a data-link-type="dfn" href="#original-image" id="ref-for-original-image④">original image</a> is the carrier’s own image (an <code>&lt;img></code> element’s
 <code>currentSrc</code> at render time) or, when present, the image named by <code>source</code>.
 <code>mode</code> states how the document relates to it; a viewer’s settings always take
 precedence over <code>mode</code> (<a href="#viewer-requirements">§ 11.5 Viewer requirements</a>).</p>
@@ -4122,11 +4179,11 @@ render (<a href="#rendering-prompt">§ 9.2 Assembling the model input</a>).
    <h3 class="heading settled" data-level="9.2" id="rendering-prompt"><span class="secno">9.2. </span><span class="content">Assembling the model input</span><a class="self-link" href="#rendering-prompt"></a></h3>
    <ul>
     <li data-md>
-     <p>A renderer MUST send the model the <a data-link-type="dfn" href="#description" id="ref-for-description③">description</a> it intends, explicitly,
-even when the document has no <code>prompt</code> (an empty description); a provider’s
+     <p>A renderer MUST send the model the <a data-link-type="dfn" href="#model-description" id="ref-for-model-description②">model description</a> it intends,
+explicitly, even when it is empty; a provider’s
 default prompt is never a JAI default.</p>
     <li data-md>
-     <p><code>style</code> and <code>avoid</code> values MUST reach the model, through a native input or
+     <p><code>style</code> and <code>avoid</code> values, merged as in <a href="#model-refinements">§ 8.3 Per-model refinements</a>, MUST reach the model, through a native input or
 as prompt text, or be reported with <code>unsupported-parameter</code>. <code>avoid</code> values
 are sent as the model’s negative prompt, joined with <code>, </code>, when it has one;
 when it has none the renderer MAY fold them into the prompt in wording the
@@ -4148,17 +4205,17 @@ renderers that involve a language model.</p>
 model.</p>
    </ul>
    <div class="note" role="note">
-The reference renderer assembles the prompt values joined with line feeds,
-then the style values as a comma-separated list, then, only when folding, a
+The reference renderer assembles the <a data-link-type="dfn" href="#model-description" id="ref-for-model-description③">model description</a>, then any
+personalisation text (<a href="#viewer-personalisation">§ 11.5.3 Personalisation</a>), then the style values as a comma-separated list, then, only when folding, a
 final line listing what to avoid. On models with a short token window, style
 terms belong early. Provider-side prompt rewriting is a user setting of the
 renderer, not a document matter.
 </div>
    <h3 class="heading settled" data-level="9.3" id="rendering-size"><span class="secno">9.3. </span><span class="content">Size and aspect</span><a class="self-link" href="#rendering-size"></a></h3>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="governing-ratio">governing ratio</dfn> of an element is the aspect ratio of its
-<a data-link-type="dfn" href="#original-image" id="ref-for-original-image④">original image</a> if it has one, and otherwise the ratio of an author-sized
-<a data-link-type="dfn" href="#layout-box" id="ref-for-layout-box">layout box</a> (both <code>width</code> and <code>height</code> attributes, or a CSS <code>aspect-ratio</code>)
-if there is one. A standalone document (a <code>.jai</code> file opened on its own) has no
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="governing-ratio">governing ratio</dfn> of an element is the ratio of its
+author-sized <a data-link-type="dfn" href="#layout-box" id="ref-for-layout-box">layout box</a> (both <code>width</code> and <code>height</code> attributes, or a CSS
+<code>aspect-ratio</code>) if there is one, and otherwise the aspect ratio of its
+<a data-link-type="dfn" href="#original-image" id="ref-for-original-image⑤">original image</a> if it has one: the shape the reader sees wins. A standalone document (a <code>.jai</code> file opened on its own) has no
 governing ratio.</p>
    <ul>
     <li data-md>
@@ -4168,8 +4225,10 @@ ratio differs when the two ratios differ by more than 1% (|ln(<em>a</em>/<em>g</
 0.01); <code>landscape</code> differs from a governing ratio that is not greater than
 1, and <code>portrait</code> from one that is not less than 1.</p>
     <li data-md>
-     <p>Otherwise the ratio is, in order: the interpreted <code>aspect</code>; the ratio of the
-<code>preview</code>; the renderer’s default.</p>
+     <p>Otherwise the ratio is, in order: the interpreted <code>aspect</code> (<code>landscape</code> as
+4:3 and <code>portrait</code> as 3:4 unless the renderer has a different default for
+the model, <a href="#key-aspect">§ 8.1.3 aspect</a>); the ratio of the <code>preview</code>; the renderer’s
+default.</p>
    </ul>
    <p><code>aspect</code> therefore shapes renders of unsized elements and standalone files, and
 records the author’s intent everywhere. On a page, the shape the author gave
@@ -4192,9 +4251,13 @@ written. A viewer MUST make those reports available to the user.</p>
 a refusal or content filter (including a blank or black frame), a timeout,
 or a cancellation. On failure a viewer MUST restore the original image, or in
 the absence of one the <code>preview</code> or the description, MUST NOT leave a
-permanent placeholder, and MUST NOT retry with an altered description. A
-refusal is a normal outcome: viewers MUST NOT rewrite the description, or let a
-document cause it to be rewritten, to evade a refusal.</p>
+permanent placeholder, and MUST NOT retry with altered model input (the
+description, refinements, <code>style</code>, <code>avoid</code>, the selected model or a
+personalisation). A refusal is a normal outcome: viewers MUST NOT rewrite the
+model input, or let a document cause it to be rewritten, to evade a refusal.
+After a failure, a render with a different model or personalisation happens
+only when the user explicitly requests it in viewer-owned UI, and a viewer
+MUST NOT suggest a personalisation as a remedy for a refusal.</p>
    <h2 class="heading settled" data-level="10" id="image-encoding"><span class="secno">10. </span><span class="content">Encoding images</span><a class="self-link" href="#image-encoding"></a></h2>
    <p><em>This section is informative.</em></p>
    <p>An <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="image-encoder">image encoder</dfn> produces a document from an existing image. It is
@@ -4219,8 +4282,11 @@ text, not from noise.</p>
      <p><strong>Compare.</strong> Each render is scored against the original. Useful measures
 are semantic (cosine similarity of image embeddings such as CLIP),
 perceptual (colour and layout distance between small thumbnails), and a
-vision model’s list of the visible differences. The fitness of a
-candidate is its mean score across the target models.</p>
+vision model’s rating of how closely each render matches. Embedding
+similarity saturates for any render of the right subject, so it cannot
+rank layout on its own. The fitness of a candidate blends its mean and its
+worst score across the target models, so that the core does not sacrifice
+one model.</p>
     <li data-md>
      <p><strong>Revise.</strong> The best candidates are kept, and new ones are written from
 them by addressing the listed differences, while keeping what already
@@ -4234,9 +4300,10 @@ only when it raises that model’s score.</p>
      <p><strong>Stop.</strong> On a budget, a time limit, or when scores reach a plateau, the
 encoder returns the best document found so far.</p>
    </ol>
-   <p>This is the loop a CELP speech coder runs, with a description in place of
-codebook indices and a generative model in place of the synthesis filter. The
-result is a code tuned to the decoders the author chose. Other models still
+   <p>This resembles the loop a CELP speech coder runs, with a description in place
+of codebook indices and a generative model in place of the synthesis filter,
+except that the decoders are a set of likely models rather than one known
+decoder. The result is a code tuned to the decoders the author chose. Other models still
 receive the core description, which remains a faithful general description of
 the image.</p>
    <p>The quality of an encoded document is bounded by its decoders: a model that
@@ -4245,27 +4312,32 @@ description is better. Scores measure resemblance, not truth; an encoder that
 optimises an embedding score alone can drift towards text that games the
 metric, which is why the comparison step also uses a reader of the images.</p>
    <h3 class="heading settled" data-level="10.2" id="image-encoding-output"><span class="secno">10.2. </span><span class="content">Output conventions</span><a class="self-link" href="#image-encoding-output"></a></h3>
-   <p>An image encoder is expected to produce a document that a person could have
-written by hand, so that it stays portable and editable:</p>
+   <p>These conventions keep encoded documents portable and editable, as if a
+person had written them by hand:</p>
    <ul>
     <li data-md>
      <p><code>prompt</code> holds the core description, complete enough for any model;
 <code>prompt/&lt;target></code> (and, rarely, <code>style/&lt;target></code> or <code>avoid/&lt;target></code>) holds
-the per-model refinements, with the target set to the model’s family name
-when only one target model is in that family, else to its alias or
-identifier.</p>
+the per-model refinements. Refinements are descriptions, never
+instructions (<a href="#rendering-prompt">§ 9.2 Assembling the model input</a>). The target is the model’s family
+name (<a href="#model-refinements">§ 8.3 Per-model refinements</a>); when two target models share a family, the
+encoder refines neither, or the family as a whole, rather than using names
+other readers do not have.</p>
     <li data-md>
      <p><code>model</code> lists the target models, best-scoring first, so that viewers that
 have several of them prefer the one that reproduced the image best.</p>
     <li data-md>
      <p><code>aspect</code> is the ratio of the original’s pixel dimensions, reduced to small
-whole numbers when that changes the ratio by less than 1%.</p>
+whole numbers when |ln(written/original)| &lt; 0.01 (so that it never
+differs from the original in the sense of <a href="#rendering-size">§ 9.3 Size and aspect</a>); a ratio
+beyond 100:1 or 1:100 is written as <code>100:1</code> or <code>1:100</code>, the limits of the
+grammar.</p>
     <li data-md>
      <p><code>seed</code> is left out unless the author wants exact reproduction with one
 model: a description tuned on one seed is still meant to work on any.</p>
     <li data-md>
      <p><code>preview</code>, when wanted, is a tiny placeholder derived from the original,
-within the bounds of <a href="#security-bounds">§ 13.1 Untrusted input and bounds</a>.</p>
+within the bounds of <a href="#key-preview">§ 8.1.8 preview</a>.</p>
     <li data-md>
      <p>Scores and the encoder’s settings, when recorded at all, go in the tool’s
 own vendor keys. Because vendor keys are part of the identity and add
@@ -4356,7 +4428,7 @@ a native user agent ignores them unless the user enables such a viewer.</p>
 this specification defines no <code>jai:</code> URL scheme (<code>jai-scheme-url</code>).</p>
    <h4 class="heading settled" data-level="11.1.1" id="html-discovery"><span class="secno">11.1.1. </span><span class="content">Discovery</span><a class="self-link" href="#html-discovery"></a></h4>
    <p>A viewer runs <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="discovery">discovery</dfn> over the <code>&lt;img></code> elements of a document in
-tree order, descending into open shadow roots and skipping closed ones, and
+tree order, descending into open shadow roots (an open shadow root’s tree is visited immediately after its host element and before the host’s children) and skipping closed ones, and
 re-runs it on the mutations HTML considers relevant for source selection
 (changes to <code>src</code>, <code>srcset</code>, <code>sizes</code>, <code>media</code>, <code>type</code>, and to the children of
 a <code>&lt;picture></code>), as well as on <code>data-jai</code> and <code>alt</code> changes. Discovery MUST NOT
@@ -4595,7 +4667,8 @@ previous value.</p>
     <li data-md>
      <p>MUST NOT alter <code>id</code>, <code>class</code>, event listeners, or link ancestors, and
 MUST keep the element in place where possible; a replacement element
-carries <code>role="img"</code> and the same accessible name and description.</p>
+carries <code>role="img"</code> and the same accessible name and description, plus
+the viewer’s state markings (<a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>).</p>
     <li data-md>
      <p>MUST record every state it changes and restore all of it on request and
 on failure, and MUST let the user compare the original and the render.</p>
@@ -4669,8 +4742,8 @@ the original image’s accessible description; it MUST NOT replace a
 human-written <code>alt</code> with it.</p>
    </ol>
    <p>Generated imagery carries no authority: logos, text and interface elements
-inside a render are model output. Viewers mark rendered images as such in
-viewer-owned UI and always offer the original.</p>
+inside a render are model output. A viewer MUST mark rendered images as
+generated in viewer-owned UI and always offer the original.</p>
    <p>The page’s own accessibility conformance is unaffected by what a user’s agent
 does at the user’s request; a conforming viewer is a user agent in the sense
 of the User Agent Accessibility Guidelines.</p>
@@ -4681,18 +4754,29 @@ adjustment, the text inside the image translated into the user’s language, or
 a mood. A personalised render:</p>
    <ol>
     <li data-md>
-     <p>MUST be marked as personalised, in viewer-owned UI and to assistive
-technology, alongside the AI-rendered state (<a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>);</p>
+     <p>MUST be marked as personalised in viewer-owned UI, and SHOULD be exposed as
+personalised to assistive technology. Any marking placed in the page MUST
+be a generic "personalised" state that does not name the personalisation;</p>
     <li data-md>
-     <p>MUST leave the document unchanged, and the viewer MUST keep a render
-without personalisation available to the user;</p>
+     <p>MUST leave the document unchanged, and the viewer MUST let the user request
+a render without personalisation (subject to <a href="#security-consent">§ 13.5 Consent, budgets and cancellation</a>) and
+show it in viewer-owned UI or in place; switching between the two is not a
+new replacement under <a href="#viewer-replacement">§ 11.5.1 Replacement</a> item 5;</p>
     <li data-md>
      <p>is reported like any render: the text sent to the model includes the
-personalisation (<a href="#rendering-prompt">§ 9.2 Assembling the model input</a>).</p>
+personalisation, after the <a data-link-type="dfn" href="#model-description" id="ref-for-model-description④">model description</a> (<a href="#rendering-prompt">§ 9.2 Assembling the model input</a>);</p>
+    <li data-md>
+     <p>is cached separately from unpersonalised renders (<a href="#document-identity">§ 6.5 Identity</a>).</p>
    </ol>
-   <p>Personalisation is a user setting. A document or a page MUST NOT be able to
-request or trigger it, and a viewer MUST NOT add a personalisation in order to
-get past a refusal (<a href="#rendering-failure">§ 9.5 Failure</a>).</p>
+   <p>Personalisation is a user setting, off by default and enabled only by an
+explicit user action in viewer-owned UI. A document or a page MUST NOT be able
+to request, enable or trigger it. A viewer MUST NOT add or change a
+personalisation to get past a refusal, and after a failure follows
+<a href="#rendering-failure">§ 9.5 Failure</a>. Because a replacement exposes the rendered pixels to
+the page, a personalised render can reveal that a personalisation is active
+and possibly what it is; viewers SHOULD let the user restrict personalisation
+to sites they trust and MUST NOT expose its settings to the page
+(<a href="#security-disclosure">§ 13.6 What leaves the browser</a>).</p>
    <h2 class="heading settled" data-level="12" id="extensibility"><span class="secno">12. </span><span class="content">Extensibility</span><a class="self-link" href="#extensibility"></a></h2>
    <ul>
     <li data-md>
@@ -4790,7 +4874,8 @@ endpoint, credentials, headers, webhooks or callbacks, change safety or
 moderation settings, or exceed the user’s configured cost policy (candidate
 count, steps, resolution, duration).</p>
    <p>A renderer MUST forward document parameters to a provider only through a
-mapping it controls: standard keys through its own semantics, and vendor keys only
+mapping it controls: standard keys through its own semantics, qualified keys
+only through <a href="#model-refinements">§ 8.3 Per-model refinements</a>, and vendor keys only
 into the provider’s model-input namespace, after validating each value
 against the provider’s published input schema and the user’s limits, and only
 when the key is not on the renderer’s per-provider deny-list of inputs that
@@ -4820,8 +4905,10 @@ with bounded concurrency; limits are visible to the user and reaching one
 stops rendering. Elements not displayed to the user MUST NOT be rendered.</p>
     <li data-md>
      <p>Consent and per-image actions are taken in viewer-owned UI from trusted
-user events and show the site, the full <code>prompt</code>, <code>avoid</code> and <code>style</code> text,
-any input image and its origin, and the configured renderer that matched.</p>
+user events and show the site; the full <code>prompt</code>, <code>style</code> and <code>avoid</code> text
+that the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model④">selected model</a> will receive after <a href="#model-refinements">§ 8.3 Per-model refinements</a>,
+with the refinements marked as such; any input image and its origin; and
+the configured renderer that matched.</p>
     <li data-md>
      <p>The user MUST be able to cancel a render; a viewer SHOULD cancel the
 provider job and set provider-side time limits where the API offers them,
@@ -4853,11 +4940,13 @@ allow-listed parameters and image bytes, never arbitrary URLs.</p>
 render is subject to the same per-site consent and the same user action as an
 uncached one, and viewers SHOULD prevent documents from distinguishing
 cross-site cache hits, by keying the cache on (identity, renderer
-configuration, top-level site) or by applying comparable delay.</p>
+configuration, selected model, personalisation, top-level site) or by applying
+comparable delay.</p>
    <h3 class="heading settled" data-level="13.8" id="security-ui"><span class="secno">13.8. </span><span class="content">Viewer UI hygiene</span><a class="self-link" href="#security-ui"></a></h3>
    <p>Viewer UI MUST render every document value as text, never as markup; SHOULD
 isolate bidirectional text (<code>unicode-bidi: plaintext</code> or <code>&lt;bdi></code>); MUST NOT
-silently truncate (<code>prompt</code>, <code>avoid</code>, <code>style</code> and <code>model</code> are fully
+silently truncate (<code>prompt</code>, <code>avoid</code>, <code>style</code>, <code>model</code> and every
+<a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified key</a> are fully
 available); SHOULD visualise or warn on control and invisible formatting
 characters; MUST show the top-level site; and MUST display the <em>configured</em>
 renderer that matched, never the document’s <code>model</code> string, as the thing that
@@ -4898,6 +4987,12 @@ They are normative: for the conditions described, a conforming interpreter
 emits exactly these codes, and the <code>interpret</code> fixtures compare the
 interpreter codes it emits as an exact multiset, ignoring any other codes.
 An interpreter that also validates MAY emit validator codes alongside them.</p>
+   </ul>
+   <p>A code that belongs to more than one class is counted once per condition,
+whichever classes an implementation combines; fixtures compare only the codes
+of the class under test. In validator conditions, "prompt" means the core key
+<code>prompt</code>: qualified <code>prompt/…</code> keys do not satisfy them.</p>
+   <ul>
     <li data-md>
      <p><em>Renderer</em> codes are emitted by renderers; a renderer MUST emit them when
 the condition occurs (<a href="#rendering-diagnostics">§ 9.4 Renderer diagnostics</a>).</p>
@@ -5005,19 +5100,19 @@ key.</p>
       <td><code>first-segment-assignment</code>
       <td>validator
       <td>the key concerned
-      <td>The first segment was an assignment to an unknown key and the document has no prompt.
+      <td>The first segment was an assignment to a key this specification does not define (not a standard key, not <code>prompt</code>, <code>style</code> or <code>avoid</code> with a target, not a dotted name) and the document has no prompt.
 
      <tr>
       <td><code>invalid-qualifier</code>
       <td>validator
       <td>the key concerned
-      <td>A <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified key</a> whose name is not <code>prompt</code>, <code>style</code> or <code>avoid</code>.
+      <td>A <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key⑤">qualified key</a> whose name is not <code>prompt</code>, <code>style</code> or <code>avoid</code>, vendor names included.
 
      <tr>
       <td><code>unknown-key</code>
       <td>validator
       <td>the key concerned
-      <td>An undotted key that this specification does not define.
+      <td>A key whose name (the part before any <code>/</code>) has no <code>.</code> and is not a standard key.
 
      <tr>
       <td><code>continuation-into-single-valued-key</code>
@@ -5329,7 +5424,8 @@ key.</p>
    <h3 class="heading settled" data-level="14.1" id="fixtures"><span class="secno">14.1. </span><span class="content">Conformance fixtures</span><a class="self-link" href="#fixtures"></a></h3>
    <p>Fixtures live under <code>tests/&lt;class>/&lt;class>.json</code> in the specification
 repository. Each file is a JSON object with <code>class</code>, <code>edition</code> and <code>cases</code>.</p>
-   <p>Every case has <code>id</code> (unique across the suite), <code>since</code> and <code>rationale</code>. A
+   <p>A top-level <code>note</code> member, where present, is an informative summary of the
+file. Every case has <code>id</code> (unique across the suite), <code>since</code> and <code>rationale</code>. A
 document is an object mapping each key to an array of strings. A diagnostic is
 written <code>code</code> or <code>code:key</code> (<a href="#diagnostics">§ 14 Diagnostics</a>). <code>diagnostics</code> is compared as
 an exact multiset. <code>advisories</code> lists validator codes that an implementation
@@ -5382,21 +5478,27 @@ fragment.</p>
      <p><code>document</code>; optional <code>catalog</code>, the configured models in configuration
 order, each <code>{id, aliases, family, image_input, default}</code> (<code>family</code> may be
 null; <code>default: true</code> marks the user’s default model, otherwise the first
-entry is the default); optional <code>families</code>, the renderer’s family list,
-mapping each family name to its spellings in order; optional
-<code>has_original</code> (boolean, default <code>false</code>: whether the carrier offers an
-original image); optional <code>governing_ratio</code> (number: the element’s
-<a data-link-type="dfn" href="#governing-ratio" id="ref-for-governing-ratio">governing ratio</a>, absent for none); optional <code>selected</code> (the <code>id</code> of
-a catalog entry the user chose, which is then the selected model instead
-of the result of <a href="#model-matching">§ 8.2 Model matching</a>) → <code>interpreted</code> and <code>diagnostics</code>. <code>interpreted</code> is
-compared only for the members present: <code>description</code> (string, after
-<a href="#model-refinements">§ 8.3 Per-model refinements</a>); <code>style</code> and <code>avoid</code> (arrays of strings, after
-<a href="#model-refinements">§ 8.3 Per-model refinements</a>); <code>aspect</code>
-(W/H as a number, <code>square</code> as 1, or the string <code>landscape</code> or
-<code>portrait</code>); <code>mode</code> (string, the interpreted value of the <code>mode</code> key);
-<code>strength</code> (number); <code>seed</code>, <code>source</code>, <code>preview</code> (string); <code>animate</code>
-(boolean); <code>model</code> (the <code>id</code> of the selected catalog entry); <code>ratio</code> (the ratio to render at under <a href="#rendering-size">§ 9.3 Size and aspect</a>, W/H
-as a number; <code>null</code> when the <code>preview</code> or the renderer’s default decides). <code>null</code> means absent or invalid. <code>diagnostics</code> is the exact
+entry is the default); when <code>catalog</code> is absent the interpreter is
+configured with no models (<a href="#model-matching">§ 8.2 Model matching</a>); optional <code>families</code>, the
+renderer’s family list, mapping each family name to its spellings, in
+member order; optional <code>has_original</code> (boolean, default <code>false</code>: whether
+the carrier offers an original image; it affects only the mode and model
+eligibility); optional <code>governing_ratio</code> (number: the element’s <a data-link-type="dfn" href="#governing-ratio" id="ref-for-governing-ratio">governing ratio</a>, absent for none; it is given only by this member); optional
+<code>selected</code> (the <code>id</code> of a catalog entry the user chose, which is then the
+<a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model⑤">selected model</a>; an id not in the catalog is ignored and model matching
+runs) → <code>interpreted</code> and <code>diagnostics</code>. <code>interpreted</code> is compared only
+for the members present: <code>description</code> (string: the <a data-link-type="dfn" href="#description" id="ref-for-description③">description</a>, core
+only); <code>style</code> and <code>avoid</code> (arrays of strings: the core values);
+<code>model_description</code> (string: the <a data-link-type="dfn" href="#model-description" id="ref-for-model-description⑤">model description</a>); <code>model_style</code> and
+<code>model_avoid</code> (arrays of strings: the values the selected model receives,
+<a href="#model-refinements">§ 8.3 Per-model refinements</a>); <code>aspect</code> (W/H as a number, <code>square</code> as 1, or the
+string <code>landscape</code> or <code>portrait</code>); <code>mode</code> (string, the interpreted value of
+the <code>mode</code> key, <code>generate</code> when absent or invalid); <code>strength</code> (number);
+<code>seed</code>, <code>source</code>, <code>preview</code> (string); <code>animate</code> (boolean, <code>false</code> when
+absent or invalid); <code>model</code> (the <code>id</code> of the selected catalog entry);
+<code>ratio</code> (the ratio to render at under <a href="#rendering-size">§ 9.3 Size and aspect</a>, W/H as a
+number; <code>null</code> when the <code>preview</code> or the renderer’s default decides).
+Otherwise <code>null</code> means absent or invalid. <code>diagnostics</code> is the exact
 multiset of interpreter codes.</p>
    </dl>
    <p>Fixtures are append-only from the first tagged edition: a changed expectation
@@ -5836,6 +5938,7 @@ the repository’s design record.</p>
    <li><a href="#key">key</a><span>, in § 3</span>
    <li><a href="#key-grammar">key grammar</a><span>, in § 4.1</span>
    <li><a href="#layout-box">layout box</a><span>, in § 3</span>
+   <li><a href="#model-description">model description</a><span>, in § 3</span>
    <li><a href="#original-image">original image</a><span>, in § 3</span>
    <li><a href="#parameter">parameter</a><span>, in § 3</span>
    <li><a href="#parameter-form">parameter form</a><span>, in § 11.3</span>
@@ -5899,6 +6002,8 @@ the repository’s design record.</p>
   <dl>
    <dt id="biblio-agent-skills">[AGENT-SKILLS]
    <dd><a href="https://agentskills.io/specification"><cite>Agent Skills specification</cite></a>. URL: <a href="https://agentskills.io/specification">https://agentskills.io/specification</a>
+   <dt id="biblio-blau-michaeli">[BLAU-MICHAELI]
+   <dd>Yochai Blau; Tomer Michaeli. <a href="https://proceedings.mlr.press/v97/blau19a.html"><cite>Rethinking Lossy Compression: The Rate-Distortion-Perception Tradeoff</cite></a>. URL: <a href="https://proceedings.mlr.press/v97/blau19a.html">https://proceedings.mlr.press/v97/blau19a.html</a>
    <dt id="biblio-blurhash">[BLURHASH]
    <dd>Dag Ågren. <a href="https://blurha.sh/"><cite>BlurHash</cite></a>. URL: <a href="https://blurha.sh/">https://blurha.sh/</a>
    <dt id="biblio-c2pa">[C2PA]
@@ -6111,7 +6216,7 @@ function parseHTML(markup) {
 {
 let dfnPanelData = {
 "advisory": {"dfnID":"advisory","dfnText":"advisory","external":false,"refSections":[{"refs":[{"id":"ref-for-advisory"}],"title":"8. Standard parameters"}],"url":"#advisory"},
-"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"5.5.1. Bare serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2464"}],"title":"8.3. Per-model refinements"}],"url":"#ascii-case-insensitive"},
+"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"5.5.1. Bare serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2464"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2465"}],"title":"8.3. Per-model refinements"}],"url":"#ascii-case-insensitive"},
 "ascii-lowercase": {"dfnID":"ascii-lowercase","dfnText":"ASCII lowercase","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-lowercase"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-ascii-lowercase\u2460"}],"title":"4.1. Keys"},{"refs":[{"id":"ref-for-ascii-lowercase\u2461"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-lowercase\u2462"}],"title":"6.3. Reading"}],"url":"#ascii-lowercase"},
 "assignment": {"dfnID":"assignment","dfnText":"assignment","external":false,"refSections":[],"url":"#assignment"},
 "assignment-pattern": {"dfnID":"assignment-pattern","dfnText":"assignment pattern","external":false,"refSections":[],"url":"#assignment-pattern"},
@@ -6130,7 +6235,7 @@ let dfnPanelData = {
 "continuation": {"dfnID":"continuation","dfnText":"continuation","external":false,"refSections":[],"url":"#continuation"},
 "decoder": {"dfnID":"decoder","dfnText":"decoder","external":false,"refSections":[{"refs":[{"id":"ref-for-decoder"}],"title":"5.5.1. Bare serialisation"}],"url":"#decoder"},
 "decoding-algorithm": {"dfnID":"decoding-algorithm","dfnText":"decoding algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-decoding-algorithm"}],"title":"11.2. Transport decoding"}],"url":"#decoding-algorithm"},
-"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-description\u2462"}],"title":"9.2. Assembling the model input"}],"url":"#description"},
+"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-description\u2462"}],"title":"14.1. Conformance fixtures"}],"url":"#description"},
 "diagnostic": {"dfnID":"diagnostic","dfnText":"diagnostic","external":false,"refSections":[],"url":"#diagnostic"},
 "discovery": {"dfnID":"discovery","dfnText":"discovery","external":false,"refSections":[],"url":"#discovery"},
 "document": {"dfnID":"document","dfnText":"document","external":false,"refSections":[{"refs":[{"id":"ref-for-document"}],"title":"4. Data model"}],"url":"#document"},
@@ -6152,7 +6257,8 @@ let dfnPanelData = {
 "key": {"dfnID":"key","dfnText":"key","external":false,"refSections":[{"refs":[{"id":"ref-for-key"}],"title":"4. Data model"},{"refs":[{"id":"ref-for-key\u2460"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-key\u2461"},{"id":"ref-for-key\u2462"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-key\u2463"}],"title":"6.1. Shape"}],"url":"#key"},
 "key-grammar": {"dfnID":"key-grammar","dfnText":"key grammar","external":false,"refSections":[{"refs":[{"id":"ref-for-key-grammar"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-key-grammar\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-key-grammar\u2461"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-key-grammar\u2462"}],"title":"6.3. Reading"}],"url":"#key-grammar"},
 "layout-box": {"dfnID":"layout-box","dfnText":"layout box","external":false,"refSections":[{"refs":[{"id":"ref-for-layout-box"}],"title":"9.3. Size and aspect"}],"url":"#layout-box"},
-"original-image": {"dfnID":"original-image","dfnText":"original image","external":false,"refSections":[{"refs":[{"id":"ref-for-original-image"}],"title":"6.5. Identity"},{"refs":[{"id":"ref-for-original-image\u2460"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-original-image\u2461"}],"title":"8.1.7. source"},{"refs":[{"id":"ref-for-original-image\u2462"}],"title":"9.1. Modes and the original image"},{"refs":[{"id":"ref-for-original-image\u2463"}],"title":"9.3. Size and aspect"}],"url":"#original-image"},
+"model-description": {"dfnID":"model-description","dfnText":"model description","external":false,"refSections":[{"refs":[{"id":"ref-for-model-description"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-model-description\u2460"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-model-description\u2461"},{"id":"ref-for-model-description\u2462"}],"title":"9.2. Assembling the model input"},{"refs":[{"id":"ref-for-model-description\u2463"}],"title":"11.5.3. Personalisation"},{"refs":[{"id":"ref-for-model-description\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#model-description"},
+"original-image": {"dfnID":"original-image","dfnText":"original image","external":false,"refSections":[{"refs":[{"id":"ref-for-original-image"}],"title":"6.5. Identity"},{"refs":[{"id":"ref-for-original-image\u2460"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-original-image\u2461"}],"title":"8.1.7. source"},{"refs":[{"id":"ref-for-original-image\u2462"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-original-image\u2463"}],"title":"9.1. Modes and the original image"},{"refs":[{"id":"ref-for-original-image\u2464"}],"title":"9.3. Size and aspect"}],"url":"#original-image"},
 "parameter": {"dfnID":"parameter","dfnText":"parameter","external":false,"refSections":[],"url":"#parameter"},
 "parameter-form": {"dfnID":"parameter-form","dfnText":"parameter form","external":false,"refSections":[],"url":"#parameter-form"},
 "parser": {"dfnID":"parser","dfnText":"parser","external":false,"refSections":[],"url":"#parser"},
@@ -6160,11 +6266,11 @@ let dfnPanelData = {
 "prose": {"dfnID":"prose","dfnText":"prose","external":false,"refSections":[],"url":"#prose"},
 "provider": {"dfnID":"provider","dfnText":"provider","external":false,"refSections":[],"url":"#provider"},
 "publisher": {"dfnID":"publisher","dfnText":"publisher","external":false,"refSections":[],"url":"#publisher"},
-"qualified-key": {"dfnID":"qualified-key","dfnText":"qualified key","external":false,"refSections":[{"refs":[{"id":"ref-for-qualified-key"}],"title":"5.2.1. Sharp edges"},{"refs":[{"id":"ref-for-qualified-key\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-qualified-key\u2461"}],"title":"6.4. Canonical JSON"},{"refs":[{"id":"ref-for-qualified-key\u2462"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-qualified-key\u2463"}],"title":"14. Diagnostics"}],"url":"#qualified-key"},
+"qualified-key": {"dfnID":"qualified-key","dfnText":"qualified key","external":false,"refSections":[{"refs":[{"id":"ref-for-qualified-key"}],"title":"5.2.1. Sharp edges"},{"refs":[{"id":"ref-for-qualified-key\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-qualified-key\u2461"}],"title":"6.4. Canonical JSON"},{"refs":[{"id":"ref-for-qualified-key\u2462"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-qualified-key\u2463"}],"title":"13.8. Viewer UI hygiene"},{"refs":[{"id":"ref-for-qualified-key\u2464"}],"title":"14. Diagnostics"}],"url":"#qualified-key"},
 "raw-segments": {"dfnID":"raw-segments","dfnText":"raw segments","external":false,"refSections":[],"url":"#raw-segments"},
 "renderer": {"dfnID":"renderer","dfnText":"renderer","external":false,"refSections":[],"url":"#renderer"},
 "scalar-value-string": {"dfnID":"scalar-value-string","dfnText":"scalar value string","external":false,"refSections":[{"refs":[{"id":"ref-for-scalar-value-string"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-scalar-value-string\u2460"}],"title":"6.4. Canonical JSON"}],"url":"#scalar-value-string"},
-"selected-model": {"dfnID":"selected-model","dfnText":"selected model","external":false,"refSections":[{"refs":[{"id":"ref-for-selected-model"},{"id":"ref-for-selected-model\u2460"}],"title":"8.3. Per-model refinements"}],"url":"#selected-model"},
+"selected-model": {"dfnID":"selected-model","dfnText":"selected model","external":false,"refSections":[{"refs":[{"id":"ref-for-selected-model"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-selected-model\u2460"}],"title":"6.5. Identity"},{"refs":[{"id":"ref-for-selected-model\u2461"},{"id":"ref-for-selected-model\u2462"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-selected-model\u2463"}],"title":"13.5. Consent, budgets and cancellation"},{"refs":[{"id":"ref-for-selected-model\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#selected-model"},
 "serialiser": {"dfnID":"serialiser","dfnText":"serialiser","external":false,"refSections":[{"refs":[{"id":"ref-for-serialiser"}],"title":"5.5. Canonical text serialisation"}],"url":"#serialiser"},
 "standard-key": {"dfnID":"standard-key","dfnText":"standard key","external":false,"refSections":[{"refs":[{"id":"ref-for-standard-key"}],"title":"8. Standard parameters"}],"url":"#standard-key"},
 "text-form": {"dfnID":"text-form","dfnText":"text form","external":false,"refSections":[{"refs":[{"id":"ref-for-text-form"}],"title":"4.1. Keys"}],"url":"#text-form"},
@@ -6588,6 +6694,7 @@ let refsData = {
 "#key": {"displayText":"key","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"key","type":"dfn","url":"#key"},
 "#key-grammar": {"displayText":"key grammar","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"key grammar","type":"dfn","url":"#key-grammar"},
 "#layout-box": {"displayText":"layout box","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"layout box","type":"dfn","url":"#layout-box"},
+"#model-description": {"displayText":"model description","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"model description","type":"dfn","url":"#model-description"},
 "#original-image": {"displayText":"original image","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"original image","type":"dfn","url":"#original-image"},
 "#qualified-key": {"displayText":"qualified key","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"qualified key","type":"dfn","url":"#qualified-key"},
 "#scalar-value-string": {"displayText":"scalar value string","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"scalar value string","type":"dfn","url":"#scalar-value-string"},

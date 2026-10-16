@@ -1607,6 +1607,51 @@
     "invalid-qualifier"
    ],
    "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-first-segment-ok",
+   "rationale": "prompt/flux= as the first segment is a defined key, not a mistaken assignment.",
+   "input": "prompt/flux=A castle",
+   "document": {
+    "prompt/flux": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "no_advisories": [
+    "first-segment-assignment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-newline",
+   "rationale": "A new line does not start a parameter, qualified or not.",
+   "input": "A castle\nprompt/flux=x",
+   "document": {
+    "prompt": [
+     "A castle\nprompt/flux=x"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "newline-assignment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-confusable",
+   "rationale": "A full-width semicolon before a qualified key is prose.",
+   "input": "A castle；prompt/flux=x",
+   "document": {
+    "prompt": [
+     "A castle；prompt/flux=x"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "confusable-delimiter"
+   ],
+   "since": "1.0-draft"
   }
  ]
 }

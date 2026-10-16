@@ -639,6 +639,41 @@
     "attribute-split"
    ],
    "since": "1.0-draft"
+  },
+  {
+   "id": "html-shadow-before-light-children",
+   "rationale": "An open shadow root's tree is visited right after its host, before the host's children.",
+   "html": "<div><template shadowrootmode=\"open\"><img src=\"b.png\" data-jai=\"B\"></template><img src=\"c.png\" data-jai=\"C\"></div><img src=\"a.png\" data-jai=\"A\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "B"
+      ]
+     },
+     "diagnostics": []
+    },
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "C"
+      ]
+     },
+     "diagnostics": []
+    },
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
   }
  ]
 }

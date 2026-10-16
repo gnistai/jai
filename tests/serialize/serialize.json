@@ -644,6 +644,77 @@
    "json": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"a\",\"style-x\":\"b\",\"style.x\":\"d\",\"style/a\":\"c\"}",
    "identity": "c189d45ccf8cd9445b7d4e8af0163679aec04584d60dabd40c8e44784ab2dec7",
    "since": "1.0-draft"
+  },
+  {
+   "id": "ser-qualified-escape-semicolon",
+   "rationale": "A ; before word/word= is escaped.",
+   "document": {
+    "prompt": [
+     "A ratio; a/b=c"
+    ]
+   },
+   "text": "jai:A ratio\\; a/b=c",
+   "json": "{\"jai\":1,\"prompt\":\"A ratio; a/b=c\"}",
+   "identity": "660c552c0129d1783a5a6649d1bcdaf5b61c7dbe2f81fbe42c6659114a356042",
+   "bare": "A ratio\\; a/b=c",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-qualified-assignment-first",
+   "rationale": "A leading word/word= forces prompt=.",
+   "document": {
+    "prompt": [
+     "1/2=half on a chalkboard"
+    ]
+   },
+   "text": "jai:prompt=1/2=half on a chalkboard",
+   "json": "{\"jai\":1,\"prompt\":\"1/2=half on a chalkboard\"}",
+   "identity": "04feb0bb79abf6f55dc03106303e5ca1b57f6d28201ca5f6b19d73f9ed5e41fa",
+   "bare": "prompt=1/2=half on a chalkboard",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-qualified-escape-case",
+   "rationale": "Keys match case-insensitively, with whitespace before =.",
+   "document": {
+    "prompt": [
+     "x; Prompt/FLUX = y"
+    ]
+   },
+   "text": "jai:x\\; Prompt/FLUX = y",
+   "json": "{\"jai\":1,\"prompt\":\"x; Prompt/FLUX = y\"}",
+   "identity": "9b0605a0e719899ce9f82605da25c9f5ba32b6024db725f78a7ac8712afe2576",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-qualified-escape-vendor",
+   "rationale": "Dotted names with a target also count.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "style": [
+     "a;acme.x/flux=b"
+    ]
+   },
+   "text": "jai:x;style=a\\;acme.x/flux=b",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"a;acme.x/flux=b\"}",
+   "identity": "735b5789111c959c35090a9757f48d9963f7280ccf7177591ee965067c8abaac",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-url-ampersand",
+   "rationale": "The canonical URL form encodes & so that HTML attributes cannot decode character references in it.",
+   "document": {
+    "prompt": [
+     "Tom &amp; Jerry"
+    ]
+   },
+   "text": "jai:Tom &amp; Jerry",
+   "json": "{\"jai\":1,\"prompt\":\"Tom &amp; Jerry\"}",
+   "identity": "22d92a16a991b4679ba15bcf29e1478d6448b725154230746ad1cfe7fe7b8fd1",
+   "url": "data:image/jai,Tom%20%26amp;%20Jerry",
+   "since": "1.0-draft"
   }
  ]
 }

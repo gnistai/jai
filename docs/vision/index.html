@@ -126,7 +126,7 @@
     <div class="eyebrow">How it works</div>
     <h2>Encoding and decoding</h2>
     <div class="prose">
-      <p><strong>Decoding</strong> is the generative model turning the description back into pixels. <strong>Encoding</strong> is the harder half, and it works by analysis by synthesis: describe the image, render the description with the models you want to support, compare each render with the original, revise the words, repeat. The loop stops when the renders match as well as they are going to, or when the time or money set aside runs out.</p>
+      <p><strong>Decoding</strong> is the generative model turning the description back into pixels. <strong>Encoding</strong> is the harder half, and it works by analysis by synthesis: describe the image, render the description with the models you want to support, compare each render with the original, revise the words, repeat. The loop stops when the renders match as well as they are going to, or when the time or money set aside runs out. The <a href="../examples/#encoding">Earthrise example</a> shows one run of the reference encoder: a 64 KB photograph became a 465-byte document.</p>
       <p>Like a font stack in CSS, a document can name the models it was tuned for, in order of preference. It carries a core description that every model understands, plus small refinements for particular models, so each one reconstructs the image as well as it can and any other model still gets the core.</p>
     </div>
     <figure class="figure" role="group" aria-labelledby="loop-cap">

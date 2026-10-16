@@ -56,7 +56,8 @@ jai:<description>;key=value;key=value
   `jai:A wizard in a doorway; behind him, a dragon sleeps;style=ink`.
 - After every unescaped `;`, the text up to the next `=` is checked. If,
   ignoring the spaces around it and letter case, it is a single word of
-  letters, digits, `_`, `-` and `.`, the segment is a parameter. `; E=mc2`,
+  letters, digits, `_`, `-` and `.`, optionally followed by `/` and another
+  such word, the segment is a parameter. `; E=mc2`,
   `; x = 3`, `;lang=en` and `; Style = minimal` are all parameters.
   `; my key=value` and `; see https://a.example/?q=1` are not.
 - Quotation marks protect nothing: `"x=1; y=2"` still splits at the `;`.
@@ -91,17 +92,22 @@ the description is all the renderer gets.
 
 `prompt`, `style` and `avoid` can carry a model target after a slash:
 `prompt/flux=…`, `style/sdxl=…`. A renderer appends those values to the core
-values only when its selected model's family, identifier or alias matches the
-target. Write the core first, complete enough for any model, then add short
-per-model tweaks only when you know a model needs them:
+values only when its selected model's family matches the target. Use family
+names such as `flux`, `sdxl`, `imagen`, `dall-e` as targets; aliases and
+provider identifiers reach almost nobody. Write the core first, complete enough
+for any model, then add short per-model tweaks only when you know a model needs
+them. A refinement describes the picture, like the core; it never instructs
+("Ensure…", "Make…"):
 
 ```
 jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;model=flux;model=sdxl
 ```
 
 Targets never choose the model; `model=` does. Other keys take no target.
-Because `word/word=` after a semicolon is a parameter, write `\=` when prose
-contains one: `a/b\=c`.
+Because `word/word=` after a semicolon or at the very start is a parameter,
+write `\=` when prose contains one (`a/b\=c`), or start the description with
+`prompt=`. A refinement can change the picture for that model, so viewers show
+it alongside the core.
 
 Other undotted keys are reserved: do not invent `lighting=` or `mood=`; put
 those in the description. Tool-specific settings use a dotted vendor key such

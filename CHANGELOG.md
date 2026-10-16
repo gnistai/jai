@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.0-draft, review round 3 — 2026-10-16
+
+An independent Go implementation written from the specification alone
+(492/492 fixtures), an adversarial review of the newest sections, and a
+security and accessibility review of the tools. Fixes:
+
+- *Description* is the core text readers see; the new *model description* is
+  what one model receives after per-model refinements. Interpret fixtures gain
+  `model_description`, `model_style` and `model_avoid`; `description`,
+  `style` and `avoid` stay the core.
+- Consent and UI hygiene cover refinements; renderers forward qualified keys
+  only through per-model refinements; targets SHOULD be family names.
+- Refusals: no retry with altered model input (refinements, model or
+  personalisation) unless the user asks in viewer UI. Personalisation is off
+  by default, never triggered by a document or page, marked generically in the
+  page, and cached separately; render cache keys include the selected model
+  and any personalisation. Marking renders as generated is now a MUST.
+- The governing ratio is the author-sized layout box first, then the
+  original's ratio, matching the replacement rules.
+- The canonical URL form encodes `&`; the canonical JSON note includes the
+  `prompt/…` members; a leading U+FEFF is not JSON; the gzip rejection list
+  names CM and truncation; `animate` defaults to false; binary64 arithmetic is
+  stated; an interpreter with no models does no matching; a user-selected
+  model suppresses matching codes; a valid `source` is an input image for
+  eligibility; shadow-root discovery order is defined; validator definitions
+  for qualified keys are precise; shared codes count once.
+- Motivation: corrected the JPEG comparison, the rate–distortion framing, the
+  CELP analogy, the provenance claim and the bandwidth claims.
+- Fixtures: 23 new cases (515 total), including escaping before qualified keys
+  that a mutant serialiser got wrong while passing the old suite; the fuzz
+  alphabet now includes qualified keys.
+
 ## 1.0-draft, encoding images — 2026-10-16
 
 - New informative section *Encoding images*: analysis by synthesis (describe,

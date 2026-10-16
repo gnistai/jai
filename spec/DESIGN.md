@@ -241,8 +241,13 @@ qualified values are appended after the core. Decisions, with the owner:
   as `aspect` or `seed` would need override rather than append semantics and
   would let one document carry different images per model. Other keys with a
   target parse and round-trip but draw `invalid-qualifier`.
-- Append, not replace: the core never disappears, so a refinement cannot turn
-  the document into a different image for one model.
+- Append, not replace: the core never disappears from the model input. A
+  refinement can still change the picture for one model (an `avoid/<target>`
+  can even remove the core subject), which is why review round 3 made viewers
+  show refinements wherever they show the core, and split *description*
+  (core, for readers) from *model description* (what one model receives).
+- Targets should be family names: identifiers rarely fit one key segment and
+  aliases are local configuration (review round 3).
 - Cost: `; a/b=c` in prose now parses as an assignment (sharp edge 5). The
   same edge already existed for `; a=c`, and the escape is the same.
 

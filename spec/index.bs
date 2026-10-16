@@ -37,6 +37,12 @@ Text Macro: EDITION 1.0-draft
     "href": "https://iptc.org/standards/photo-metadata/iptc-standard/",
     "publisher": "IPTC"
     },
+    "BLAU-MICHAELI": {
+    "title": "Rethinking Lossy Compression: The Rate-Distortion-Perception Tradeoff",
+    "href": "https://proceedings.mlr.press/v97/blau19a.html",
+    "authors": ["Yochai Blau", "Tomer Michaeli"],
+    "publisher": "ICML 2019"
+    },
     "C2PA": {
     "title": "C2PA Technical Specification",
     "href": "https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html",
@@ -59,9 +65,9 @@ table.keys td:first-child, table.codes td:first-child { white-space: nowrap; fon
 A JAI document is an image compressed into words: a natural-language
 description and, optionally, a few rendering parameters, from which a
 generative model reconstructs the picture. The description is the code; the
-model is the decoder. Two decoders produce different pixels, but the same
-image in meaning and appearance, in the way two JPEG decoders produce slightly
-different pixels from the same file, only much further along the same curve.
+model is the decoder. Unlike two JPEG decoders, two generative decoders can
+produce visibly different pictures from the same document; a good description
+narrows the difference to what the description leaves open.
 
 The simplest JAI document is a sentence:
 
@@ -102,19 +108,23 @@ File form: the JSON above as a single gzip member, in a file named `castle.jai`,
 
 Every image format trades bits for distortion. JPEG discards detail the eye
 will not miss; JAI keeps only what a person would say about the picture and
-discards the rest. In the terms of rate–distortion theory it sits at the far
-low-rate end of the same curve: a typical document is 50 to 500 bytes for an
-image of any resolution, against tens of kilobytes to megabytes for a raster,
-and its distortion is measured in meaning and appearance (does the result show
-the same things, arranged and lit the same way) rather than in pixel error.
+discards the rest. In rate–distortion terms it operates at a very low rate
+under a semantic rather than a pixel distortion measure: a typical document is
+50 to 500 bytes for an image of any resolution, against tens of kilobytes to
+megabytes for a raster, and its distortion is judged in meaning and appearance
+(does the result show the same things, arranged and lit the same way). Like
+other generative codecs, it trades pixel fidelity for realism, the
+rate–distortion–perception trade-off [[BLAU-MICHAELI]].
 
 This works because the decoder carries a prior. A generative model has
 learned what harbours, castles and dusk light look like, so the code only has
 to say which ones, where and how. Speech coding has relied on the same idea for
 decades: a vocoder transmits the parameters of a model of the voice instead of
-the waveform, and a CELP encoder finds those parameters by running the decoder
-inside the encoder and keeping what sounds closest. JAI encoding is the same
-*analysis by synthesis* ([[#image-encoding]]): an [=image encoder=] describes an image, renders the
+the waveform, and a CELP encoder chooses its excitation by running the decoder
+inside the encoder and keeping the closest result. JAI encoding uses the same
+*analysis by synthesis* ([[#image-encoding]]), with one difference: a CELP
+encoder knows the decoder exactly, while a JAI encoder does not know which
+model the reader will use, so it optimises for a set of likely decoders: an [=image encoder=] describes an image, renders the
 description with the target models, compares the renders with the original,
 and revises the description until they match as closely as time and budget
 allow. A document can carry a core description shared by all models plus small
@@ -129,16 +139,19 @@ decorative image, a few precise paragraphs for one whose look matters.
 JAI is designed for a world where generating an image is cheap and local, and
 moving one is not.
 
-- **Links with little bandwidth and enough compute.** Spacecraft and
-    deep-space links, ships, aircraft, satellite connections with data caps,
-    rural networks, disaster zones, and text-only channels such as SMS, packet
-    radio and mesh networks can carry a sentence where they cannot carry a
-    photograph. A receiver with a GPU reconstructs the picture.
+- **Links with little bandwidth and enough compute.** Ships, aircraft,
+    spacecraft crews, satellite connections with data caps, rural networks,
+    disaster zones, and text-only channels such as SMS, packet radio and mesh
+    networks can carry a sentence where they cannot carry a photograph. A
+    receiver with a GPU reconstructs the picture. This suits illustrative and
+    situational images, not measurements: where the pixels are the data, send
+    the pixels ([[#intro-scope]]).
 - **Local generation.** Image generation is moving onto commodity GPUs and
-    phones, at well under a second per image. When decoding is local and free,
-    a browser can choose the JAI source in a `<picture>` element and never
-    download the raster ([[#html-carriers]]); pages get lighter with no change
-    to their markup.
+    recent phones, in seconds or less with distilled models. If browsers come
+    to decode `image/jai` natively, a browser could choose the JAI source in a
+    `<picture>` element and fetch the raster only when rendering fails
+    ([[#html-carriers]]), so pages get lighter with no change to their markup.
+    Today's viewers still download the raster ([[#viewer-requirements]]).
 - **An audience of one.** Because the reader's own decoder produces the
     pixels, the reader can ask for them differently: adapted to their culture,
     softened for sensitive content, adjusted for their eyesight, in the
@@ -154,8 +167,10 @@ moving one is not.
     own text alternative for screen readers and text-only browsers; and
     language models and agents can read and write images in the medium they
     already use.
-- **Honest provenance.** A JAI image is generated by construction, so it
-    cannot be mistaken for a photograph of something that happened.
+- **Declared provenance.** A JAI document says it is a description, and
+    renderers label their output as generated ([[#security-provenance]]). The
+    format never claims that a render records an event, even when the
+    description was encoded from a photograph.
 
 Today, rendering usually runs on hosted providers through an API key. That is
 the stage this edition is published in: good for demonstrations and for
@@ -306,7 +321,13 @@ edition.
 :: The values of the key `prompt`: the description of the image.
 : <dfn export>description</dfn>
 :: The textual rendering of a document: its prompt values joined with U+000A
-    LINE FEED, in order.
+    LINE FEED, in order. Qualified keys are not part of it. It is what readers
+    see as fallback text and accessible names.
+: <dfn export>model description</dfn>
+:: What one model receives: the description followed by the values of the
+    qualified `prompt` keys that match the [=selected model=], joined with
+    U+000A LINE FEED ([[#model-refinements]]). Without matching refinements it
+    equals the description.
 : <dfn export>text form</dfn>
 :: The human-readable serialisation of a document ([[#text]]):
     `jai:A magical castle;style=anime`.
@@ -402,9 +423,9 @@ starts with a lowercase ASCII letter or digit and continues with lowercase
 ASCII letters, digits, `_` and `-`. A key with a target, such as
 `prompt/flux`, is a <dfn export>qualified key</dfn>: it holds refinements for
 the models that target names ([[#model-refinements]]). Only the names
-`prompt`, `style` and `avoid` take a target in this edition; parsers and
-serialisers keep other qualified keys unchanged, and validators report them
-with `invalid-qualifier`.
+`prompt`, `style` and `avoid` take a target in this edition; parsers, JSON
+readers and serialisers keep other qualified keys unchanged, and validators
+report them with `invalid-qualifier`.
 
 Keys are compared for equality after [=ASCII lowercase=] conversion: readers
 convert every key they receive to ASCII lowercase before anything else, so a
@@ -523,7 +544,7 @@ A `\` that does not begin an `escape` is an ordinary character.
 <tr><td><code>A castle ; style = anime ;</code><td>prompt = <code>A castle</code>; style = <code>anime</code>
 <tr><td><code>source=data:image/webp;base64,UklGRkI=;style=anime</code><td>source = <code>data:image/webp;base64,UklGRkI=</code>; style = <code>anime</code> (<code>base64,…</code> is not an assignment)
 <tr><td><code>; my key=value</code><td>prompt = <code>my key=value</code> (<code>my key</code> contains a space and is not a key; the leading <code>;</code> yields <code>empty-segment</code>)
-<tr><td><code>http://example.org/?a=b</code><td>prompt = <code>http://example.org/?a=b</code> (<code>:</code> and <code>/</code> are not key characters)
+<tr><td><code>http://example.org/?a=b</code><td>prompt = <code>http://example.org/?a=b</code> (<code>:</code> and <code>?</code> are not key characters)
 <tr><td><code>Draw a graph\; y=2x</code><td>prompt = <code>Draw a graph; y=2x</code>
 <tr><td><code>E\=mc2 explained</code><td>prompt = <code>E=mc2 explained</code>
 </table>
@@ -551,8 +572,10 @@ knowing. Validators report each of them ([[#diagnostics]]).
     semicolons (`data:image/svg+xml\;charset=utf-8,…`); the canonical
     serialiser does so. A plain `data:…;base64,` URL needs nothing, because
     `base64,…` is not an assignment.
-5. A word, `/`, a word and `=` after a semicolon is a [=qualified key=]:
-    `A ratio; a/b=c` assigns `c` to `a/b`. Write `a/b\=c` to keep it as text.
+5. A word (which may contain `.`), `/`, a word and `=`, at the start of the
+    text or after a semicolon, is a [=qualified key=]: `A ratio; a/b=c`
+    assigns `c` to `a/b`, and `1/2=half on a chalkboard` assigns to `1/2`
+    and leaves no prompt. Write `a/b\=c`, or start with `prompt=`.
 
 ## Escaping arbitrary text ## {#text-escaping}
 
@@ -695,7 +718,8 @@ not satisfy the data model (keys not lowercase, values not normalised).
     delimiter after it);
 - a `;` that is the first code point of *v*, or that is followed by optional
     JAI whitespace and then either the end of *v*, another `;`, or a [=key=]
-    followed by optional JAI whitespace and `=`.
+    (matched [=ASCII case-insensitively=]) followed by optional JAI whitespace
+    and `=`.
 
 Each decision looks at the original *v*, never at text already escaped. As an
 ECMAScript regular expression, with `WS` standing for the [=JAI whitespace=]
@@ -824,8 +848,11 @@ The text form carries no marker; its prefix plays that role.
 The <dfn export>JSON reading algorithm</dfn> takes a JSON text and a flag *in JAI
 context* and returns a document and diagnostics.
 
-1. Parse the text as JSON [[!RFC8259]]. Texts that are not valid RFC 8259 JSON
-    (including `NaN`, `Infinity`, comments and trailing commas), and texts
+1. Parse the text as JSON [[!RFC8259]]. A leading U+FEFF is not JSON
+    whitespace and is not skipped (decoders remove byte order marks before
+    calling the reader, [[#decoding]]). Texts that are not valid RFC 8259 JSON
+    (including `NaN`, `Infinity`, comments, trailing commas and a leading
+    U+FEFF), and texts
     containing a number whose value, rounded to the nearest IEEE 754 binary64
     value, is infinite (for example `1e400`) wherever it occurs, the `jai`
     member included, yield the empty document with the diagnostic
@@ -912,11 +939,14 @@ Because values are [=scalar value strings=], canonical JSON never contains
 surrogate escapes.
 
 <div class=note>
-This is RFC 8785 (the JSON Canonicalization Scheme) with one deviation: the
-members `jai` and `prompt` come first, so that every file begins with the
-bytes `{"jai":1` followed by `,` or `}` after decompression and a reader can
-see the description first. An implementation can run a JCS library and move those two members to
-the front; the string and number rules are identical. In JavaScript the
+This is RFC 8785 (the JSON Canonicalization Scheme) with one deviation in
+member order: `jai`, then `prompt`, then the qualified `prompt/…` members come
+first, so that every file begins with the bytes `{"jai":1` followed by `,` or
+`}` after decompression and a reader can see the description first. An
+implementation can run a JCS library and then move `jai`, `prompt` and the
+`prompt/…` members, in that order, to the front; the string and number rules
+are identical. Fixture `ser-qualified-order` catches the common mistake of
+moving only `jai` and `prompt`. In JavaScript the
 canonical form is `JSON.stringify` of an object built in this member order;
 in Python, `json.dumps(obj, ensure_ascii=False, separators=(',', ':'))` with
 members inserted in order; Go callers need `SetEscapeHTML(false)`.
@@ -942,7 +972,8 @@ carrier delivered the document, and whatever whitespace, key case or key
 order the author used.
 
 Identity names a document, not a render. A render cache key MUST include,
-besides the identity, the renderer and its configuration, and the identity of
+besides the identity, the renderer and its configuration, the [=selected
+model=], any personalisation ([[#viewer-personalisation]]), and the identity of
 every image input the render used (an explicit `source` or the carrier's
 [=original image=]). See also [[#security-cache]].
 
@@ -959,6 +990,8 @@ content is the [=canonical JSON form=]. A `.jai` file contains the file form.
 
 Decoders MUST reject, as described in [[#decoding]]:
 
+- a header shorter than 10 bytes, a compression method (CM) other than 8, or
+    a member truncated anywhere (header fields, deflate data or trailer);
 - a member whose reserved FLG bits are set;
 - a CRC32 or ISIZE that does not match the decompressed content;
 - any bytes after the end of the member, including a second member;
@@ -982,7 +1015,11 @@ Decoders MUST reject, as described in [[#decoding]]:
     distance symbol 30 or 31; a distance greater than the number of bytes output
     so far; or a stream that ends before its final block ends. These are exactly
     the streams zlib's inflate rejects, so `DecompressionStream`, Node's `zlib`
-    and Python's `zlib` can be used unmodified.
+    and Python's `zlib` can be used unmodified for the deflate data. Header and
+    trailer checks are not always included: Go's `compress/gzip`, for
+    example, accepts reserved FLG bits, second members and trailing bytes, so
+    Go implementations parse the header themselves, inflate with
+    `compress/flate`, and then check the trailer and the end of input.
 
 The header fields FEXTRA, FNAME, FCOMMENT, MTIME, XFL and OS are read and
 ignored; FNAME is never used as a file name. Byte equality of two `.jai`
@@ -1130,10 +1167,11 @@ When a serialiser or encoder writes the text form or the JSON form into the body
 `data:image/jai,` URL it MUST percent-encode every byte of the UTF-8 encoding
 that is a C0 control, U+007F, an ASCII whitespace character (U+0020 as `%20`,
 U+000A as `%0A`, U+0009 as `%09`), `%` (as `%25`), `#` (as `%23`), `"` (as `%22`), `'` (as `%27`), `<` (as `%3C`),
-`>` (as `%3E`), and a `,`
+`>` (as `%3E`), `&` (as `%26`, because HTML decodes character references in
+attribute values), and a `,`
 that would be the last byte of the URL (as `%2C`); a body beginning with `/`
 is written with `%2F`. Every other byte, including `;`, `=`, `,`, `{`, `}`, `?`, `/`,
-`&`, `+` and non-ASCII, MAY remain literal. The
+`+` and non-ASCII, MAY remain literal. The
 <dfn export>canonical URL form</dfn> of a document is `data:image/jai,` followed by
 its [=bare serialisation=] so encoded, so that the canonical URL form can be
 placed in any quoted HTML attribute without further escaping.
@@ -1203,14 +1241,19 @@ appear in the document: no quotation mark or full stop is removed, and
 [[#model-matching]] receives the document's values.
 
 Interpreters MUST NOT use lenient or locale-aware number parsers; the
-grammars below are ASCII and exact. Non-ASCII digits, full-width characters
+grammars below are ASCII and exact. Each decimal number is converted to the
+nearest IEEE 754 binary64 value, and arithmetic on it (a percentage divided by
+100, a ratio W/H) is binary64 arithmetic: `33.3%` is 0.33299999999999996 and
+`0.1:0.3` is 0.33333333333333337. Fixtures compare these numbers exactly. Non-ASCII digits, full-width characters
 and the decimal comma are invalid (an authoring tool offers `0,6` → `0.6`,
 `１６：９` → `16:9`).
 
 ### `prompt`, `style`, `avoid` ### {#key-text}
 
 Any value is valid. The interpreted prompt is the [=description=]: the values
-joined with a single U+000A in order. `prompt=a;prompt=b` renders as the same
+joined with a single U+000A in order. What a particular model receives is the
+[=model description=] and the merged `style` and `avoid` values of
+[[#model-refinements]]. `prompt=a;prompt=b` renders as the same
 input as a single value `a` U+000A `b` but is a different document. Renderers
 MAY normalise whitespace for their model.
 
@@ -1271,7 +1314,8 @@ with `adjusted-value`. 0 means the source is unchanged, 1 means the source
 constrains nothing. Renderers map this linearly onto the model's own control;
 a control that measures image influence rather than departure takes
 1 − strength. `strength` has an effect only in `transform` mode; validators
-report `strength-without-transform` otherwise.
+report `strength-without-transform` otherwise, and interpreters report
+nothing (`ignored-value` is reserved for `aspect` and `source`).
 
 ### `seed` ### {#key-seed}
 
@@ -1330,7 +1374,7 @@ them as prefixed values without affecting this edition's viewers.
 ASCII case-insensitively. True requests a looping animated image resource
 (GIF, APNG, animated WebP or animated AVIF) of renderer-chosen length that is
 displayable wherever a still image is; video containers are not JAI render
-results. A renderer that cannot produce one renders a still frame and reports
+results. Absent or invalid: false. A renderer that cannot produce one renders a still frame and reports
 `unsupported-parameter`. Viewer obligations for motion are in
 [[#viewer-accessibility]].
 
@@ -1361,7 +1405,13 @@ part ([[#security-selectors]]).
 2. If no value selected a model, including when the document has no `model`
     value, use the user's default model and report `no-matching-model`.
 3. A model is *eligible* if it is configured and enabled and, in `transform`
-    mode with an input image, accepts an image input. Step 2 uses the user's
+    mode with an input image, accepts an image input. An input image exists
+    when the carrier offers an [=original image=] or the interpreted `source`
+    is valid; whether it can actually be read is decided later, by the
+    renderer ([[#security-inputs]]).
+
+An interpreter configured with no models does not perform model matching: it
+selects no model, emits no model-matching code and merges no refinement. Step 2 uses the user's
     default model even when it is not eligible; in `transform` mode with an
     input image it is then rendered as `generate` with `mode-degraded`
     ([[#rendering-modes]]).
@@ -1403,15 +1453,25 @@ jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon float
 ```
 </div>
 
-The <dfn>selected model</dfn> is the model that [[#model-matching]] selects,
-or the model the user chose when a viewer lets the user override the
-document's preference. Once a model is selected, an interpreter forms the
-values it uses for `prompt`, `style` and `avoid`: the core values of the key,
-followed by the values of every qualified key with that name whose target
-matches the [=selected model=], in ascending code point order of the key. A target
-matches when it equals, [=ASCII case-insensitively=], the model's family name,
-its identifier or one of its aliases. The [=description=] given to the model is
-formed from these values.
+The <dfn export>selected model</dfn> is the model that [[#model-matching]]
+selects, or the configured model the user chose when a viewer lets the user
+override the document's preference. When the user chose, model matching is not
+run and emits no code, but `mode-degraded` still applies
+([[#rendering-modes]]). Once a model is selected, an interpreter forms the
+values the model receives for `prompt`, `style` and `avoid`: the core values
+of the key, followed by the values of every qualified key with that name whose
+target matches the [=selected model=], in ascending code point order of the
+key. A target matches when it equals, [=ASCII case-insensitively=], the
+model's family name, its identifier or one of its aliases. The [=model
+description=] is formed from the `prompt` values; the [=description=] stays
+the core.
+
+A target is a single key segment, so identifiers containing `/`, `.`, `:` or
+`@` can never be targets, and aliases exist only in each reader's own
+configuration. Targets SHOULD therefore be family names from Appendix
+[[#families]], and renderers that support a family listed there SHOULD use the
+name listed there. A target that is an alias or an identifier reaches only
+readers whose configuration uses that exact name.
 
 Qualified keys never select a model: `model` remains the ordered preference
 list, like a font stack, and the core values are the fallback that every model
@@ -1421,6 +1481,12 @@ without a diagnostic.
 Because refinements follow the core, a model that reads only the start of its
 input, such as one with a 77-token text encoder, may never see them. Authors
 who refine for such a model keep the core short, with the essentials first.
+
+A refinement can change what the image shows for that model, including
+removing the core subject through `avoid/<target>`. Viewers therefore show the
+refinements that apply wherever they show the core ([[#security-consent]],
+[[#security-ui]]), and renderers never forward a qualified key except through
+this section ([[#security-forwarding]]).
 
 An [=image encoder=] typically
 evolves the core first and then adds refinements for the models in its
@@ -1493,10 +1559,10 @@ render ([[#rendering-prompt]]).
 
 ## Assembling the model input ## {#rendering-prompt}
 
-- A renderer MUST send the model the [=description=] it intends, explicitly,
-    even when the document has no `prompt` (an empty description); a provider's
+- A renderer MUST send the model the [=model description=] it intends,
+    explicitly, even when it is empty; a provider's
     default prompt is never a JAI default.
-- `style` and `avoid` values MUST reach the model, through a native input or
+- `style` and `avoid` values, merged as in [[#model-refinements]], MUST reach the model, through a native input or
     as prompt text, or be reported with `unsupported-parameter`. `avoid` values
     are sent as the model's negative prompt, joined with `, `, when it has one;
     when it has none the renderer MAY fold them into the prompt in wording the
@@ -1515,8 +1581,8 @@ render ([[#rendering-prompt]]).
     model.
 
 <div class=note>
-The reference renderer assembles the prompt values joined with line feeds,
-then the style values as a comma-separated list, then, only when folding, a
+The reference renderer assembles the [=model description=], then any
+personalisation text ([[#viewer-personalisation]]), then the style values as a comma-separated list, then, only when folding, a
 final line listing what to avoid. On models with a short token window, style
 terms belong early. Provider-side prompt rewriting is a user setting of the
 renderer, not a document matter.
@@ -1524,10 +1590,10 @@ renderer, not a document matter.
 
 ## Size and aspect ## {#rendering-size}
 
-The <dfn export>governing ratio</dfn> of an element is the aspect ratio of its
-[=original image=] if it has one, and otherwise the ratio of an author-sized
-[=layout box=] (both `width` and `height` attributes, or a CSS `aspect-ratio`)
-if there is one. A standalone document (a `.jai` file opened on its own) has no
+The <dfn export>governing ratio</dfn> of an element is the ratio of its
+author-sized [=layout box=] (both `width` and `height` attributes, or a CSS
+`aspect-ratio`) if there is one, and otherwise the aspect ratio of its
+[=original image=] if it has one: the shape the reader sees wins. A standalone document (a `.jai` file opened on its own) has no
 governing ratio.
 
 - When a governing ratio exists, the viewer renders at it, and the interpreted
@@ -1535,8 +1601,10 @@ governing ratio.
     ratio differs when the two ratios differ by more than 1% (|ln(*a*/*g*)| >
     0.01); `landscape` differs from a governing ratio that is not greater than
     1, and `portrait` from one that is not less than 1.
-- Otherwise the ratio is, in order: the interpreted `aspect`; the ratio of the
-    `preview`; the renderer's default.
+- Otherwise the ratio is, in order: the interpreted `aspect` (`landscape` as
+    4:3 and `portrait` as 3:4 unless the renderer has a different default for
+    the model, [[#key-aspect]]); the ratio of the `preview`; the renderer's
+    default.
 
 `aspect` therefore shapes renders of unsized elements and standalone files, and
 records the author's intent everywhere. On a page, the shape the author gave
@@ -1565,9 +1633,13 @@ A render fails when it produces no usable image: a provider or network error,
 a refusal or content filter (including a blank or black frame), a timeout,
 or a cancellation. On failure a viewer MUST restore the original image, or in
 the absence of one the `preview` or the description, MUST NOT leave a
-permanent placeholder, and MUST NOT retry with an altered description. A
-refusal is a normal outcome: viewers MUST NOT rewrite the description, or let a
-document cause it to be rewritten, to evade a refusal.
+permanent placeholder, and MUST NOT retry with altered model input (the
+description, refinements, `style`, `avoid`, the selected model or a
+personalisation). A refusal is a normal outcome: viewers MUST NOT rewrite the
+model input, or let a document cause it to be rewritten, to evade a refusal.
+After a failure, a render with a different model or personalisation happens
+only when the user explicitly requests it in viewer-owned UI, and a viewer
+MUST NOT suggest a personalisation as a remedy for a refusal.
 
 # Encoding images # {#image-encoding}
 
@@ -1594,8 +1666,11 @@ the original, using the target models themselves as the decoder:
 3. **Compare.** Each render is scored against the original. Useful measures
     are semantic (cosine similarity of image embeddings such as CLIP),
     perceptual (colour and layout distance between small thumbnails), and a
-    vision model's list of the visible differences. The fitness of a
-    candidate is its mean score across the target models.
+    vision model's rating of how closely each render matches. Embedding
+    similarity saturates for any render of the right subject, so it cannot
+    rank layout on its own. The fitness of a candidate blends its mean and its
+    worst score across the target models, so that the core does not sacrifice
+    one model.
 4. **Revise.** The best candidates are kept, and new ones are written from
     them by addressing the listed differences, while keeping what already
     matches.
@@ -1606,9 +1681,10 @@ the original, using the target models themselves as the decoder:
 6. **Stop.** On a budget, a time limit, or when scores reach a plateau, the
     encoder returns the best document found so far.
 
-This is the loop a CELP speech coder runs, with a description in place of
-codebook indices and a generative model in place of the synthesis filter. The
-result is a code tuned to the decoders the author chose. Other models still
+This resembles the loop a CELP speech coder runs, with a description in place
+of codebook indices and a generative model in place of the synthesis filter,
+except that the decoders are a set of likely models rather than one known
+decoder. The result is a code tuned to the decoders the author chose. Other models still
 receive the core description, which remains a faithful general description of
 the image.
 
@@ -1620,22 +1696,27 @@ metric, which is why the comparison step also uses a reader of the images.
 
 ## Output conventions ## {#image-encoding-output}
 
-An image encoder is expected to produce a document that a person could have
-written by hand, so that it stays portable and editable:
+These conventions keep encoded documents portable and editable, as if a
+person had written them by hand:
 
 - `prompt` holds the core description, complete enough for any model;
     `prompt/<target>` (and, rarely, `style/<target>` or `avoid/<target>`) holds
-    the per-model refinements, with the target set to the model's family name
-    when only one target model is in that family, else to its alias or
-    identifier.
+    the per-model refinements. Refinements are descriptions, never
+    instructions ([[#rendering-prompt]]). The target is the model's family
+    name ([[#model-refinements]]); when two target models share a family, the
+    encoder refines neither, or the family as a whole, rather than using names
+    other readers do not have.
 - `model` lists the target models, best-scoring first, so that viewers that
     have several of them prefer the one that reproduced the image best.
 - `aspect` is the ratio of the original's pixel dimensions, reduced to small
-    whole numbers when that changes the ratio by less than 1%.
+    whole numbers when |ln(written/original)| < 0.01 (so that it never
+    differs from the original in the sense of [[#rendering-size]]); a ratio
+    beyond 100:1 or 1:100 is written as `100:1` or `1:100`, the limits of the
+    grammar.
 - `seed` is left out unless the author wants exact reproduction with one
     model: a description tuned on one seed is still meant to work on any.
 - `preview`, when wanted, is a tiny placeholder derived from the original,
-    within the bounds of [[#security-bounds]].
+    within the bounds of [[#key-preview]].
 - Scores and the encoder's settings, when recorded at all, go in the tool's
     own vendor keys. Because vendor keys are part of the identity and add
     bytes, published documents usually leave them out and keep the report
@@ -1724,7 +1805,7 @@ this specification defines no `jai:` URL scheme (`jai-scheme-url`).
 ### Discovery ### {#html-discovery}
 
 A viewer runs <dfn export>discovery</dfn> over the `<img>` elements of a document in
-tree order, descending into open shadow roots and skipping closed ones, and
+tree order, descending into open shadow roots (an open shadow root's tree is visited immediately after its host element and before the host's children) and skipping closed ones, and
 re-runs it on the mutations HTML considers relevant for source selection
 (changes to `src`, `srcset`, `sizes`, `media`, `type`, and to the children of
 a `<picture>`), as well as on `data-jai` and `alt` changes. Discovery MUST NOT
@@ -1949,7 +2030,8 @@ A viewer that replaces an image with a render:
     `aspect-ratio`, else the original's ratio.
 3. MUST NOT alter `id`, `class`, event listeners, or link ancestors, and
     MUST keep the element in place where possible; a replacement element
-    carries `role="img"` and the same accessible name and description.
+    carries `role="img"` and the same accessible name and description, plus
+    the viewer's state markings ([[#viewer-accessibility]]).
 4. MUST record every state it changes and restore all of it on request and
     on failure, and MUST let the user compare the original and the render.
 5. MUST NOT replace the same element more than once per [=identity=] per page
@@ -2010,8 +2092,8 @@ A viewer that replaces an image with a render:
     human-written `alt` with it.
 
 Generated imagery carries no authority: logos, text and interface elements
-inside a render are model output. Viewers mark rendered images as such in
-viewer-owned UI and always offer the original.
+inside a render are model output. A viewer MUST mark rendered images as
+generated in viewer-owned UI and always offer the original.
 
 The page's own accessibility conformance is unaffected by what a user's agent
 does at the user's request; a conforming viewer is a user agent in the sense
@@ -2024,16 +2106,26 @@ user chose: for example a preferred style, a sensitivity or accessibility
 adjustment, the text inside the image translated into the user's language, or
 a mood. A personalised render:
 
-1. MUST be marked as personalised, in viewer-owned UI and to assistive
-    technology, alongside the AI-rendered state ([[#viewer-accessibility]]);
-2. MUST leave the document unchanged, and the viewer MUST keep a render
-    without personalisation available to the user;
+1. MUST be marked as personalised in viewer-owned UI, and SHOULD be exposed as
+    personalised to assistive technology. Any marking placed in the page MUST
+    be a generic "personalised" state that does not name the personalisation;
+2. MUST leave the document unchanged, and the viewer MUST let the user request
+    a render without personalisation (subject to [[#security-consent]]) and
+    show it in viewer-owned UI or in place; switching between the two is not a
+    new replacement under [[#viewer-replacement]] item 5;
 3. is reported like any render: the text sent to the model includes the
-    personalisation ([[#rendering-prompt]]).
+    personalisation, after the [=model description=] ([[#rendering-prompt]]);
+4. is cached separately from unpersonalised renders ([[#document-identity]]).
 
-Personalisation is a user setting. A document or a page MUST NOT be able to
-request or trigger it, and a viewer MUST NOT add a personalisation in order to
-get past a refusal ([[#rendering-failure]]).
+Personalisation is a user setting, off by default and enabled only by an
+explicit user action in viewer-owned UI. A document or a page MUST NOT be able
+to request, enable or trigger it. A viewer MUST NOT add or change a
+personalisation to get past a refusal, and after a failure follows
+[[#rendering-failure]]. Because a replacement exposes the rendered pixels to
+the page, a personalised render can reveal that a personalisation is active
+and possibly what it is; viewers SHOULD let the user restrict personalisation
+to sites they trust and MUST NOT expose its settings to the page
+([[#security-disclosure]]).
 
 # Extensibility # {#extensibility}
 
@@ -2133,7 +2225,8 @@ moderation settings, or exceed the user's configured cost policy (candidate
 count, steps, resolution, duration).
 
 A renderer MUST forward document parameters to a provider only through a
-mapping it controls: standard keys through its own semantics, and vendor keys only
+mapping it controls: standard keys through its own semantics, qualified keys
+only through [[#model-refinements]], and vendor keys only
 into the provider's model-input namespace, after validating each value
 against the provider's published input schema and the user's limits, and only
 when the key is not on the renderer's per-provider deny-list of inputs that
@@ -2161,8 +2254,10 @@ other weight files, or carry third-party API tokens.
     with bounded concurrency; limits are visible to the user and reaching one
     stops rendering. Elements not displayed to the user MUST NOT be rendered.
 - Consent and per-image actions are taken in viewer-owned UI from trusted
-    user events and show the site, the full `prompt`, `avoid` and `style` text,
-    any input image and its origin, and the configured renderer that matched.
+    user events and show the site; the full `prompt`, `style` and `avoid` text
+    that the [=selected model=] will receive after [[#model-refinements]],
+    with the refinements marked as such; any input image and its origin; and
+    the configured renderer that matched.
 - The user MUST be able to cancel a render; a viewer SHOULD cancel the
     provider job and set provider-side time limits where the API offers them,
     and cancels on navigation.
@@ -2194,13 +2289,15 @@ A render cache keyed by [=identity=] is a cross-site history oracle. A cached
 render is subject to the same per-site consent and the same user action as an
 uncached one, and viewers SHOULD prevent documents from distinguishing
 cross-site cache hits, by keying the cache on (identity, renderer
-configuration, top-level site) or by applying comparable delay.
+configuration, selected model, personalisation, top-level site) or by applying
+comparable delay.
 
 ## Viewer UI hygiene ## {#security-ui}
 
 Viewer UI MUST render every document value as text, never as markup; SHOULD
 isolate bidirectional text (`unicode-bidi: plaintext` or `<bdi>`); MUST NOT
-silently truncate (`prompt`, `avoid`, `style` and `model` are fully
+silently truncate (`prompt`, `avoid`, `style`, `model` and every
+[=qualified key=] are fully
 available); SHOULD visualise or warn on control and invisible formatting
 characters; MUST show the top-level site; and MUST display the *configured*
 renderer that matched, never the document's `model` string, as the thing that
@@ -2244,6 +2341,11 @@ chooses. Codes are stable identifiers; messages are not.
     emits exactly these codes, and the `interpret` fixtures compare the
     interpreter codes it emits as an exact multiset, ignoring any other codes.
     An interpreter that also validates MAY emit validator codes alongside them.
+
+A code that belongs to more than one class is counted once per condition,
+whichever classes an implementation combines; fixtures compare only the codes
+of the class under test. In validator conditions, "prompt" means the core key
+`prompt`: qualified `prompt/…` keys do not satisfy them.
 - *Renderer* codes are emitted by renderers; a renderer MUST emit them when
     the condition occurs ([[#rendering-diagnostics]]).
 - *Viewer* codes are emitted by viewers.
@@ -2270,9 +2372,9 @@ key.
 <tr><td>`invalid-json`<td>parser<td>none<td>The JSON form could not be parsed; the document is empty.
 <tr><td>`malformed-container`<td>parser<td>none<td>The gzip member was malformed, followed by bytes, over the bound, or did not contain JSON; the document is empty.
 <tr><td>`undecodable`<td>parser<td>none<td>The bytes are not well-formed UTF-8 or exceed the text bound; the document is empty.
-<tr><td>`first-segment-assignment`<td>validator<td>the key concerned<td>The first segment was an assignment to an unknown key and the document has no prompt.
-<tr><td>`invalid-qualifier`<td>validator<td>the key concerned<td>A [=qualified key=] whose name is not `prompt`, `style` or `avoid`.
-<tr><td>`unknown-key`<td>validator<td>the key concerned<td>An undotted key that this specification does not define.
+<tr><td>`first-segment-assignment`<td>validator<td>the key concerned<td>The first segment was an assignment to a key this specification does not define (not a standard key, not `prompt`, `style` or `avoid` with a target, not a dotted name) and the document has no prompt.
+<tr><td>`invalid-qualifier`<td>validator<td>the key concerned<td>A [=qualified key=] whose name is not `prompt`, `style` or `avoid`, vendor names included.
+<tr><td>`unknown-key`<td>validator<td>the key concerned<td>A key whose name (the part before any `/`) has no `.` and is not a standard key.
 <tr><td>`continuation-into-single-valued-key`<td>validator<td>the key concerned<td>Prose continued the value of `aspect`, `mode`, `strength`, `seed` or `animate` (not `source` or `preview`, whose `data:` URLs contain semicolons; see `split-data-uri`).
 <tr><td>`no-prompt`<td>validator<td>none<td>No prompt, and the interpreted `mode` is `generate`.
 <tr><td>`bare-key`<td>validator<td>the key concerned<td>A prose segment is exactly a standard key; `key=true` was probably intended.
@@ -2331,7 +2433,8 @@ key.
 Fixtures live under `tests/<class>/<class>.json` in the specification
 repository. Each file is a JSON object with `class`, `edition` and `cases`.
 
-Every case has `id` (unique across the suite), `since` and `rationale`. A
+A top-level `note` member, where present, is an informative summary of the
+file. Every case has `id` (unique across the suite), `since` and `rationale`. A
 document is an object mapping each key to an array of strings. A diagnostic is
 written `code` or `code:key` ([[#diagnostics]]). `diagnostics` is compared as
 an exact multiset. `advisories` lists validator codes that an implementation
@@ -2376,21 +2479,28 @@ validator codes that it MUST NOT emit.
 :: `document`; optional `catalog`, the configured models in configuration
     order, each `{id, aliases, family, image_input, default}` (`family` may be
     null; `default: true` marks the user's default model, otherwise the first
-    entry is the default); optional `families`, the renderer's family list,
-    mapping each family name to its spellings in order; optional
-    `has_original` (boolean, default `false`: whether the carrier offers an
-    original image); optional `governing_ratio` (number: the element's
-    [=governing ratio=], absent for none); optional `selected` (the `id` of
-    a catalog entry the user chose, which is then the selected model instead
-    of the result of [[#model-matching]]) → `interpreted` and `diagnostics`. `interpreted` is
-    compared only for the members present: `description` (string, after
-    [[#model-refinements]]); `style` and `avoid` (arrays of strings, after
-    [[#model-refinements]]); `aspect`
-    (W/H as a number, `square` as 1, or the string `landscape` or
-    `portrait`); `mode` (string, the interpreted value of the `mode` key);
-    `strength` (number); `seed`, `source`, `preview` (string); `animate`
-    (boolean); `model` (the `id` of the selected catalog entry); `ratio` (the ratio to render at under [[#rendering-size]], W/H
-    as a number; `null` when the `preview` or the renderer's default decides). `null` means absent or invalid. `diagnostics` is the exact
+    entry is the default); when `catalog` is absent the interpreter is
+    configured with no models ([[#model-matching]]); optional `families`, the
+    renderer's family list, mapping each family name to its spellings, in
+    member order; optional `has_original` (boolean, default `false`: whether
+    the carrier offers an original image; it affects only the mode and model
+    eligibility); optional `governing_ratio` (number: the element's [=governing
+    ratio=], absent for none; it is given only by this member); optional
+    `selected` (the `id` of a catalog entry the user chose, which is then the
+    [=selected model=]; an id not in the catalog is ignored and model matching
+    runs) → `interpreted` and `diagnostics`. `interpreted` is compared only
+    for the members present: `description` (string: the [=description=], core
+    only); `style` and `avoid` (arrays of strings: the core values);
+    `model_description` (string: the [=model description=]); `model_style` and
+    `model_avoid` (arrays of strings: the values the selected model receives,
+    [[#model-refinements]]); `aspect` (W/H as a number, `square` as 1, or the
+    string `landscape` or `portrait`); `mode` (string, the interpreted value of
+    the `mode` key, `generate` when absent or invalid); `strength` (number);
+    `seed`, `source`, `preview` (string); `animate` (boolean, `false` when
+    absent or invalid); `model` (the `id` of the selected catalog entry);
+    `ratio` (the ratio to render at under [[#rendering-size]], W/H as a
+    number; `null` when the `preview` or the renderer's default decides).
+    Otherwise `null` means absent or invalid. `diagnostics` is the exact
     multiset of interpreter codes.
 
 Fixtures are append-only from the first tagged edition: a changed expectation
