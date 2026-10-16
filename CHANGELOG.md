@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0-draft, alt is the description — 2026-10-16
+
+- The `alt` carrier (`alt` beginning with `jai:`) is removed. `alt` is the
+  image's text for people who cannot see it, and screen readers would read
+  JAI syntax in it aloud; an `alt` that begins with `jai:` is ordinary text.
+- For `data-jai`, the element's `alt` is now the first prompt value, taken
+  literally and never parsed: `<img alt="A magical castle at dusk"
+  data-jai="style=anime">`. The description is written once and serves both
+  screen readers and models; `data-jai` holds extra detail, settings and
+  refinements that are not read aloud. New validator code `alt-repeated`.
+- The accessible name generated from a description is no longer truncated.
+  Authoring guidance: describe what can be seen, essentials first, visible
+  facts over mood words; a content image's `alt` says what it shows.
+- Readable without seeing (vision-impaired readers and text-only AI agents) is
+  now the first use case on the Vision page, the homepage and in Motivation.
+- Fixtures: 520.
+
 ## 1.0-draft, review round 3 — 2026-10-16
 
 An independent Go implementation written from the specification alone

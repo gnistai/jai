@@ -898,7 +898,7 @@
   {
    "id": "html-picture-unencoded-space",
    "rationale": "An unencoded space makes the rest of the attribute a descriptor; castle is not a valid descriptor, so HTML drops the candidate and the source is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" alt=\"a\" data-jai=\"fallback\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" data-jai=\"fallback\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -938,7 +938,7 @@
   {
    "id": "html-data-jai-json",
    "rationale": "data-jai is always the text form; JSON there is prose (R2-6).",
-   "html": "<img src=\"a.png\" alt=\"a\" data-jai='{\"jai\":1,\"prompt\":\"x\"}'>",
+   "html": "<img src=\"a.png\" data-jai='{\"jai\":1,\"prompt\":\"x\"}'>",
    "discovered": [
     {
      "carrier": 2,
@@ -956,7 +956,7 @@
   {
    "id": "html-source-other-data-type",
    "rationale": "A carrier-1 data: URL whose essence is not image/jai is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:text/plain,hello\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:text/plain,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -974,7 +974,7 @@
   {
    "id": "html-source-data-default-type",
    "rationale": "data:, has the default type text/plain and is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:,hello\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -992,7 +992,7 @@
   {
    "id": "html-source-data-bad-base64",
    "rationale": "A carrier-1 data: URL the processor rejects is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai;base64,!!!\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai;base64,!!!\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -1009,29 +1009,16 @@
   },
   {
    "id": "html-src-data-bad-base64",
-   "rationale": "A carrier-3 data: URL the processor rejects: continue with carrier 4 (R2-7).",
+   "rationale": "A carrier-3 data: URL the processor rejects: the element carries no document (alt is never a carrier).",
    "html": "<img src=\"data:image/jai;base64,!!!\" alt=\"jai:fallback\">",
-   "discovered": [
-    {
-     "carrier": 4,
-     "document": {
-      "prompt": [
-       "fallback"
-      ]
-     },
-     "diagnostics": []
-    }
-   ],
-   "advisories": [
-    "alt-carrier"
-   ],
+   "discovered": [],
    "since": "1.0-draft",
    "_action": "add"
   },
   {
    "id": "html-shadow-tree-order",
    "rationale": "Open shadow roots are visited in tree order, at their host (R2-35).",
-   "html": "<div><template shadowrootmode=\"open\"><img src=\"a.png\" alt=\"a\" data-jai=\"in shadow\"></template></div><img src=\"b.png\" alt=\"b\" data-jai=\"after host\">",
+   "html": "<div><template shadowrootmode=\"open\"><img src=\"a.png\" data-jai=\"in shadow\"></template></div><img src=\"b.png\" data-jai=\"after host\">",
    "discovered": [
     {
      "carrier": 2,
@@ -1058,7 +1045,7 @@
   {
    "id": "html-shadow-closed-skipped",
    "rationale": "Closed shadow roots are skipped.",
-   "html": "<div><template shadowrootmode=\"closed\"><img src=\"a.png\" alt=\"a\" data-jai=\"hidden\"></template></div><img src=\"b.png\" alt=\"b\" data-jai=\"visible\">",
+   "html": "<div><template shadowrootmode=\"closed\"><img src=\"a.png\" data-jai=\"hidden\"></template></div><img src=\"b.png\" data-jai=\"visible\">",
    "discovered": [
     {
      "carrier": 2,
@@ -1185,7 +1172,7 @@
   {
    "id": "html-attribute-split",
    "rationale": "A raw \" ends the attribute early; validators flag the junk attributes (R2-30).",
-   "html": "<img src=\"a.png\" alt=\"a\" data-jai=\"A sign reading \"OPEN\" above a door;style=photo\">",
+   "html": "<img src=\"a.png\" data-jai=\"A sign reading \"OPEN\" above a door;style=photo\">",
    "discovered": [
     {
      "carrier": 2,

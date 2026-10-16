@@ -37,7 +37,7 @@
     <div>
       <div class="eyebrow">Just AI Images</div>
       <h1>Images compressed into words.<br>Any AI is the decoder.</h1>
-      <p class="lede">JAI is an open image format for a world where generating pictures is cheap and local, and moving them is not. A JAI image is a few hundred bytes of description that any generative model turns back into the picture: different pixels, same image.</p>
+      <p class="lede">JAI is an open image format for a world where generating pictures is cheap and local, and moving them is not. A JAI image is a few hundred bytes of description that any generative model turns back into the picture, and that a screen reader or a text-only AI agent can read as it is.</p>
       <div class="jai-line">
         <code id="hero-jai" data-jai-highlight>jai:A magical castle;style=anime</code>
         <button type="button" data-copy="#hero-jai" aria-label="Copy the example">Copy</button>
@@ -59,15 +59,19 @@
   <div class="wrap">
     <div class="eyebrow">The idea</div>
     <h2>A description is compression</h2>
-    <p class="lede">JPEG throws away detail you will not miss. JAI goes to the far end of the same curve and keeps only what you would say about the picture. A generative model has already learned what the world looks like, so a few hundred bytes are enough for it to draw the rest.</p>
-    <div class="grid grid-3" style="margin-top:28px">
+    <p class="lede">JPEG throws away detail you will not miss. JAI keeps only what you would say about the picture and measures loss in meaning and appearance, not pixels. A generative model has already learned what the world looks like, so a few hundred bytes are enough for it to draw the rest.</p>
+    <div class="grid" style="margin-top:28px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))">
+      <div class="card">
+        <h3>Readable without seeing</h3>
+        <p>The description is the image. A vision-impaired reader hears the author's own words through a screen reader, and a text-only AI agent reads and writes pictures with no vision model at all.</p>
+      </div>
       <div class="card">
         <h3>Little bandwidth</h3>
-        <p>Spacecraft, ships, satellite links and text-only radio can carry a sentence where they cannot carry a photograph. A receiver with a GPU draws the picture.</p>
+        <p>Ships, satellite links, disaster zones and text-only radio can carry a sentence where they cannot carry a photograph. A receiver with a GPU draws the picture.</p>
       </div>
       <div class="card">
         <h3>Local generation</h3>
-        <p>Image models are moving onto ordinary GPUs at well under a second. When decoding is local and free, browsers can skip downloading the raster altogether.</p>
+        <p>Image models are moving onto ordinary GPUs and phones, in seconds or less. Once decoding is local, the description can travel instead of the pixels.</p>
       </div>
       <div class="card">
         <h3>An audience of one</h3>
@@ -143,7 +147,8 @@ gzip( JSON )</code></pre>
 &lt;/picture&gt;</code></pre>
         <h3>Inline, no extra file</h3>
 <pre><code>&lt;img src="castle.png" alt="A magical castle at dusk"
-     data-jai="A magical castle at dusk;style=anime"&gt;</code></pre>
+     data-jai="style=anime"&gt;</code></pre>
+        <p class="muted">The alt text is the description, for screen readers and for the model; <code>data-jai</code> adds the settings.</p>
       </div>
       <div>
         <h3>JAI in <code>src</code>, like a data URI</h3>

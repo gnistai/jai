@@ -428,38 +428,50 @@ h("html-picture-source-after-img", '<picture><img src="a.png" alt="a"><source ty
   [], "A source after the img is ignored.")
 h("html-picture-no-type", '<picture><source srcset="data:image/jai,x"><img src="a.png" alt="a"></picture>',
   [], "A source without type is not a JAI carrier.")
-h("html-picture-unencoded-space", '<picture><source type="image/jai" srcset="data:image/jai,A castle"><img src="a.png" alt="a" data-jai="fallback"></picture>',
+h("html-picture-unencoded-space", '<picture><source type="image/jai" srcset="data:image/jai,A castle"><img src="a.png" data-jai="fallback"></picture>',
   [{"carrier": 1, "document": {"prompt": ["A"]}, "diagnostics": []}], "An unencoded space ends the srcset URL; the rest is a descriptor.")
-h("html-data-jai", '<img src="castle.png" alt="A castle" data-jai="A magical castle;style=anime">',
-  [{"carrier": 2, "document": castle, "diagnostics": []}], "Carrier 2.")
-h("html-data-jai-entities", '<img src="c.png" alt="c" data-jai="Salt &amp; pepper;style=&quot;ink&quot;">',
+h("html-data-jai", '<img src="castle.png" alt="A magical castle" data-jai="style=anime">',
+  [{"carrier": 2, "document": castle, "diagnostics": []}], "The alt text is the first prompt value; data-jai adds the rest.")
+h("html-data-jai-entities", '<img src="c.png" data-jai="Salt &amp; pepper;style=&quot;ink&quot;">',
   [{"carrier": 2, "document": {"prompt": ["Salt & pepper"], "style": ["\"ink\""]}, "diagnostics": []}], "HTML entities are decoded by the HTML parser, not by JAI.")
-h("html-data-jai-newline", '<img src="c.png" alt="c" data-jai="A castle&#10;Mist below">',
+h("html-data-jai-newline", '<img src="c.png" data-jai="A castle&#10;Mist below">',
   [{"carrier": 2, "document": {"prompt": ["A castle\nMist below"]}, "diagnostics": []}], "&#10; is a line break.")
-h("html-data-jai-percent-not-decoded", '<img src="c.png" alt="c" data-jai="100%20 cotton">',
+h("html-data-jai-percent-not-decoded", '<img src="c.png" data-jai="100%20 cotton">',
   [{"carrier": 2, "document": {"prompt": ["100%20 cotton"]}, "diagnostics": []}], "Attributes are not percent-decoded.", advisories=["percent-encoded-text"])
 h("html-src-data", '<img src="data:image/jai,A%20magical%20castle;style=anime" alt="A magical castle" width="800" height="600">',
   [{"carrier": 3, "document": castle, "diagnostics": []}], "Carrier 3.")
 h("html-src-jai-scheme", '<img src="jai:A castle" alt="A castle">',
   [], "jai: in src is not a carrier.")
 h("html-alt", '<img src="castle.png" alt="jai:A magical castle;style=anime">',
-  [{"carrier": 4, "document": castle, "diagnostics": []}], "Carrier 4 (deprecated).", advisories=["alt-carrier"])
-h("html-alt-leading-ws", '<img src="castle.png" alt="  jai:A castle">',
-  [{"carrier": 4, "document": {"prompt": ["A castle"]}, "diagnostics": []}], "Leading whitespace before the prefix.")
+  [], "alt is never a carrier, even when it begins with jai: (it is the screen-reader text).")
 h("html-alt-plain", '<img src="castle.png" alt="A magical castle">',
   [], "An ordinary alt is never JAI.")
 h("html-alt-jai-word", '<img src="castle.png" alt="Jaipur at night">',
   [], "Only the exact prefix counts.")
 h("html-order-picture-wins", '<picture><source type="image/jai" srcset="data:image/jai,one"><img src="a.png" alt="jai:four" data-jai="two"></picture>',
-  [{"carrier": 1, "document": {"prompt": ["one"]}, "diagnostics": []}], "Carrier 1 before 2 and 4.")
+  [{"carrier": 1, "document": {"prompt": ["one"]}, "diagnostics": []}], "Carrier 1 before 2; alt is ignored.")
 h("html-order-data-jai-before-alt", '<img src="a.png" alt="jai:four" data-jai="two">',
-  [{"carrier": 2, "document": {"prompt": ["two"]}, "diagnostics": []}], "Carrier 2 before 4.")
+  [{"carrier": 2, "document": {"prompt": ["jai:four", "two"]}, "diagnostics": []}], "data-jai is the carrier; its alt is plain text, taken literally as the first prompt line.")
 h("html-order-src-before-alt", '<img src="data:image/jai,three" alt="jai:four">',
-  [{"carrier": 3, "document": {"prompt": ["three"]}, "diagnostics": []}], "Carrier 3 before 4.")
-h("html-multiple", '<p><img src="a.png" alt="a"><img src="b.png" alt="b" data-jai="bee"><img src="c.png" alt="jai:sea"></p>',
-  [{"carrier": 2, "document": {"prompt": ["bee"]}, "diagnostics": []}, {"carrier": 4, "document": {"prompt": ["sea"]}, "diagnostics": []}], "Tree order.")
-h("html-data-jai-empty", '<img src="a.png" alt="a" data-jai="">',
-  [{"carrier": 2, "document": {}, "diagnostics": []}], "An empty data-jai is an empty document (carrier present).")
+  [{"carrier": 3, "document": {"prompt": ["three"]}, "diagnostics": []}], "src is the carrier; alt is ignored.")
+h("html-multiple", '<p><img src="a.png" alt="a"><img src="b.png" alt="A bee" data-jai="on a sunflower"><img src="c.png" alt="jai:sea"></p>',
+  [{"carrier": 2, "document": {"prompt": ["A bee", "on a sunflower"]}, "diagnostics": []}], "Tree order; an alt beginning with jai: carries nothing.")
+h("html-data-jai-empty", '<img src="a.png" data-jai="">',
+  [{"carrier": 2, "document": {}, "diagnostics": []}], "An empty data-jai without alt is an empty document (carrier present).")
+h("html-data-jai-empty-with-alt", '<img src="a.png" alt="A lighthouse at night" data-jai="">',
+  [{"carrier": 2, "document": {"prompt": ["A lighthouse at night"]}, "diagnostics": []}], "An empty data-jai marks the image; the alt is the description.")
+h("html-alt-first-prompt", '<img src="c.png" alt="Twelve colleagues in ski gear laughing on a slope in a white-out" data-jai="One raises a beer;style=35mm film photo;aspect=3:2">',
+  [{"carrier": 2, "document": {"prompt": ["Twelve colleagues in ski gear laughing on a slope in a white-out", "One raises a beer"], "style": ["35mm film photo"], "aspect": ["3:2"]}, "diagnostics": []}], "alt first, then the prose in data-jai.")
+h("html-alt-literal", '<img src="c.png" alt="Ratio 1:2; style=bold\\; x" data-jai="aspect=1:1">',
+  [{"carrier": 2, "document": {"prompt": ["Ratio 1:2; style=bold\\; x"], "aspect": ["1:1"]}, "diagnostics": []}], "alt is never parsed: semicolons, key= and backslashes stay text.")
+h("html-alt-normalised", '<img src="c.png" alt="  A castle&#13;&#10;at dusk  " data-jai="style=anime">',
+  [{"carrier": 2, "document": {"prompt": ["A castle\nat dusk"], "style": ["anime"]}, "diagnostics": []}], "alt is a value: trimmed, CR LF becomes LF.")
+h("html-alt-empty", '<img src="c.png" alt="" data-jai="A castle">',
+  [{"carrier": 2, "document": {"prompt": ["A castle"]}, "diagnostics": []}], "An empty alt (decorative image) adds nothing.")
+h("html-alt-not-carrier-3", '<img src="data:image/jai,style=anime" alt="A castle" width="10" height="10">',
+  [{"carrier": 3, "document": {"style": ["anime"]}, "diagnostics": []}], "Only carrier 2 takes its first prompt line from alt.")
+h("html-alt-repeated", '<img src="c.png" alt="A castle" data-jai="A castle;style=anime">',
+  [{"carrier": 2, "document": {"prompt": ["A castle", "A castle"], "style": ["anime"]}, "diagnostics": []}], "Repeating the alt in data-jai sends it twice; validators warn.", advisories=["alt-repeated"])
 
 # ---------------------------------------------------------------- interpret
 
@@ -532,7 +544,7 @@ i("int-model-transform-no-original", {"mode": ["transform"], "model": ["flux"]},
 # with the same id; while the suite is untagged, replacing is allowed.
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "round2.json"), encoding="utf-8") as fh:
     ROUND2 = json.load(fh)
-REMOVED = {"int-quoted-model-unaffected"}  # asserted nothing (review round 2, R2-5)
+REMOVED = {"int-quoted-model-unaffected", "html-alt-carrier-payload"}  # the alt carrier was removed (owner, 2026-10-16)  # asserted nothing (review round 2, R2-5)
 _lists = {"parse": P, "serialize": S, "roundtrip": R, "json": JS, "decode": D, "url": U, "html": H, "interpret": I}
 for _cls, _cases in ROUND2.items():
     target = _lists[_cls]

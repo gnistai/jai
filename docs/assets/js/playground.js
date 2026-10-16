@@ -22,7 +22,7 @@ const EXAMPLES = [
   ['Template text, escaped', 'prompt=Red mug\\; model\\=XZ-200\\; colour\\=red;style=product photo;aspect=1:1'],
   ['JSON form', '{"jai":1,"prompt":["A magical castle on a hill at dusk","Mist in the valley below"],"aspect":"16:9","style":"storybook illustration","strength":0.6}'],
   ['data: URL', 'data:image/jai,A%20magical%20castle;style=anime'],
-  ['HTML with carriers', '<picture>\n  <source type="image/jai" srcset="data:image/jai,A%20magical%20castle;style=anime">\n  <img src="castle.png" alt="A magical castle">\n</picture>\n<img src="team.jpg" alt="The team" data-jai="Four people in front of a brick office;mode=keep">\n<img src="old.png" alt="jai:A lighthouse at night">'],
+  ['HTML with carriers', '<picture>\n  <source type="image/jai" srcset="data:image/jai,A%20magical%20castle;style=anime">\n  <img src="castle.png" alt="A magical castle">\n</picture>\n<img src="team.jpg" alt="The team" data-jai="Four people in front of a brick office;mode=keep">\n<img src="lighthouse.png" alt="jai:A lighthouse at night">'],
 ];
 
 const sel = $('examples');
@@ -139,9 +139,8 @@ function escAttr(s) { return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').re
 function altText(doc) {
   const p = (doc.get('prompt') || [])[0];
   if (!p) return 'Image';
-  const clean = p.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
-  const g = Array.from(clean);
-  return g.length > 250 ? g.slice(0, 249).join('') + '…' : clean;
+  // The description is the alt text, in full: JAI sets no length limit on it.
+  return p.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 function boxSize(it) {
   const r = it.aspect ? it.aspect.width / it.aspect.height : 1;
@@ -158,15 +157,22 @@ function renderHTML() {
     code = `<picture>\n  <source type="image/jai" srcset="${escAttr(url)}">\n  <img src="your-image.png" alt="${alt}" width="${w}" height="${h}">\n</picture>`;
     note = 'Recommended. Browsers without JAI support show your-image.png and never fetch the JAI source. Replace the alt text with your own description if it differs.';
   } else if (htmlMode === 'datajai') {
-    code = `<img src="your-image.png" alt="${alt}"\n     data-jai="${escAttr(bare)}">`;
-    note = 'Inline, for markup you cannot restructure. Survives most HTML sanitisers.';
+    // The first prompt value goes in alt (spoken by screen readers, first line for the model); the rest in data-jai.
+    const prompts = doc.get('prompt') || [];
+    const rest = new Map(doc);
+    if (prompts.length > 1) rest.set('prompt', prompts.slice(1)); else rest.delete('prompt');
+    const altExact = prompts.length ? escAttr(prompts[0]) : '';
+    code = `<img src="your-image.png" alt="${altExact}"\n     data-jai="${escAttr(J.serialize(rest, { bare: true }))}">`;
+    note = prompts.length
+      ? 'The alt text is the description: screen readers speak it, and it is the first line the model receives. data-jai holds the rest and is not read aloud. Survives most HTML sanitisers.'
+      : 'No description: the image needs an alt that describes it, which becomes the first prompt line.';
   } else if (htmlMode === 'src') {
     code = `<img src="${escAttr(url)}"\n     alt="${alt}" width="${w}" height="${h}">`;
     note = 'The pure form: no fallback pixels. Without a JAI viewer readers see only the alt text, so it must be real prose, and the size must be set.';
   } else {
-    const prompt = (doc.get('prompt') || [''])[0].replace(/\s+/g, ' ').replace(/[[\]]/g, '');
-    code = `![jai:${prompt}](your-image.png)`;
-    note = 'Deprecated carrier: screen readers read the alt text aloud, so keep it to the prefix and a short description. Prefer raw HTML <picture> where the Markdown host allows it.';
+    const altMd = altText(doc).replace(/\s+/g, ' ').replace(/[[\]\\*_]/g, '');
+    code = `![${altMd}](<${url}>)`;
+    note = 'Carrier 3 in Markdown image syntax, for hosts that keep data: URLs. The alt text stays plain prose for screen readers; JAI never goes in alt. Prefer raw HTML <picture> where the host allows it.';
   }
   $('out-html').textContent = code;
   $('html-note').textContent = note;
@@ -197,8 +203,8 @@ async function update() {
   ol.textContent = '';
   cw.hidden = a.kind !== 'html';
   if (a.kind === 'html') {
-    const names = { 1: '<picture><source type="image/jai">', 2: 'data-jai attribute', 3: 'data:image/jai in src', 4: 'jai: in alt (deprecated)' };
-    if (!a.carriers.length) { const li = document.createElement('li'); li.textContent = 'No JAI carrier found. An ordinary alt is never JAI.'; ol.append(li); }
+    const names = { 1: '<picture><source type="image/jai">', 2: 'data-jai attribute', 3: 'data:image/jai in src' };
+    if (!a.carriers.length) { const li = document.createElement('li'); li.textContent = 'No JAI carrier found. alt is never JAI, even when it begins with jai:.'; ol.append(li); }
     for (const c of a.carriers) {
       const li = document.createElement('li');
       li.textContent = `Carrier ${c.carrier}: ${names[c.carrier]} — ` + (c.document ? J.serialize(c.document) : `fetches ${c.url} when the reader chooses to render`);

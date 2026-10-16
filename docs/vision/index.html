@@ -58,9 +58,9 @@
     <div class="eyebrow">The idea</div>
     <h2>A description is compression</h2>
     <div class="prose">
-      <p>Every image format trades bytes for distortion. PNG keeps every pixel. JPEG discards detail your eye will not miss. JAI goes to the far end of the same curve: it keeps only what a person would say about the picture, and discards the rest.</p>
-      <p>That is not a different kind of thing from image compression; it is the same trade taken much further. The difference is in how distortion is measured. A JAI decoding will not match the original pixel for pixel, but it can show the same things, arranged and lit the same way, from a thousand times fewer bytes.</p>
-      <p>It works because the decoder brings a prior. A generative model has already learned what harbours, castles and dusk light look like, so the code only has to say which ones, where and how. Speech coding has relied on this for decades: a vocoder sends the parameters of a model of the voice instead of the waveform, and a CELP encoder chooses them by running the decoder inside the encoder and keeping what sounds closest.</p>
+      <p>Every image format trades bytes for distortion. PNG keeps every pixel. JPEG discards detail your eye will not miss. JAI takes the same trade much further: it keeps only what a person would say about the picture, and discards the rest.</p>
+      <p>That is not a different kind of thing from image compression; it is the same trade taken much further. The difference is in how distortion is measured: in meaning and appearance, not pixels. A JAI decoding will not match the original pixel for pixel, and two models can draw visibly different pictures, but a good description makes them show the same things, arranged and lit the same way, from a thousand times fewer bytes.</p>
+      <p>It works because the decoder brings a prior. A generative model has already learned what harbours, castles and dusk light look like, so the code only has to say which ones, where and how. Speech coding has relied on this for decades: a vocoder sends the parameters of a model of the voice instead of the waveform, and a CELP encoder chooses its excitation by running the decoder inside the encoder and keeping what sounds closest. A JAI encoder does the same, except that it does not know which model the reader will use, so it tunes for a set of likely ones.</p>
     </div>
 
     <figure class="figure" role="group" aria-labelledby="rd-cap">
@@ -94,28 +94,28 @@
     <h2>The use cases</h2>
     <div class="grid grid-2" style="margin-top:20px">
       <div class="card use">
-        <h3><span class="n">01</span> Little bandwidth, enough compute</h3>
-        <p>Spacecraft and deep-space links, ships and aircraft, satellite plans with data caps, rural and disaster-zone networks. Text-only channels such as SMS, packet radio and mesh networks can carry a sentence where they cannot carry a photograph. A receiver with a GPU draws the picture.</p>
+        <h3><span class="n">01</span> Readable without seeing</h3>
+        <p>A JAI image is text first. A vision-impaired reader's screen reader speaks the author's own description, the same words the model draws from, so the text alternative is always there and always matches the picture. A text-only AI agent reads and writes images directly, with no vision model: it can understand, search, translate, compare and edit a picture in the medium it already uses.</p>
       </div>
       <div class="card use">
-        <h3><span class="n">02</span> Local generation</h3>
-        <p>Generating an image is moving onto ordinary GPUs and phones, at well under a second. When decoding is local and free, a browser can pick the JAI source in a <code>&lt;picture&gt;</code> element and never download the raster. Pages get lighter with no change to their markup.</p>
+        <h3><span class="n">02</span> Little bandwidth, enough compute</h3>
+        <p>Ships and aircraft, satellite plans with data caps, rural and disaster-zone networks, and text-only channels such as SMS, packet radio and mesh networks can carry a sentence where they cannot carry a photograph. A receiver with a GPU draws the picture. This suits illustrative and situational images, not measurements: where the pixels are the data, send the pixels.</p>
       </div>
       <div class="card use">
-        <h3><span class="n">03</span> An audience of one</h3>
+        <h3><span class="n">03</span> Local generation</h3>
+        <p>Generating an image is moving onto ordinary GPUs and recent phones, in seconds or less with distilled models. If browsers come to decode JAI natively, a page could offer the JAI source in a <code>&lt;picture&gt;</code> element and the browser would fetch the raster only when rendering fails. Today's viewers still download the raster.</p>
+      </div>
+      <div class="card use">
+        <h3><span class="n">04</span> An audience of one</h3>
         <p>Your decoder draws the pixels, so you can ask for them your way: adapted to your culture, softened for content you would rather not see, adjusted for your eyesight, with the text in the picture in your language, or just in a mood you enjoy. The author's description stays the same, and the personalised render is always labelled as such.</p>
       </div>
       <div class="card use">
-        <h3><span class="n">04</span> Longevity and any resolution</h3>
+        <h3><span class="n">05</span> Longevity and any resolution</h3>
         <p>A description does not age with its codec and has no fixed resolution. Rendered next year by a better model, or for a larger screen, the same few hundred bytes give a better picture, the way vector graphics outlive the screens they were drawn for.</p>
       </div>
       <div class="card use">
-        <h3><span class="n">05</span> Text all the way down</h3>
-        <p>A JAI image can be searched, translated, compared in version control and edited in a text editor. It carries its own text alternative for screen readers and text-only browsers, and language models and agents read and write it in the medium they already use.</p>
-      </div>
-      <div class="card use">
-        <h3><span class="n">06</span> Honest by construction</h3>
-        <p>A JAI image is generated by definition. It cannot be mistaken for a photograph of something that happened, and it says so in its format.</p>
+        <h3><span class="n">06</span> Declared provenance</h3>
+        <p>A JAI document says it is a description, and renderers label what they draw as generated. The format never claims that a render records an event, even when the description was encoded from a photograph.</p>
       </div>
     </div>
   </div>

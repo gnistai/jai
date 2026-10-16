@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="dacd66b35ec1269ec333665e484414d28740fa7e" name="revision">
+  <meta content="e0d112b5e5a02de986c533b9be6d6ad2587c571b" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -2475,6 +2475,13 @@ decorative image, a few precise paragraphs for one whose look matters.</p>
 moving one is not.</p>
    <ul>
     <li data-md>
+     <p><strong>Readable without seeing.</strong> A JAI image is text first. A vision-impaired
+reader’s screen reader speaks the author’s own description, the same words
+the model draws from, so the text alternative is always present and always
+matches the picture (<a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>). A text-only AI agent
+reads and writes images directly, with no vision model, and can search,
+translate, diff and edit them in the medium it already uses.</p>
+    <li data-md>
      <p><strong>Links with little bandwidth and enough compute.</strong> Ships, aircraft,
 spacecraft crews, satellite connections with data caps, rural networks,
 disaster zones, and text-only channels such as SMS, packet radio and mesh
@@ -2501,12 +2508,6 @@ enjoy, while the author’s description stays the same
 its codec and has no fixed resolution. Rendered next year by a better
 model, or at a higher resolution, the same document yields a better
 picture, much as vector graphics outlive the screens they were drawn for.</p>
-    <li data-md>
-     <p><strong>Text all the way down.</strong> A JAI image can be searched, translated,
-diffed in version control and edited with a text editor; it carries its
-own text alternative for screen readers and text-only browsers; and
-language models and agents can read and write images in the medium they
-already use.</p>
     <li data-md>
      <p><strong>Declared provenance.</strong> A JAI document says it is a description, and
 renderers label their output as generated (<a href="#security-provenance">§ 13.10 Provenance</a>). The
@@ -4350,7 +4351,7 @@ provenance or rights information (<a href="#security-provenance">§ 13.10 Prov
    </ul>
    <h2 class="heading settled" data-level="11" id="html"><span class="secno">11. </span><span class="content">HTML and URL integration</span><a class="self-link" href="#html"></a></h2>
    <h3 class="heading settled" data-level="11.1" id="html-carriers"><span class="secno">11.1. </span><span class="content">Carriers</span><a class="self-link" href="#html-carriers"></a></h3>
-   <p>A document reaches an <code>&lt;img></code> element through one of four <a data-link-type="dfn" href="#carrier" id="ref-for-carrier①">carriers</a>. A
+   <p>A document reaches an <code>&lt;img></code> element through one of three <a data-link-type="dfn" href="#carrier" id="ref-for-carrier①">carriers</a>. A
 viewer examines them in the order below and takes the first one found; the
 same order is the recommended order for authors.</p>
    <dl>
@@ -4374,13 +4375,19 @@ hold a <code>data:image/jai</code> URL.
     <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="carrier-2">carrier 2</dfn>: the <code>data-jai</code> attribute
 
     <dd>
-<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle at dusk"</c->
-     <c- e>data-jai</c-><c- o>=</c-><c- s>"A magical castle at dusk;style=anime"</c-><c- p>></c->
+<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle at dusk, seen from below"</c->
+     <c- e>data-jai</c-><c- o>=</c-><c- s>"Mist fills the valley;style=anime;prompt/flux=Lit windows glow warm"</c-><c- p>></c->
 </pre>
      
-The attribute holds the text form; the <code>jai:</code> prefix is optional. It is never
-read as the JSON form: a JSON object in <code>data-jai</code> is prose. This is the inline
-form for markup that cannot be restructured.
+The element’s <code>alt</code> text is the first prompt value, taken literally and never
+parsed; the attribute holds the text form of the rest of the document, with
+the <code>jai:</code> prefix optional. So <code>alt</code> is both what screen readers speak and the
+start of what the model draws, and nothing is written twice. Text that only
+the model needs (camera terms, framing fractions, <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified keys</a>) goes in
+<code>data-jai</code> and is not read aloud. An empty or absent <code>alt</code> adds nothing, and
+an empty <code>data-jai</code> marks an image whose <code>alt</code> is its whole description.
+<code>data-jai</code> is never read as the JSON form: a JSON object in it is prose. This
+is the inline form for markup that cannot be restructured.
 
 
      <div class="note" role="note">
@@ -4401,27 +4408,14 @@ pixels. In every current browser this is an unavailable image whose <code>alt</c
 text is what the reader sees; see <a href="#html-carrier-3">§ 11.1.2 Requirements for carrier 3</a>.
 
 
-    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="carrier-4">carrier 4</dfn>: <code>alt</code> beginning with <code>jai:</code> (deprecated)
-
-    <dd>
-<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"jai:A magical castle at dusk;style=anime"</c-><c- p>></c->
-</pre>
-     
-Deprecated. The accessible name of the image becomes the syntax, which
-assistive technology announces, and every parameter is read aloud. Documents
-SHOULD NOT use this carrier where any other is available; validators report
-<code>alt-carrier</code>. It is recognised because it is the only carrier that Markdown
-and strict sanitisers let through, and in those contexts a document should be
-the prefix and a short description with few or no parameters. A document
-MUST NOT place a <code>data:</code> URL (<code>preview</code>, <code>source</code> or any other value) in an
-<code>alt</code> carrier (<code>alt-carrier-payload</code>). A viewer MUST NOT render automatically
-from this carrier; it MAY offer rendering on explicit per-image request.
-
    </dl>
    <p>Carriers 1 and 3 are HTML’s own extension points and are the only carriers a
-user agent that decodes <code>image/jai</code> natively implements. Carriers 2 and 4 are
-defined for scripts and extensions acting for a user on a page that opted in;
-a native user agent ignores them unless the user enables such a viewer.</p>
+user agent that decodes <code>image/jai</code> natively implements. Carrier 2 is defined
+for scripts and extensions acting for a user on a page that opted in; a native
+user agent ignores it unless the user enables such a viewer.</p>
+   <p><code>alt</code> is never a carrier. It is the image’s text for people who cannot see it,
+and a screen reader would read JAI syntax in it aloud, parameter by parameter.
+An <code>alt</code> that begins with <code>jai:</code> is ordinary alternative text.</p>
    <p>An <code>alt</code> attribute that does not begin, after leading <a data-link-type="dfn" href="#jai-whitespace" id="ref-for-jai-whitespace⑤">JAI whitespace</a>, with
 <code>jai:</code> is never a JAI document. A <code>jai:</code> string in any URL slot (<code>src</code>,
 <code>href</code>, <code>srcset</code>, CSS <code>url()</code>) is not a carrier: <code>jai:</code> is a text prefix and
@@ -4454,16 +4448,13 @@ layout hints. An implementation that cannot evaluate media queries treats
 every <code>media</code> value as matching.</p>
     <li data-md>
      <p>Otherwise, for a script or extension viewer: if the element has a
-<code>data-jai</code> attribute, the document is its value parsed with the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm①">text parsing algorithm</a>.</p>
+<code>data-jai</code> attribute, the document is its value parsed with the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm①">text parsing algorithm</a>; then, if the element’s <code>alt</code> attribute, after
+<a data-link-type="dfn" href="#value-normalisation" id="ref-for-value-normalisation④">value normalisation</a>, is not empty, it is inserted as the first
+<code>prompt</code> value.</p>
     <li data-md>
      <p>Otherwise, if the element’s <code>src</code> attribute, parsed against the base URL,
 is a <code>data:</code> URL that the data: URL processor accepts and whose MIME type
 essence is <code>image/jai</code>: the document is its body (<a href="#data-urls">§ 7.5 data: URLs</a>).</p>
-    <li data-md>
-     <p>Otherwise, for a script or extension viewer: if the element’s <code>alt</code>
-attribute begins, after JAI whitespace, with <code>jai:</code> ASCII
-case-insensitively, the document is the attribute value parsed with the
-text parsing algorithm (carrier 4).</p>
     <li data-md>
      <p>Otherwise the element carries no document.</p>
    </ol>
@@ -4532,7 +4523,7 @@ never fails. Decode the resulting bytes with <a href="#decoding">§ 7.4 Decodi
      <p>http(s) URL (carrier 1 with a resource URL): the response body, decoded
 with <a href="#decoding">§ 7.4 Decoding</a> regardless of the served <code>Content-Type</code>.</p>
     <li data-md>
-     <p><code>data-jai</code> and <code>alt</code> attributes (carriers 2 and 4): no transport decoding;
+     <p>the <code>data-jai</code> attribute (carrier 2): no transport decoding;
 the attribute value, as the HTML parser produced it, is the input.</p>
     <li data-md>
      <p>Query forms: <a href="#url-query">§ 11.3 Query forms</a>.</p>
@@ -4585,9 +4576,10 @@ consent, decode the parameter locally instead of fetching the gateway.</p>
    <p><em>This section is informative.</em></p>
    <ul>
     <li data-md>
-     <p><strong>Markdown.</strong> CommonMark image syntax exposes only <code>src</code> and <code>alt</code>, so the
-only Markdown carrier is carrier 4 (<code>![jai:A magical castle](castle.png)</code>),
-or a gateway URL in the parameter form. Where a Markdown host allows raw
+     <p><strong>Markdown.</strong> CommonMark image syntax exposes only <code>src</code> and <code>alt</code>. Where a
+Markdown host keeps <code>data:</code> URLs, carrier 3 works
+(<code>![A magical castle](data:image/jai,A%20magical%20castle)</code>); otherwise use
+a gateway URL in the parameter form. Where a Markdown host allows raw
 HTML, carrier 1 is preferred. Bare spaces break Markdown destinations; use
 percent-encoding or angle brackets.</p>
     <li data-md>
@@ -4629,11 +4621,11 @@ can use depends on the pipeline:</p>
 
      <tr>
       <td>User content through GitHub-style allow-list sanitisers
-      <td>carrier 1 as raw HTML (<code>&lt;picture></code>, <code>&lt;source></code>, <code>srcset</code>, <code>type</code> survive; <code>data-*</code> and <code>data:</code> <code>src</code> do not), else carrier 4
+      <td>carrier 1 as raw HTML (<code>&lt;picture></code>, <code>&lt;source></code>, <code>srcset</code>, <code>type</code> survive; <code>data-*</code> and <code>data:</code> <code>src</code> do not), else the text form beside the image
 
      <tr>
       <td>CommonMark image syntax
-      <td>carrier 4 only, or a gateway URL
+      <td>carrier 3 where the host keeps <code>data:</code> URLs, else a gateway URL
 
      <tr>
       <td>Chat, documentation, email text
@@ -4706,11 +4698,10 @@ of the rendered bytes over a <code>blob:</code> URL, which more policies permit.
    <ol>
     <li data-md>
      <p>A viewer MUST keep a human-written <code>alt</code> unchanged, including <code>alt=""</code>. If
-the <code>alt</code> carried the document (carrier 4) or is absent, the accessible
-name becomes the first <code>prompt</code> value with control characters
-removed, truncated at a grapheme cluster boundary at about 250 code
-points, with the full text available in the viewer’s own UI; when the
-document has no <code>prompt</code>, a localised generic name. Keys, URLs and <code>data:</code>
+the <code>alt</code> is absent, the accessible name becomes the <a data-link-type="dfn" href="#description" id="ref-for-description③">description</a> with
+control characters removed, in full: a description is written to be read
+by people as well as models, and JAI sets no length limit on it. When the
+document has no <code>prompt</code>, the name is a localised generic name. Keys, URLs and <code>data:</code>
 payloads never appear in an accessible name.</p>
     <li data-md>
      <p>A viewer SHOULD expose to assistive technology what it shows sighted users about
@@ -4914,8 +4905,8 @@ the configured renderer that matched.</p>
 provider job and set provider-side time limits where the API offers them,
 and cancels on navigation.</p>
     <li data-md>
-     <p>A viewer MUST NOT render automatically from carrier 4 or from a document
-with <code>unsupported-version</code>.</p>
+     <p>A viewer MUST NOT render automatically from a document with
+<code>unsupported-version</code>.</p>
     <li data-md>
      <p>A viewer SHOULD keep a local, clearable, unsynchronised record of renders:
 it is a browsing history.</p>
@@ -4946,7 +4937,7 @@ comparable delay.</p>
    <p>Viewer UI MUST render every document value as text, never as markup; SHOULD
 isolate bidirectional text (<code>unicode-bidi: plaintext</code> or <code>&lt;bdi></code>); MUST NOT
 silently truncate (<code>prompt</code>, <code>avoid</code>, <code>style</code>, <code>model</code> and every
-<a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified key</a> are fully
+<a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key⑤">qualified key</a> are fully
 available); SHOULD visualise or warn on control and invisible formatting
 characters; MUST show the top-level site; and MUST display the <em>configured</em>
 renderer that matched, never the document’s <code>model</code> string, as the thing that
@@ -5106,7 +5097,13 @@ key.</p>
       <td><code>invalid-qualifier</code>
       <td>validator
       <td>the key concerned
-      <td>A <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key⑤">qualified key</a> whose name is not <code>prompt</code>, <code>style</code> or <code>avoid</code>, vendor names included.
+      <td>A <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key⑥">qualified key</a> whose name is not <code>prompt</code>, <code>style</code> or <code>avoid</code>, vendor names included.
+
+     <tr>
+      <td><code>alt-repeated</code>
+      <td>validator
+      <td>none
+      <td>Carrier 2: the first prompt value in <code>data-jai</code> repeats the element’s <code>alt</code>, so the model receives it twice.
 
      <tr>
       <td><code>unknown-key</code>
@@ -5283,18 +5280,6 @@ key.</p>
       <td>A <code>jai:</code> string in a URL slot.
 
      <tr>
-      <td><code>alt-carrier</code>
-      <td>validator
-      <td>none
-      <td>Carrier 4 is used.
-
-     <tr>
-      <td><code>alt-carrier-payload</code>
-      <td>validator
-      <td>none
-      <td>A <code>data:</code> URL inside an <code>alt</code> carrier.
-
-     <tr>
       <td><code>missing-size</code>
       <td>validator
       <td>none
@@ -5469,7 +5454,7 @@ applies <a href="#data-urls">§ 7.5 data: URLs</a>; <code>query</code> and <co
 declarative shadow roots attached; base URL <code>https://example.test/page/</code>;
 every <code>media</code> value matches) → <code>discovered</code>, one entry per <code>&lt;img></code> that
 carries a document, in the order of <a href="#html-discovery">§ 11.1.1 Discovery</a>: <code>carrier</code> (1 to
-4), and either <code>document</code> and <code>diagnostics</code>, or <code>url</code>, the candidate URL as
+3), and either <code>document</code> and <code>diagnostics</code>, or <code>url</code>, the candidate URL as
 written in <code>srcset</code>, compared after resolving it against the base URL.
 Optional <code>advisories</code> and <code>no_advisories</code> apply to all carriers in the
 fragment.</p>
@@ -5487,7 +5472,7 @@ eligibility); optional <code>governing_ratio</code> (number: the element’s <a 
 <code>selected</code> (the <code>id</code> of a catalog entry the user chose, which is then the
 <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model⑤">selected model</a>; an id not in the catalog is ignored and model matching
 runs) → <code>interpreted</code> and <code>diagnostics</code>. <code>interpreted</code> is compared only
-for the members present: <code>description</code> (string: the <a data-link-type="dfn" href="#description" id="ref-for-description③">description</a>, core
+for the members present: <code>description</code> (string: the <a data-link-type="dfn" href="#description" id="ref-for-description④">description</a>, core
 only); <code>style</code> and <code>avoid</code> (arrays of strings: the core values);
 <code>model_description</code> (string: the <a data-link-type="dfn" href="#model-description" id="ref-for-model-description⑤">model description</a>); <code>model_style</code> and
 <code>model_avoid</code> (arrays of strings: the values the selected model receives,
@@ -5516,9 +5501,17 @@ the medium. Ordinary punctuation, including semicolons, is fine.</p>
 items rather than listing them in one value.</p>
     <li data-md>
      <p>Put <code>jai:</code> in front when the place you are writing in does not already say
-it is JAI (a chat message, a document). On a web page, put the text in a
-<code>data-jai</code> attribute (no prefix needed) or use the <code>&lt;picture></code> form; avoid
-<code>alt</code>, which screen readers read aloud.</p>
+it is JAI (a chat message, a document). On a web page, write the
+description in the image’s <code>alt</code> and the settings in a <code>data-jai</code>
+attribute (no prefix needed), or use the <code>&lt;picture></code> form. Never put JAI
+syntax in <code>alt</code>: screen readers read it aloud.</p>
+    <li data-md>
+     <p>Describe what can be seen, concretely, with the essentials in the first
+sentence: a listener can stop once they have heard enough, and models
+with a short prompt window read only the beginning. Prefer visible facts
+to mood words ("warm lamplight on a wooden desk" rather than "an
+empowering atmosphere"). A content image’s <code>alt</code> should say what the image
+shows, not only why it is there.</p>
     <li data-md>
      <p>If your description itself starts with a word followed by <code>=</code>, start with
 <code>prompt=</code> instead. If you need a literal <code>;</code> right before something that
@@ -5574,8 +5567,8 @@ Image-conditioned rendering, with the page’s own image as the input:
 A publisher’s photograph with a description for agents and future readers,
 not to be replaced automatically:
 
-<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"team.jpg"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"The four founders in front of the office"</c->
-     <c- e>data-jai</c-><c- o>=</c-><c- s>"Four people in casual clothes standing in front of a brick office building, overcast daylight;mode=keep"</c-><c- p>></c->
+<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"team.jpg"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"The four founders, in casual clothes, standing in front of the brick office building on an overcast day"</c->
+     <c- e>data-jai</c-><c- o>=</c-><c- s>"mode=keep"</c-><c- p>></c->
 </pre>
    </div>
    <div class="example" id="ex-file">
@@ -5911,7 +5904,6 @@ the repository’s design record.</p>
    <li><a href="#carrier-1">carrier 1</a><span>, in § 11.1</span>
    <li><a href="#carrier-2">carrier 2</a><span>, in § 11.1</span>
    <li><a href="#carrier-3">carrier 3</a><span>, in § 11.1</span>
-   <li><a href="#carrier-4">carrier 4</a><span>, in § 11.1</span>
    <li><a href="#conforming-document">conforming document</a><span>, in § 2.1</span>
    <li><a href="#continuation">continuation</a><span>, in § 5.2</span>
    <li><a href="#decoder">decoder</a><span>, in § 2.1</span>
@@ -6230,12 +6222,11 @@ let dfnPanelData = {
 "carrier-1": {"dfnID":"carrier-1","dfnText":"carrier 1","external":false,"refSections":[],"url":"#carrier-1"},
 "carrier-2": {"dfnID":"carrier-2","dfnText":"carrier 2","external":false,"refSections":[],"url":"#carrier-2"},
 "carrier-3": {"dfnID":"carrier-3","dfnText":"carrier 3","external":false,"refSections":[],"url":"#carrier-3"},
-"carrier-4": {"dfnID":"carrier-4","dfnText":"carrier 4","external":false,"refSections":[],"url":"#carrier-4"},
 "conforming-document": {"dfnID":"conforming-document","dfnText":"conforming document","external":false,"refSections":[],"url":"#conforming-document"},
 "continuation": {"dfnID":"continuation","dfnText":"continuation","external":false,"refSections":[],"url":"#continuation"},
 "decoder": {"dfnID":"decoder","dfnText":"decoder","external":false,"refSections":[{"refs":[{"id":"ref-for-decoder"}],"title":"5.5.1. Bare serialisation"}],"url":"#decoder"},
 "decoding-algorithm": {"dfnID":"decoding-algorithm","dfnText":"decoding algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-decoding-algorithm"}],"title":"11.2. Transport decoding"}],"url":"#decoding-algorithm"},
-"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-description\u2462"}],"title":"14.1. Conformance fixtures"}],"url":"#description"},
+"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-description\u2462"}],"title":"11.5.2. Accessibility"},{"refs":[{"id":"ref-for-description\u2463"}],"title":"14.1. Conformance fixtures"}],"url":"#description"},
 "diagnostic": {"dfnID":"diagnostic","dfnText":"diagnostic","external":false,"refSections":[],"url":"#diagnostic"},
 "discovery": {"dfnID":"discovery","dfnText":"discovery","external":false,"refSections":[],"url":"#discovery"},
 "document": {"dfnID":"document","dfnText":"document","external":false,"refSections":[{"refs":[{"id":"ref-for-document"}],"title":"4. Data model"}],"url":"#document"},
@@ -6266,7 +6257,7 @@ let dfnPanelData = {
 "prose": {"dfnID":"prose","dfnText":"prose","external":false,"refSections":[],"url":"#prose"},
 "provider": {"dfnID":"provider","dfnText":"provider","external":false,"refSections":[],"url":"#provider"},
 "publisher": {"dfnID":"publisher","dfnText":"publisher","external":false,"refSections":[],"url":"#publisher"},
-"qualified-key": {"dfnID":"qualified-key","dfnText":"qualified key","external":false,"refSections":[{"refs":[{"id":"ref-for-qualified-key"}],"title":"5.2.1. Sharp edges"},{"refs":[{"id":"ref-for-qualified-key\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-qualified-key\u2461"}],"title":"6.4. Canonical JSON"},{"refs":[{"id":"ref-for-qualified-key\u2462"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-qualified-key\u2463"}],"title":"13.8. Viewer UI hygiene"},{"refs":[{"id":"ref-for-qualified-key\u2464"}],"title":"14. Diagnostics"}],"url":"#qualified-key"},
+"qualified-key": {"dfnID":"qualified-key","dfnText":"qualified key","external":false,"refSections":[{"refs":[{"id":"ref-for-qualified-key"}],"title":"5.2.1. Sharp edges"},{"refs":[{"id":"ref-for-qualified-key\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-qualified-key\u2461"}],"title":"6.4. Canonical JSON"},{"refs":[{"id":"ref-for-qualified-key\u2462"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-qualified-key\u2463"}],"title":"11.1. Carriers"},{"refs":[{"id":"ref-for-qualified-key\u2464"}],"title":"13.8. Viewer UI hygiene"},{"refs":[{"id":"ref-for-qualified-key\u2465"}],"title":"14. Diagnostics"}],"url":"#qualified-key"},
 "raw-segments": {"dfnID":"raw-segments","dfnText":"raw segments","external":false,"refSections":[],"url":"#raw-segments"},
 "renderer": {"dfnID":"renderer","dfnText":"renderer","external":false,"refSections":[],"url":"#renderer"},
 "scalar-value-string": {"dfnID":"scalar-value-string","dfnText":"scalar value string","external":false,"refSections":[{"refs":[{"id":"ref-for-scalar-value-string"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-scalar-value-string\u2460"}],"title":"6.4. Canonical JSON"}],"url":"#scalar-value-string"},
@@ -6279,7 +6270,7 @@ let dfnPanelData = {
 "user": {"dfnID":"user","dfnText":"user","external":false,"refSections":[],"url":"#user"},
 "validator": {"dfnID":"validator","dfnText":"validator","external":false,"refSections":[],"url":"#validator"},
 "value": {"dfnID":"value","dfnText":"value","external":false,"refSections":[{"refs":[{"id":"ref-for-value"}],"title":"4. Data model"},{"refs":[{"id":"ref-for-value\u2460"}],"title":"4.2. Values"}],"url":"#value"},
-"value-normalisation": {"dfnID":"value-normalisation","dfnText":"value normalisation","external":false,"refSections":[{"refs":[{"id":"ref-for-value-normalisation"}],"title":"5.3. Escaping arbitrary text"},{"refs":[{"id":"ref-for-value-normalisation\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-value-normalisation\u2461"}],"title":"6.1. Shape"},{"refs":[{"id":"ref-for-value-normalisation\u2462"}],"title":"6.3. Reading"}],"url":"#value-normalisation"},
+"value-normalisation": {"dfnID":"value-normalisation","dfnText":"value normalisation","external":false,"refSections":[{"refs":[{"id":"ref-for-value-normalisation"}],"title":"5.3. Escaping arbitrary text"},{"refs":[{"id":"ref-for-value-normalisation\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-value-normalisation\u2461"}],"title":"6.1. Shape"},{"refs":[{"id":"ref-for-value-normalisation\u2462"}],"title":"6.3. Reading"},{"refs":[{"id":"ref-for-value-normalisation\u2463"}],"title":"11.1.1. Discovery"}],"url":"#value-normalisation"},
 "viewer": {"dfnID":"viewer","dfnText":"viewer","external":false,"refSections":[{"refs":[{"id":"ref-for-viewer"}],"title":"11.5. Viewer requirements"}],"url":"#viewer"},
 "whole-query-form": {"dfnID":"whole-query-form","dfnText":"whole-query form","external":false,"refSections":[],"url":"#whole-query-form"},
 };

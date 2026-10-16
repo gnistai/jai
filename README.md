@@ -4,8 +4,10 @@ JAI compresses an image into words: a natural-language description plus a few
 optional settings, from which a generative model reconstructs the picture. A
 typical JAI image is 50 to 500 bytes at any resolution. It is designed for a
 world where generating images is cheap and local and moving them is not:
-links with little bandwidth, local GPUs that draw a picture in under a second,
-and renders personalised for an audience of one. Read the
+links with little bandwidth, local GPUs that draw a picture in seconds or less,
+and renders personalised for an audience of one. Because the image is its
+description, it is readable out of the box by vision-impaired readers, through
+their screen readers, and by text-only AI agents. Read the
 [vision](https://jai.gnist.ai/vision/).
 
 ```

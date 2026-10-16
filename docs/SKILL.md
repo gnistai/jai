@@ -136,6 +136,12 @@ discussion too.
 
 ## Writing JAI from a request
 
+The description is also the image's text for vision-impaired readers and for
+text-only agents: a viewer uses it as the accessible name when there is no
+human-written `alt`. Write it so it reads well aloud, as plain sentences.
+Model-specific tweaks belong in `prompt/<family>=` refinements, which screen
+readers do not hear.
+
 1. Decide the medium first (photograph, oil painting, 3D render, pixel art,
    vector icon). It goes at the start of the description and, as a short
    term, in `style=`.
@@ -258,22 +264,22 @@ The options:
    </picture>
    ```
    Inline instead of a file: `srcset="data:image/jai,A%20magical%20castle%20at%20dusk;style=watercolor"`.
-   On a page, the image's own shape wins: the original's ratio, or `width` and
-   `height`. Make `aspect` agree with them; a differing `aspect` is ignored there.
+   On a page, the image's own shape wins: `width` and `height`, or else the
+   original's ratio. Make `aspect` agree with them; a differing `aspect` is ignored there.
 2. **HTML where you cannot restructure markup:** `<img src="castle.png" alt="A
-   magical castle at dusk" data-jai="A magical castle at dusk;style=watercolor">`.
+   magical castle at dusk" data-jai="style=watercolor">`. The `alt` text is the
+   first line of the description, so write it as a real description and do not
+   repeat it in `data-jai`; put only extra detail and settings there.
 3. **A JAI-aware surface with no pixels at all:**
    `<img src="data:image/jai,A%20magical%20castle%20at%20dusk" alt="A magical castle at dusk" width="800" height="600">`.
    It shows as an unavailable image everywhere else, so the `alt` must be
    real prose and the size must be set.
-4. **Markdown with only image syntax (deprecated; viewers never render it
-   automatically, so use it only when nothing else survives):**
-   `![jai:A magical castle at dusk](castle.png)`.
-   This puts JAI in the `alt` text, which screen readers read aloud; keep it
-   to the prefix and a short description, never `data:` URLs. Prefer raw HTML
-   `<picture>` where the Markdown host allows it. In Markdown image text,
-   backslash escapes, `*`, `_`, `[` and `]` are Markdown syntax: keep the
-   description free of them, or double each JAI backslash (`\\;`).
+4. **Markdown with only image syntax:** carrier 3, where the host keeps
+   `data:` URLs: `![A magical castle at dusk](<data:image/jai,A%20magical%20castle%20at%20dusk>)`.
+   Prefer raw HTML `<picture>` where the Markdown host allows it.
+
+Never put JAI in `alt`. It is the text screen readers speak; viewers ignore an
+`alt` that begins with `jai:`, and readers would hear the syntax.
 
 In any URL (`src`, `srcset`, Markdown links) percent-encode spaces as `%20`,
 tabs and line breaks as `%09` and `%0A`, `%` as `%25`, `#` as `%23`, `"` as

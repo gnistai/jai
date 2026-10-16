@@ -803,18 +803,14 @@ export function discover(img, { baseURL } = {}) {
   const dj = img.getAttribute('data-jai');
   if (dj !== null) {
     const r = parse(dj);
-    return { carrier: 2, kind: 'inline', document: r.document, diagnostics: r.diagnostics, info: r.info };
+    return { carrier: 2, kind: 'inline', document: withAltPrompt(r.document, img.getAttribute('alt')), diagnostics: r.diagnostics, info: r.info };
   }
   const src = img.getAttribute('src');
   if (src !== null) {
     const r = decodeDataURL(src);
     if (r) return { carrier: 3, kind: 'inline', document: r.document, diagnostics: r.diagnostics };
   }
-  const alt = img.getAttribute('alt');
-  if (alt !== null && /^jai:/i.test(alt.replace(LEADING_WS_RE, ''))) {
-    const r = parse(alt);
-    return { carrier: 4, kind: 'inline', document: r.document, diagnostics: r.diagnostics, info: r.info };
-  }
+  // `alt` is never a carrier: it is the image's text for screen readers.
   return null;
 }
 
@@ -1106,6 +1102,18 @@ function dataURLAdvisories(url) {
 }
 
 /**
+ * Carrier 2 (spec §Carriers): the element's alt text, taken literally and never
+ * parsed, is the first prompt value; the prose in data-jai follows it.
+ */
+export function withAltPrompt(doc, alt) {
+  const a = alt === null || alt === undefined ? null : normalizeValue(alt);
+  if (!a) return doc;
+  const out = new Map([['prompt', [a, ...(doc.get('prompt') || [])]]]);
+  for (const [k, v] of doc) if (k !== 'prompt') out.set(k, v);
+  return out;
+}
+
+/**
  * Advisories about how a document was delivered: a decode() result (bytes from
  * a file or a fetched resource; pass viaDataURL for the body of a data: URL),
  * and/or a discovery carrier with its element.
@@ -1114,11 +1122,8 @@ export function validateDelivery({ decoded, carrier, element, viaDataURL = false
   const d = [];
   if (decoded && !viaDataURL && (decoded.form === 'json' || decoded.form === 'text')) d.push(diag('non-canonical-encoding'));
   const doc = decoded && decoded.document;
-  if (carrier === 4) {
-    d.push(diag('alt-carrier'));
-    if (doc) for (const vals of doc.values()) if (vals.some(v => /data:/i.test(v))) { d.push(diag('alt-carrier-payload')); break; }
-  }
   if (carrier === 3 && element && !(element.getAttribute('width') && element.getAttribute('height'))) d.push(diag('missing-size'));
+  if (carrier === 2 && doc) { const p = doc.get('prompt'); if (p && p.length > 1 && p[0] === p[1] && element && element.getAttribute('alt') !== null) d.push(diag('alt-repeated')); }
   if (carrier === 1 && doc) { const m = doc.get('mode'); if (m && asciiLower(trim(m[m.length - 1])) === 'keep') d.push(diag('keep-in-source')); }
   if (element) {
     const names = typeof element.getAttributeNames === 'function' ? element.getAttributeNames() : [];

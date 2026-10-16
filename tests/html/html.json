@@ -103,7 +103,7 @@
   {
    "id": "html-picture-unencoded-space",
    "rationale": "An unencoded space makes the rest of the attribute a descriptor; castle is not a valid descriptor, so HTML drops the candidate and the source is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" alt=\"a\" data-jai=\"fallback\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" data-jai=\"fallback\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -122,8 +122,8 @@
   },
   {
    "id": "html-data-jai",
-   "rationale": "Carrier 2.",
-   "html": "<img src=\"castle.png\" alt=\"A castle\" data-jai=\"A magical castle;style=anime\">",
+   "rationale": "The alt text is the first prompt value; data-jai adds the rest.",
+   "html": "<img src=\"castle.png\" alt=\"A magical castle\" data-jai=\"style=anime\">",
    "discovered": [
     {
      "carrier": 2,
@@ -143,7 +143,7 @@
   {
    "id": "html-data-jai-entities",
    "rationale": "HTML entities are decoded by the HTML parser, not by JAI.",
-   "html": "<img src=\"c.png\" alt=\"c\" data-jai=\"Salt &amp; pepper;style=&quot;ink&quot;\">",
+   "html": "<img src=\"c.png\" data-jai=\"Salt &amp; pepper;style=&quot;ink&quot;\">",
    "discovered": [
     {
      "carrier": 2,
@@ -163,7 +163,7 @@
   {
    "id": "html-data-jai-newline",
    "rationale": "&#10; is a line break.",
-   "html": "<img src=\"c.png\" alt=\"c\" data-jai=\"A castle&#10;Mist below\">",
+   "html": "<img src=\"c.png\" data-jai=\"A castle&#10;Mist below\">",
    "discovered": [
     {
      "carrier": 2,
@@ -180,7 +180,7 @@
   {
    "id": "html-data-jai-percent-not-decoded",
    "rationale": "Attributes are not percent-decoded.",
-   "html": "<img src=\"c.png\" alt=\"c\" data-jai=\"100%20 cotton\">",
+   "html": "<img src=\"c.png\" data-jai=\"100%20 cotton\">",
    "discovered": [
     {
      "carrier": 2,
@@ -226,42 +226,9 @@
   },
   {
    "id": "html-alt",
-   "rationale": "Carrier 4 (deprecated).",
+   "rationale": "alt is never a carrier, even when it begins with jai: (it is the screen-reader text).",
    "html": "<img src=\"castle.png\" alt=\"jai:A magical castle;style=anime\">",
-   "discovered": [
-    {
-     "carrier": 4,
-     "document": {
-      "prompt": [
-       "A magical castle"
-      ],
-      "style": [
-       "anime"
-      ]
-     },
-     "diagnostics": []
-    }
-   ],
-   "advisories": [
-    "alt-carrier"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "html-alt-leading-ws",
-   "rationale": "Leading whitespace before the prefix.",
-   "html": "<img src=\"castle.png\" alt=\"  jai:A castle\">",
-   "discovered": [
-    {
-     "carrier": 4,
-     "document": {
-      "prompt": [
-       "A castle"
-      ]
-     },
-     "diagnostics": []
-    }
-   ],
+   "discovered": [],
    "since": "1.0-draft"
   },
   {
@@ -280,7 +247,7 @@
   },
   {
    "id": "html-order-picture-wins",
-   "rationale": "Carrier 1 before 2 and 4.",
+   "rationale": "Carrier 1 before 2; alt is ignored.",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,one\"><img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\"></picture>",
    "discovered": [
     {
@@ -297,13 +264,14 @@
   },
   {
    "id": "html-order-data-jai-before-alt",
-   "rationale": "Carrier 2 before 4.",
+   "rationale": "data-jai is the carrier; its alt is plain text, taken literally as the first prompt line.",
    "html": "<img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\">",
    "discovered": [
     {
      "carrier": 2,
      "document": {
       "prompt": [
+       "jai:four",
        "two"
       ]
      },
@@ -314,7 +282,7 @@
   },
   {
    "id": "html-order-src-before-alt",
-   "rationale": "Carrier 3 before 4.",
+   "rationale": "src is the carrier; alt is ignored.",
    "html": "<img src=\"data:image/jai,three\" alt=\"jai:four\">",
    "discovered": [
     {
@@ -331,23 +299,15 @@
   },
   {
    "id": "html-multiple",
-   "rationale": "Tree order.",
-   "html": "<p><img src=\"a.png\" alt=\"a\"><img src=\"b.png\" alt=\"b\" data-jai=\"bee\"><img src=\"c.png\" alt=\"jai:sea\"></p>",
+   "rationale": "Tree order; an alt beginning with jai: carries nothing.",
+   "html": "<p><img src=\"a.png\" alt=\"a\"><img src=\"b.png\" alt=\"A bee\" data-jai=\"on a sunflower\"><img src=\"c.png\" alt=\"jai:sea\"></p>",
    "discovered": [
     {
      "carrier": 2,
      "document": {
       "prompt": [
-       "bee"
-      ]
-     },
-     "diagnostics": []
-    },
-    {
-     "carrier": 4,
-     "document": {
-      "prompt": [
-       "sea"
+       "A bee",
+       "on a sunflower"
       ]
      },
      "diagnostics": []
@@ -357,14 +317,153 @@
   },
   {
    "id": "html-data-jai-empty",
-   "rationale": "An empty data-jai is an empty document (carrier present).",
-   "html": "<img src=\"a.png\" alt=\"a\" data-jai=\"\">",
+   "rationale": "An empty data-jai without alt is an empty document (carrier present).",
+   "html": "<img src=\"a.png\" data-jai=\"\">",
    "discovered": [
     {
      "carrier": 2,
      "document": {},
      "diagnostics": []
     }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-empty-with-alt",
+   "rationale": "An empty data-jai marks the image; the alt is the description.",
+   "html": "<img src=\"a.png\" alt=\"A lighthouse at night\" data-jai=\"\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A lighthouse at night"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-first-prompt",
+   "rationale": "alt first, then the prose in data-jai.",
+   "html": "<img src=\"c.png\" alt=\"Twelve colleagues in ski gear laughing on a slope in a white-out\" data-jai=\"One raises a beer;style=35mm film photo;aspect=3:2\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "Twelve colleagues in ski gear laughing on a slope in a white-out",
+       "One raises a beer"
+      ],
+      "style": [
+       "35mm film photo"
+      ],
+      "aspect": [
+       "3:2"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-literal",
+   "rationale": "alt is never parsed: semicolons, key= and backslashes stay text.",
+   "html": "<img src=\"c.png\" alt=\"Ratio 1:2; style=bold\\; x\" data-jai=\"aspect=1:1\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "Ratio 1:2; style=bold\\; x"
+      ],
+      "aspect": [
+       "1:1"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-normalised",
+   "rationale": "alt is a value: trimmed, CR LF becomes LF.",
+   "html": "<img src=\"c.png\" alt=\"  A castle&#13;&#10;at dusk  \" data-jai=\"style=anime\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A castle\nat dusk"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-empty",
+   "rationale": "An empty alt (decorative image) adds nothing.",
+   "html": "<img src=\"c.png\" alt=\"\" data-jai=\"A castle\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A castle"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-not-carrier-3",
+   "rationale": "Only carrier 2 takes its first prompt line from alt.",
+   "html": "<img src=\"data:image/jai,style=anime\" alt=\"A castle\" width=\"10\" height=\"10\">",
+   "discovered": [
+    {
+     "carrier": 3,
+     "document": {
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-repeated",
+   "rationale": "Repeating the alt in data-jai sends it twice; validators warn.",
+   "html": "<img src=\"c.png\" alt=\"A castle\" data-jai=\"A castle;style=anime\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A castle",
+       "A castle"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "alt-repeated"
    ],
    "since": "1.0-draft"
   },
@@ -388,7 +487,7 @@
   {
    "id": "html-data-jai-json",
    "rationale": "data-jai is always the text form; JSON there is prose (R2-6).",
-   "html": "<img src=\"a.png\" alt=\"a\" data-jai='{\"jai\":1,\"prompt\":\"x\"}'>",
+   "html": "<img src=\"a.png\" data-jai='{\"jai\":1,\"prompt\":\"x\"}'>",
    "discovered": [
     {
      "carrier": 2,
@@ -405,7 +504,7 @@
   {
    "id": "html-source-other-data-type",
    "rationale": "A carrier-1 data: URL whose essence is not image/jai is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:text/plain,hello\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:text/plain,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -422,7 +521,7 @@
   {
    "id": "html-source-data-default-type",
    "rationale": "data:, has the default type text/plain and is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:,hello\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -439,7 +538,7 @@
   {
    "id": "html-source-data-bad-base64",
    "rationale": "A carrier-1 data: URL the processor rejects is skipped (R2-7).",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai;base64,!!!\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai;base64,!!!\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
      "carrier": 2,
@@ -455,28 +554,15 @@
   },
   {
    "id": "html-src-data-bad-base64",
-   "rationale": "A carrier-3 data: URL the processor rejects: continue with carrier 4 (R2-7).",
+   "rationale": "A carrier-3 data: URL the processor rejects: the element carries no document (alt is never a carrier).",
    "html": "<img src=\"data:image/jai;base64,!!!\" alt=\"jai:fallback\">",
-   "discovered": [
-    {
-     "carrier": 4,
-     "document": {
-      "prompt": [
-       "fallback"
-      ]
-     },
-     "diagnostics": []
-    }
-   ],
-   "advisories": [
-    "alt-carrier"
-   ],
+   "discovered": [],
    "since": "1.0-draft"
   },
   {
    "id": "html-shadow-tree-order",
    "rationale": "Open shadow roots are visited in tree order, at their host (R2-35).",
-   "html": "<div><template shadowrootmode=\"open\"><img src=\"a.png\" alt=\"a\" data-jai=\"in shadow\"></template></div><img src=\"b.png\" alt=\"b\" data-jai=\"after host\">",
+   "html": "<div><template shadowrootmode=\"open\"><img src=\"a.png\" data-jai=\"in shadow\"></template></div><img src=\"b.png\" data-jai=\"after host\">",
    "discovered": [
     {
      "carrier": 2,
@@ -502,7 +588,7 @@
   {
    "id": "html-shadow-closed-skipped",
    "rationale": "Closed shadow roots are skipped.",
-   "html": "<div><template shadowrootmode=\"closed\"><img src=\"a.png\" alt=\"a\" data-jai=\"hidden\"></template></div><img src=\"b.png\" alt=\"b\" data-jai=\"visible\">",
+   "html": "<div><template shadowrootmode=\"closed\"><img src=\"a.png\" data-jai=\"hidden\"></template></div><img src=\"b.png\" data-jai=\"visible\">",
    "discovered": [
     {
      "carrier": 2,
@@ -597,33 +683,9 @@
    "since": "1.0-draft"
   },
   {
-   "id": "html-alt-carrier-payload",
-   "rationale": "A data: URL inside an alt carrier (S-11).",
-   "html": "<img src=\"a.png\" alt=\"jai:A castle;preview=data:image/png;base64,iVBORw0KGgo=\">",
-   "discovered": [
-    {
-     "carrier": 4,
-     "document": {
-      "prompt": [
-       "A castle"
-      ],
-      "preview": [
-       "data:image/png;base64,iVBORw0KGgo="
-      ]
-     },
-     "diagnostics": []
-    }
-   ],
-   "advisories": [
-    "alt-carrier",
-    "alt-carrier-payload"
-   ],
-   "since": "1.0-draft"
-  },
-  {
    "id": "html-attribute-split",
    "rationale": "A raw \" ends the attribute early; validators flag the junk attributes (R2-30).",
-   "html": "<img src=\"a.png\" alt=\"a\" data-jai=\"A sign reading \"OPEN\" above a door;style=photo\">",
+   "html": "<img src=\"a.png\" data-jai=\"A sign reading \"OPEN\" above a door;style=photo\">",
    "discovered": [
     {
      "carrier": 2,

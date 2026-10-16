@@ -270,6 +270,19 @@ the text:
 - Models with a 77-token text encoder never see refinements appended after a
   long core, hence the note in *Per-model refinements*.
 
+## 6e. alt is the description (owner decision)
+
+The `alt` carrier was removed before any release: a deprecated carrier on day
+one made no sense, and JAI syntax in `alt` is what screen readers would speak.
+Instead, for `data-jai`, `alt` is the first prompt value. The owner's view,
+adopted: alt text should describe what an image shows, richly and concretely,
+not only name its occasion ("our team at the offsite" withholds the white-out
+on the ski slope from a blind reader). A JAI description and a good alt are the
+same text, so it is written once. Costs accepted: tools that rewrite `alt`
+change the render (keeping picture and text in sync), and the document of a
+`data-jai` image spans two attributes. The accessible-name truncation was
+removed with the carrier it was written for.
+
 ## 7. Extensibility
 
 Undotted keys are reserved for the spec; vendors use `vendor.name`; `dc.`
