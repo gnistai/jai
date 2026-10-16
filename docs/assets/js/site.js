@@ -99,7 +99,7 @@ if (sentEls.length) {
       if (!rec) continue;
       if (el.matches('details.sent')) {
         const pre = document.createElement('pre');
-        pre.textContent = `renderer   ${rec.renderer}\nsize       ${rec.width}×${rec.height}\nidentity   ${rec.identity.slice(0, 16)}…\nsent       ${JSON.stringify(rec.sent, null, 2)}`;
+        pre.textContent = `renderer   ${rec.renderer}\nsize       ${rec.width}×${rec.height}\nidentity   ${rec.identity.slice(0, 16)}… (SHA-256 of the document text; contains nothing else)\nsent       ${JSON.stringify(rec.sent, null, 2)}`;
         el.append(pre);
       }
       if (el.matches('[data-image-meta]')) el.textContent = `${rec.renderer.split('/')[1]} · ${rec.width}×${rec.height}`;
