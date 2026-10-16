@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="89a2b9f78be89960c9ad62dd3296b7f7894f28e8" name="revision">
+  <meta content="a66dadd20a87bef58c5877f97b116de6430210a2" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -2231,7 +2231,7 @@ Parts of this work may be from another specification document.  If so, those par
   </div>
   <div class="p-summary" data-fill-with="abstract">
    <h2 class="heading no-num no-ref no-toc settled" id="abstract"><span class="content">Abstract</span></h2>
-   <p>JAI represents an image as a natural-language description plus optional rendering parameters instead of pixels; a generative model acts as the decoder. This specification defines the data model, the human-readable text form, the JSON form, the gzip-compressed file form (<code>.jai</code>, <code>image/jai</code>), the standard parameters and how renderers interpret them, integration with HTML and URLs, and conformance requirements for parsers, serialisers, validators, renderers and viewers.</p>
+   <p>JAI compresses an image into words: a natural-language description plus optional rendering parameters, from which a generative model reconstructs the picture. It is designed for a world where generating images is cheap and local and moving them is not. This specification defines the data model, the human-readable text form, the JSON form, the gzip-compressed file form (<code>.jai</code>, <code>image/jai</code>), the standard parameters and how renderers interpret them, integration with HTML and URLs, and conformance requirements for parsers, serialisers, validators, renderers and viewers.</p>
   </div>
   <div data-fill-with="at-risk"></div>
   <nav data-fill-with="table-of-contents" id="toc">
@@ -2240,8 +2240,14 @@ Parts of this work may be from another specification document.  If so, those par
     <li>
      <a href="#intro"><span class="secno">1</span> <span class="content">Introduction</span></a>
      <ol class="toc">
-      <li><a href="#intro-scope"><span class="secno">1.1</span> <span class="content">What JAI is and is not</span></a>
-      <li><a href="#intro-audiences"><span class="secno">1.2</span> <span class="content">Audiences</span></a>
+      <li>
+       <a href="#intro-motivation"><span class="secno">1.1</span> <span class="content">Motivation</span></a>
+       <ol class="toc">
+        <li><a href="#intro-compression"><span class="secno">1.1.1</span> <span class="content">A description is compression</span></a>
+        <li><a href="#intro-uses"><span class="secno">1.1.2</span> <span class="content">Where it matters</span></a>
+       </ol>
+      <li><a href="#intro-scope"><span class="secno">1.2</span> <span class="content">What JAI is and is not</span></a>
+      <li><a href="#intro-audiences"><span class="secno">1.3</span> <span class="content">Audiences</span></a>
      </ol>
     <li>
      <a href="#conformance"><span class="secno">2</span> <span class="content">Conformance</span></a>
@@ -2344,6 +2350,7 @@ Parts of this work may be from another specification document.  If so, those par
        <ol class="toc">
         <li><a href="#viewer-replacement"><span class="secno">10.5.1</span> <span class="content">Replacement</span></a>
         <li><a href="#viewer-accessibility"><span class="secno">10.5.2</span> <span class="content">Accessibility</span></a>
+        <li><a href="#viewer-personalisation"><span class="secno">10.5.3</span> <span class="content">Personalisation</span></a>
        </ol>
      </ol>
     <li><a href="#extensibility"><span class="secno">11</span> <span class="content">Extensibility</span></a>
@@ -2391,12 +2398,12 @@ Parts of this work may be from another specification document.  If so, those par
    <p class="edition">Edition 1.0-draft. This is a living document; the edition stamp identifies the vocabulary and fixture set that the Agent Skill <a data-link-type="biblio" href="#biblio-agent-skills" title="Agent Skills specification">[AGENT-SKILLS]</a> and the conformance suite refer to.</p>
    <h2 class="heading settled" data-level="1" id="intro"><span class="secno">1. </span><span class="content">Introduction</span><a class="self-link" href="#intro"></a></h2>
    <p><em>This section is informative.</em></p>
-   <p>A JAI document is an image whose pixels have been discarded and replaced by
-what is needed to regenerate an acceptable image: a natural-language
-description and, optionally, a few rendering parameters. Any JAI-capable
-renderer is a decoder. Two decoders produce different pixels, but the same
-image in intent. JAI is to images roughly what MIDI is to music: the score
-travels, the performance is produced where it is played.</p>
+   <p>A JAI document is an image compressed into words: a natural-language
+description and, optionally, a few rendering parameters, from which a
+generative model reconstructs the picture. The description is the code; the
+model is the decoder. Two decoders produce different pixels, but the same
+image in meaning and appearance, in the way two JPEG decoders produce slightly
+different pixels from the same file, only much further along the same curve.</p>
    <p>The simplest JAI document is a sentence:</p>
    <div class="example" id="ex-intro-plain">
     <a class="self-link" href="#ex-intro-plain"></a>
@@ -2428,26 +2435,92 @@ JSON form:
 File form: the JSON above as a single gzip member, in a file named <code>castle.jai</code>, served as <code>image/jai</code>, or embedded as <code>data:image/jai;base64,…</code>.
 
    </div>
-   <h3 class="heading settled" data-level="1.1" id="intro-scope"><span class="secno">1.1. </span><span class="content">What JAI is and is not</span><a class="self-link" href="#intro-scope"></a></h3>
+   <h3 class="heading settled" data-level="1.1" id="intro-motivation"><span class="secno">1.1. </span><span class="content">Motivation</span><a class="self-link" href="#intro-motivation"></a></h3>
+   <p><em>This section is informative.</em></p>
+   <h4 class="heading settled" data-level="1.1.1" id="intro-compression"><span class="secno">1.1.1. </span><span class="content">A description is compression</span><a class="self-link" href="#intro-compression"></a></h4>
+   <p>Every image format trades bits for distortion. JPEG discards detail the eye
+will not miss; JAI keeps only what a person would say about the picture and
+discards the rest. In the terms of rate–distortion theory it sits at the far
+low-rate end of the same curve: a typical document is 50 to 500 bytes for an
+image of any resolution, against tens of kilobytes to megabytes for a raster,
+and its distortion is measured in meaning and appearance (does the result show
+the same things, arranged and lit the same way) rather than in pixel error.</p>
+   <p>This works because the decoder carries a prior. A generative model has
+learned what harbours, castles and dusk light look like, so the code only has
+to say which ones, where and how. Speech coding has relied on the same idea for
+decades: a vocoder transmits the parameters of a model of the voice instead of
+the waveform, and a CELP encoder finds those parameters by running the decoder
+inside the encoder and keeping what sounds closest. JAI encoding is the same
+<em>analysis by synthesis</em>: an encoder describes an image, renders the
+description with the target models, compares the renders with the original,
+and revises the description until they match as closely as time and budget
+allow. A document can carry a core description shared by all models plus small
+per-model refinements, so that each decoder in its preference list
+reconstructs the image as well as it can.</p>
+   <p>The rate–distortion trade-off is the author’s to choose: a sentence for a
+decorative image, a few precise paragraphs for one whose look matters.</p>
+   <h4 class="heading settled" data-level="1.1.2" id="intro-uses"><span class="secno">1.1.2. </span><span class="content">Where it matters</span><a class="self-link" href="#intro-uses"></a></h4>
+   <p>JAI is designed for a world where generating an image is cheap and local, and
+moving one is not.</p>
+   <ul>
+    <li data-md>
+     <p><strong>Links with little bandwidth and enough compute.</strong> Spacecraft and
+deep-space links, ships, aircraft, satellite connections with data caps,
+rural networks, disaster zones, and text-only channels such as SMS, packet
+radio and mesh networks can carry a sentence where they cannot carry a
+photograph. A receiver with a GPU reconstructs the picture.</p>
+    <li data-md>
+     <p><strong>Local generation.</strong> Image generation is moving onto commodity GPUs and
+phones, at well under a second per image. When decoding is local and free,
+a browser can choose the JAI source in a <code>&lt;picture></code> element and never
+download the raster (<a href="#html-carriers">§ 10.1 Carriers</a>); pages get lighter with no change
+to their markup.</p>
+    <li data-md>
+     <p><strong>An audience of one.</strong> Because the reader’s own decoder produces the
+pixels, the reader can ask for them differently: adapted to their culture,
+softened for sensitive content, adjusted for their eyesight, in the
+language of the text inside the image, or simply in a mood or style they
+enjoy, while the author’s description stays the same
+(<a href="#viewer-personalisation">§ 10.5.3 Personalisation</a>).</p>
+    <li data-md>
+     <p><strong>Longevity and resolution independence.</strong> A description does not age with
+its codec and has no fixed resolution. Rendered next year by a better
+model, or at a higher resolution, the same document yields a better
+picture, much as vector graphics outlive the screens they were drawn for.</p>
+    <li data-md>
+     <p><strong>Text all the way down.</strong> A JAI image can be searched, translated,
+diffed in version control and edited with a text editor; it carries its
+own text alternative for screen readers and text-only browsers; and
+language models and agents can read and write images in the medium they
+already use.</p>
+    <li data-md>
+     <p><strong>Honest provenance.</strong> A JAI image is generated by construction, so it
+cannot be mistaken for a photograph of something that happened.</p>
+   </ul>
+   <p>Today, rendering usually runs on hosted providers through an API key. That is
+the stage this edition is published in: good for demonstrations and for
+personal renders, and the reason the security section spends so much care on
+consent, budgets and what leaves the browser (<a href="#security">§ 12 Security and privacy considerations</a>). The format does
+not depend on it.</p>
+   <h3 class="heading settled" data-level="1.2" id="intro-scope"><span class="secno">1.2. </span><span class="content">What JAI is and is not</span><a class="self-link" href="#intro-scope"></a></h3>
    <p><em>This section is informative.</em></p>
    <p>JAI describes visual intent, not pixels. It does not specify a neural network,
 a sampler, a provider, or exact output. A decoder produces <em>an</em> image
-consistent with the description, not <em>the</em> image. Decoding is
-non-deterministic across decoders, versions, hardware and time; it may take
-seconds, cost money, require a network and a user-chosen provider, and be
-refused by a provider’s content policy. Unlike every other image format,
-decoding a JAI document has side effects: it transmits the document, and
-possibly an input image, to a renderer, under the account of the person
-viewing it.</p>
+consistent with the description, not <em>the</em> image; the encoder can only reduce
+the distortion, never remove it. Decoding is non-deterministic across
+decoders, versions, hardware and time. With hosted providers, as today, it may
+also take seconds, cost money, and be refused by a provider’s content policy,
+and it has side effects that no other image format has: it transmits the
+document, and possibly an input image, to a renderer, under the account of the
+person viewing it.</p>
    <p>Every JAI document also has a textual rendering that is instant, free and
 always available: its description, the <code>prompt</code> values joined with line
-breaks. A user agent that will not render pixels presents that instead. For
-the same reason, a JAI document carries its own text alternative in a way no
-pixel format does.</p>
-   <p>JAI is not a compressor for existing rasters. When acceptable pixels exist,
-ship them, and let the JAI document travel alongside as the editable source:
-HTML’s <code>&lt;picture></code> element does exactly this (<a href="#html-carriers">§ 10.1 Carriers</a>).</p>
-   <h3 class="heading settled" data-level="1.2" id="intro-audiences"><span class="secno">1.2. </span><span class="content">Audiences</span><a class="self-link" href="#intro-audiences"></a></h3>
+breaks. A user agent that will not render pixels presents that instead.</p>
+   <p>Where exact pixels matter more than size, such as evidence, medical images,
+diagrams and screenshots of text, ship the raster. JAI can still travel
+alongside it as the editable, searchable source: HTML’s <code>&lt;picture></code> element
+carries both (<a href="#html-carriers">§ 10.1 Carriers</a>).</p>
+   <h3 class="heading settled" data-level="1.3" id="intro-audiences"><span class="secno">1.3. </span><span class="content">Audiences</span><a class="self-link" href="#intro-audiences"></a></h3>
    <p><em>This section is informative.</em></p>
    <p>This specification is written for six audiences: people and AI agents who
 write JAI; authoring tools that convert images to JAI or validate it; library
@@ -4469,6 +4542,25 @@ viewer-owned UI and always offer the original.</p>
    <p>The page’s own accessibility conformance is unaffected by what a user’s agent
 does at the user’s request; a conforming viewer is a user agent in the sense
 of the User Agent Accessibility Guidelines.</p>
+   <h4 class="heading settled" data-level="10.5.3" id="viewer-personalisation"><span class="secno">10.5.3. </span><span class="content">Personalisation</span><a class="self-link" href="#viewer-personalisation"></a></h4>
+   <p>At the user’s request, a viewer MAY render a document with transformations the
+user chose: for example a preferred style, a sensitivity or accessibility
+adjustment, the text inside the image translated into the user’s language, or
+a mood. A personalised render:</p>
+   <ol>
+    <li data-md>
+     <p>MUST be marked as personalised, in viewer-owned UI and to assistive
+technology, alongside the AI-rendered state (<a href="#viewer-accessibility">§ 10.5.2 Accessibility</a>);</p>
+    <li data-md>
+     <p>MUST leave the document unchanged, and the viewer MUST keep a render
+without personalisation available to the user;</p>
+    <li data-md>
+     <p>is reported like any render: the text sent to the model includes the
+personalisation (<a href="#rendering-prompt">§ 9.2 Assembling the model input</a>).</p>
+   </ol>
+   <p>Personalisation is a user setting. A document or a page MUST NOT be able to
+request or trigger it, and a viewer MUST NOT add a personalisation in order to
+get past a refusal (<a href="#rendering-failure">§ 9.5 Failure</a>).</p>
    <h2 class="heading settled" data-level="11" id="extensibility"><span class="secno">11. </span><span class="content">Extensibility</span><a class="self-link" href="#extensibility"></a></h2>
    <ul>
     <li data-md>

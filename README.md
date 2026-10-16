@@ -1,9 +1,12 @@
 # JAI — Just AI Images
 
-JAI is an open standard for representing an image as a natural-language
-description plus optional rendering parameters, instead of pixels. A
-generative model is the decoder: different renderers produce different
-pixels, with the same intent.
+JAI compresses an image into words: a natural-language description plus a few
+optional settings, from which a generative model reconstructs the picture. A
+typical JAI image is 50 to 500 bytes at any resolution. It is designed for a
+world where generating images is cheap and local and moving them is not:
+links with little bandwidth, local GPUs that draw a picture in under a second,
+and renders personalised for an audience of one. Read the
+[vision](https://jai.gnist.ai/vision/).
 
 ```
 jai:A magical castle at dusk;style=storybook illustration;aspect=16:9

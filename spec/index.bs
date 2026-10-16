@@ -6,7 +6,7 @@ Status: LD
 URL: https://jai.gnist.ai/spec/
 Editor: André C. Andersen, Gnist AI https://gnist.ai
 Repository: gnistai/jai
-Abstract: JAI represents an image as a natural-language description plus optional rendering parameters instead of pixels; a generative model acts as the decoder. This specification defines the data model, the human-readable text form, the JSON form, the gzip-compressed file form (<code>.jai</code>, <code>image/jai</code>), the standard parameters and how renderers interpret them, integration with HTML and URLs, and conformance requirements for parsers, serialisers, validators, renderers and viewers.
+Abstract: JAI compresses an image into words: a natural-language description plus optional rendering parameters, from which a generative model reconstructs the picture. It is designed for a world where generating images is cheap and local and moving them is not. This specification defines the data model, the human-readable text form, the JSON form, the gzip-compressed file form (<code>.jai</code>, <code>image/jai</code>), the standard parameters and how renderers interpret them, integration with HTML and URLs, and conformance requirements for parsers, serialisers, validators, renderers and viewers.
 Markup Shorthands: markdown yes, css no
 Boilerplate: conformance no, repository-issue-tracking no
 Complain About: accidental-2119 yes, missing-example-ids no
@@ -56,12 +56,12 @@ table.keys td:first-child, table.codes td:first-child { white-space: nowrap; fon
 
 *This section is informative.*
 
-A JAI document is an image whose pixels have been discarded and replaced by
-what is needed to regenerate an acceptable image: a natural-language
-description and, optionally, a few rendering parameters. Any JAI-capable
-renderer is a decoder. Two decoders produce different pixels, but the same
-image in intent. JAI is to images roughly what MIDI is to music: the score
-travels, the performance is produced where it is played.
+A JAI document is an image compressed into words: a natural-language
+description and, optionally, a few rendering parameters, from which a
+generative model reconstructs the picture. The description is the code; the
+model is the decoder. Two decoders produce different pixels, but the same
+image in meaning and appearance, in the way two JPEG decoders produce slightly
+different pixels from the same file, only much further along the same curve.
 
 The simplest JAI document is a sentence:
 
@@ -94,29 +94,97 @@ JSON form:
 File form: the JSON above as a single gzip member, in a file named `castle.jai`, served as `image/jai`, or embedded as `data:image/jai;base64,…`.
 </div>
 
+## Motivation ## {#intro-motivation}
+
+*This section is informative.*
+
+### A description is compression ### {#intro-compression}
+
+Every image format trades bits for distortion. JPEG discards detail the eye
+will not miss; JAI keeps only what a person would say about the picture and
+discards the rest. In the terms of rate–distortion theory it sits at the far
+low-rate end of the same curve: a typical document is 50 to 500 bytes for an
+image of any resolution, against tens of kilobytes to megabytes for a raster,
+and its distortion is measured in meaning and appearance (does the result show
+the same things, arranged and lit the same way) rather than in pixel error.
+
+This works because the decoder carries a prior. A generative model has
+learned what harbours, castles and dusk light look like, so the code only has
+to say which ones, where and how. Speech coding has relied on the same idea for
+decades: a vocoder transmits the parameters of a model of the voice instead of
+the waveform, and a CELP encoder finds those parameters by running the decoder
+inside the encoder and keeping what sounds closest. JAI encoding is the same
+*analysis by synthesis*: an encoder describes an image, renders the
+description with the target models, compares the renders with the original,
+and revises the description until they match as closely as time and budget
+allow. A document can carry a core description shared by all models plus small
+per-model refinements, so that each decoder in its preference list
+reconstructs the image as well as it can.
+
+The rate–distortion trade-off is the author's to choose: a sentence for a
+decorative image, a few precise paragraphs for one whose look matters.
+
+### Where it matters ### {#intro-uses}
+
+JAI is designed for a world where generating an image is cheap and local, and
+moving one is not.
+
+- **Links with little bandwidth and enough compute.** Spacecraft and
+    deep-space links, ships, aircraft, satellite connections with data caps,
+    rural networks, disaster zones, and text-only channels such as SMS, packet
+    radio and mesh networks can carry a sentence where they cannot carry a
+    photograph. A receiver with a GPU reconstructs the picture.
+- **Local generation.** Image generation is moving onto commodity GPUs and
+    phones, at well under a second per image. When decoding is local and free,
+    a browser can choose the JAI source in a `<picture>` element and never
+    download the raster ([[#html-carriers]]); pages get lighter with no change
+    to their markup.
+- **An audience of one.** Because the reader's own decoder produces the
+    pixels, the reader can ask for them differently: adapted to their culture,
+    softened for sensitive content, adjusted for their eyesight, in the
+    language of the text inside the image, or simply in a mood or style they
+    enjoy, while the author's description stays the same
+    ([[#viewer-personalisation]]).
+- **Longevity and resolution independence.** A description does not age with
+    its codec and has no fixed resolution. Rendered next year by a better
+    model, or at a higher resolution, the same document yields a better
+    picture, much as vector graphics outlive the screens they were drawn for.
+- **Text all the way down.** A JAI image can be searched, translated,
+    diffed in version control and edited with a text editor; it carries its
+    own text alternative for screen readers and text-only browsers; and
+    language models and agents can read and write images in the medium they
+    already use.
+- **Honest provenance.** A JAI image is generated by construction, so it
+    cannot be mistaken for a photograph of something that happened.
+
+Today, rendering usually runs on hosted providers through an API key. That is
+the stage this edition is published in: good for demonstrations and for
+personal renders, and the reason the security section spends so much care on
+consent, budgets and what leaves the browser ([[#security]]). The format does
+not depend on it.
+
 ## What JAI is and is not ## {#intro-scope}
 
 *This section is informative.*
 
 JAI describes visual intent, not pixels. It does not specify a neural network,
 a sampler, a provider, or exact output. A decoder produces *an* image
-consistent with the description, not *the* image. Decoding is
-non-deterministic across decoders, versions, hardware and time; it may take
-seconds, cost money, require a network and a user-chosen provider, and be
-refused by a provider's content policy. Unlike every other image format,
-decoding a JAI document has side effects: it transmits the document, and
-possibly an input image, to a renderer, under the account of the person
-viewing it.
+consistent with the description, not *the* image; the encoder can only reduce
+the distortion, never remove it. Decoding is non-deterministic across
+decoders, versions, hardware and time. With hosted providers, as today, it may
+also take seconds, cost money, and be refused by a provider's content policy,
+and it has side effects that no other image format has: it transmits the
+document, and possibly an input image, to a renderer, under the account of the
+person viewing it.
 
 Every JAI document also has a textual rendering that is instant, free and
 always available: its description, the `prompt` values joined with line
-breaks. A user agent that will not render pixels presents that instead. For
-the same reason, a JAI document carries its own text alternative in a way no
-pixel format does.
+breaks. A user agent that will not render pixels presents that instead.
 
-JAI is not a compressor for existing rasters. When acceptable pixels exist,
-ship them, and let the JAI document travel alongside as the editable source:
-HTML's `<picture>` element does exactly this ([[#html-carriers]]).
+Where exact pixels matter more than size, such as evidence, medical images,
+diagrams and screenshots of text, ship the raster. JAI can still travel
+alongside it as the editable, searchable source: HTML's `<picture>` element
+carries both ([[#html-carriers]]).
 
 ## Audiences ## {#intro-audiences}
 
@@ -1825,6 +1893,24 @@ viewer-owned UI and always offer the original.
 The page's own accessibility conformance is unaffected by what a user's agent
 does at the user's request; a conforming viewer is a user agent in the sense
 of the User Agent Accessibility Guidelines.
+
+### Personalisation ### {#viewer-personalisation}
+
+At the user's request, a viewer MAY render a document with transformations the
+user chose: for example a preferred style, a sensitivity or accessibility
+adjustment, the text inside the image translated into the user's language, or
+a mood. A personalised render:
+
+1. MUST be marked as personalised, in viewer-owned UI and to assistive
+    technology, alongside the AI-rendered state ([[#viewer-accessibility]]);
+2. MUST leave the document unchanged, and the viewer MUST keep a render
+    without personalisation available to the user;
+3. is reported like any render: the text sent to the model includes the
+    personalisation ([[#rendering-prompt]]).
+
+Personalisation is a user setting. A document or a page MUST NOT be able to
+request or trigger it, and a viewer MUST NOT add a personalisation in order to
+get past a refusal ([[#rendering-failure]]).
 
 # Extensibility # {#extensibility}
 

@@ -20,6 +20,7 @@
     <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">jai</span> JAI</a>
     <nav class="nav" aria-label="Main">
       <a href="./" aria-current="page">Home</a>
+      <a href="vision/">Vision</a>
       <a href="examples/">Examples</a>
       <a href="playground/">Playground</a>
       <a href="spec/">Specification</a>
@@ -35,16 +36,16 @@
   <div class="wrap">
     <div>
       <div class="eyebrow">Just AI Images</div>
-      <h1>Images as words.<br>Any AI is the decoder.</h1>
-      <p class="lede">JAI is an open standard for storing an image as a short description and a few optional settings instead of pixels. Hand it to any image generator and you get the picture back: different pixels, same intent.</p>
+      <h1>Images compressed into words.<br>Any AI is the decoder.</h1>
+      <p class="lede">JAI is an open image format for a world where generating pictures is cheap and local, and moving them is not. A JAI image is a few hundred bytes of description that any generative model turns back into the picture: different pixels, same image.</p>
       <div class="jai-line">
         <code id="hero-jai" data-jai-highlight>jai:A magical castle;style=anime</code>
         <button type="button" data-copy="#hero-jai" aria-label="Copy the example">Copy</button>
       </div>
-      <p class="muted">That line is a complete JAI image. The picture beside it is one way to decode it.</p>
+      <p class="muted">Those 32 bytes are a complete JAI image. The picture beside it, 189 KB as WebP, is one way to decode them.</p>
       <div class="actions">
         <a class="btn" href="playground/">Try the playground</a>
-        <a class="btn secondary" href="spec/">Read the specification</a>
+        <a class="btn secondary" href="vision/">Why JAI exists</a>
       </div>
     </div>
     <figure class="hero-figure">
@@ -57,23 +58,23 @@
 <section id="what">
   <div class="wrap">
     <div class="eyebrow">The idea</div>
-    <h2>An extremely lossy image format</h2>
-    <p class="lede">A JPEG throws away detail you will not miss. JAI throws away all the pixels and keeps only what you would say about the picture. A generative model fills the rest back in when the image is viewed.</p>
+    <h2>A description is compression</h2>
+    <p class="lede">JPEG throws away detail you will not miss. JAI goes to the far end of the same curve and keeps only what you would say about the picture. A generative model has already learned what the world looks like, so a few hundred bytes are enough for it to draw the rest.</p>
     <div class="grid grid-3" style="margin-top:28px">
       <div class="card">
-        <h3>Portable</h3>
-        <p>A JAI image is not tied to a model, a service, a language or a browser. Today's renderer and next year's both understand the same sentence.</p>
+        <h3>Little bandwidth</h3>
+        <p>Spacecraft, ships, satellite links and text-only radio can carry a sentence where they cannot carry a photograph. A receiver with a GPU draws the picture.</p>
       </div>
       <div class="card">
-        <h3>Editable</h3>
-        <p>Change the words, change the picture. Swap <code>style=anime</code> for <code>style=watercolor</code> and render again. The description is the source; pixels are a build output.</p>
+        <h3>Local generation</h3>
+        <p>Image models are moving onto ordinary GPUs at well under a second. When decoding is local and free, browsers can skip downloading the raster altogether.</p>
       </div>
       <div class="card">
-        <h3>Readable by people and agents</h3>
-        <p>The simplest JAI document is an ordinary sentence. People write it by hand; AI agents write it from a request or from an existing image.</p>
+        <h3>An audience of one</h3>
+        <p>Your decoder draws the pixels, so you can have them your way: adapted to your culture, softened, adjusted for your eyesight, or just in a mood you enjoy.</p>
       </div>
     </div>
-    <p class="muted" style="margin-top:24px">Honest limits: decoding is not exact. It takes seconds, usually costs money, runs under the viewer's own account with a provider they choose, and two renderers never draw the same pixels. When you already have the right pixels, ship them, and let JAI travel alongside as the editable source.</p>
+    <p class="muted" style="margin-top:24px">Today most renders still go to a hosted provider through an API key, which is fine for demos and personal renders, and the reason the reference viewer asks before every render. <a href="vision/">Read the full argument</a>.</p>
   </div>
 </section>
 
@@ -172,7 +173,7 @@ gzip( JSON )</code></pre>
         <p class="muted">Copy the folder into your agent's skills directory, for example for Claude Code:</p>
 <pre><code>mkdir -p ~/.claude/skills/jai
 curl -o ~/.claude/skills/jai/SKILL.md \
-  https://gnistai.github.io/jai/SKILL.md</code></pre>
+  https://jai.gnist.ai/SKILL.md</code></pre>
         <p class="muted">Or point any assistant at the URL and ask it to follow the instructions.</p>
       </div>
     </div>

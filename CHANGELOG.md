@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0-draft, vision and layout — 2026-10-16
+
+- The introduction now frames JAI as compression (rate–distortion, a
+  generative prior, analysis-by-synthesis encoding) and argues its use cases
+  in a new Motivation section; new informative section on personalisation for
+  an audience of one, with normative marking rules.
+- `aspect` versus layout: the governing ratio (original image, else an
+  author-sized box) wins; renders are never stretched.
+- Website: new Vision page; the homepage leads with the vision.
+
 ## 1.0-draft, review round 2 — 2026-10-16
 
 An independent implementation written from the specification alone exposed

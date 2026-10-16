@@ -19,13 +19,17 @@ reason they lost.
 
 ## 0. Framing
 
-- **D0.1 Codec as design principle, not as claim.** A JAI document is an
-  image whose pixels are replaced by what is needed to regenerate an
-  acceptable image. The spec says plainly: a decoder produces *an* image
-  consistent with the description, not *the* image; decoding is
-  non-deterministic, slow, usually paid, policy-bound, and performed under the
-  reader's provider account. The analogy used publicly is MIDI, not JPEG.
-  Every document has a free textual rendering: its description.
+- **D0.1 A description is compression.** JAI is image compression taken to the
+  far low-rate end of the rate–distortion curve: distortion is measured in
+  meaning and appearance, and the decoder carries a learned prior (as a
+  vocoder carries a model of the voice). Encoding is analysis by synthesis,
+  as in CELP. Revised on the owner's direction (2026-10-16): round 1 had
+  demoted the codec framing to a "design principle, not a claim" and used a
+  MIDI analogy; the owner's view is information-theoretic, and the spec now
+  argues the use cases (little bandwidth with local compute, cheap local
+  generation, audience-of-one personalisation, longevity, text-native images,
+  honest provenance), with hosted APIs described as today's stage. The honest
+  limits stay: a decoder produces an image, not the image.
 - **D0.2 Priorities.** Easier to write, then easier to implement correctly,
   then more compact. Readability of the *canonical* form is not a goal above
   those.
@@ -214,6 +218,14 @@ altered description. The viewer always wins over `mode`.
   and accessible (keep human `alt`; name from the prompt only when `alt` was
   the JAI string or absent; expose the AI-rendered state; no hover-only
   controls; no transitions under reduced motion).
+
+## 6b. Personalisation
+
+A viewer MAY, at the user's request, render with user-chosen transformations
+(style, sensitivity or accessibility adjustments, translated in-image text,
+mood). The render is marked as personalised, the document is unchanged, an
+unpersonalised render stays available, and neither documents nor pages can
+trigger it. It may never be used to get past a refusal.
 
 ## 7. Extensibility
 
