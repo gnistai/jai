@@ -12,7 +12,7 @@ disagree, the fixtures are correct and the prose has a bug.
 | `json` | `json/json.json` | JSON `input` (with `context`) → `document`, `diagnostics`; codes in `optional` may or may not be emitted |
 | `decode` | `decode/decode.json` | base64 `bytes` → `document`, `diagnostics` (`bound` gives the decompression bound to use) |
 | `url` | `url/url.json` | `url` of `kind` `data`, `query` or `param` → `document`, `diagnostics`, or `discovered: false` |
-| `html` | `html/html.json` | HTML fragment → `discovered` carriers in tree order (`url` entries are resolved against the page and fetched by a viewer, not decoded here) |
+| `html` | `html/html.json` | HTML fragment → `discovered` carriers (`picture`, `attribute`, `src`) in tree order (`url` entries are resolved against the page and fetched by a viewer, not decoded here) |
 | `interpret` | `interpret/interpret.json` | `document` (+ optional model `catalog`, `families`, `has_original`, `governing_ratio`, `selected`) → `interpreted` fields (including `model_description`, `model_style`, `model_avoid`) and exact interpreter diagnostics |
 
 A document is written as an object mapping each key to an array of values.

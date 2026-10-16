@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="e0d112b5e5a02de986c533b9be6d6ad2587c571b" name="revision">
+  <meta content="af7963f828383948aa77d81130114d2e06294d0b" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -2341,9 +2341,10 @@ Parts of this work may be from another specification document.  If so, those par
       <li>
        <a href="#html-carriers"><span class="secno">11.1</span> <span class="content">Carriers</span></a>
        <ol class="toc">
-        <li><a href="#html-discovery"><span class="secno">11.1.1</span> <span class="content">Discovery</span></a>
-        <li><a href="#html-carrier-3"><span class="secno">11.1.2</span> <span class="content">Requirements for carrier 3</span></a>
-        <li><a href="#html-serving"><span class="secno">11.1.3</span> <span class="content">Serving <code>.jai</code> resources</span></a>
+        <li><a href="#html-choosing"><span class="secno">11.1.1</span> <span class="content">Choosing a carrier</span></a>
+        <li><a href="#html-discovery"><span class="secno">11.1.2</span> <span class="content">Discovery</span></a>
+        <li><a href="#html-carrier-src"><span class="secno">11.1.3</span> <span class="content">Requirements for the src carrier</span></a>
+        <li><a href="#html-serving"><span class="secno">11.1.4</span> <span class="content">Serving <code>.jai</code> resources</span></a>
        </ol>
       <li><a href="#html-transport"><span class="secno">11.2</span> <span class="content">Transport decoding</span></a>
       <li><a href="#url-query"><span class="secno">11.3</span> <span class="content">Query forms</span></a>
@@ -4351,16 +4352,18 @@ provenance or rights information (<a href="#security-provenance">§ 13.10 Prov
    </ul>
    <h2 class="heading settled" data-level="11" id="html"><span class="secno">11. </span><span class="content">HTML and URL integration</span><a class="self-link" href="#html"></a></h2>
    <h3 class="heading settled" data-level="11.1" id="html-carriers"><span class="secno">11.1. </span><span class="content">Carriers</span><a class="self-link" href="#html-carriers"></a></h3>
-   <p>A document reaches an <code>&lt;img></code> element through one of three <a data-link-type="dfn" href="#carrier" id="ref-for-carrier①">carriers</a>. A
-viewer examines them in the order below and takes the first one found; the
-same order is the recommended order for authors.</p>
+   <p>A document reaches an <code>&lt;img></code> element through one of three <a data-link-type="dfn" href="#carrier" id="ref-for-carrier①">carriers</a>. The
+order below is the precedence a viewer applies when one element carries more
+than one; it is not a recommendation (<a href="#html-choosing">§ 11.1.1 Choosing a carrier</a> says which to use).
+Each carrier also marks the image as JAI: a plain <code>&lt;img></code> with ordinary
+<code>alt</code> text is never a JAI image.</p>
    <dl>
-    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="carrier-1">carrier 1</dfn>: <code>&lt;picture></code> with <code>&lt;source type="image/jai"></code>
+    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="picture-carrier">picture carrier</dfn>: <code>&lt;picture></code> with <code>&lt;source type="image/jai"></code>
 
     <dd>
 <pre class="highlight language-html"><c- p>&lt;</c-><c- f>picture</c-><c- p>></c->
   <c- p>&lt;</c-><c- f>source</c-> <c- e>type</c-><c- o>=</c-><c- s>"image/jai"</c-> <c- e>srcset</c-><c- o>=</c-><c- s>"castle.jai"</c-><c- p>></c->
-  <c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle at dusk"</c-><c- p>></c->
+  <c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A castle at dusk"</c-><c- p>></c->
 <c- p>&lt;/</c-><c- f>picture</c-><c- p>></c->
 </pre>
      
@@ -4369,10 +4372,11 @@ This is HTML’s own format negotiation: a browser that does not support
 <a data-link-type="biblio" href="#biblio-html" title="HTML Standard">[HTML]</a>. <code>src</code> and <code>alt</code> stay untouched, the <code>.jai</code> is fetched only when a
 viewer wants to render, and a browser that one day decodes <code>image/jai</code>
 natively needs no markup change. The <code>srcset</code> may name a <code>.jai</code> resource or
-hold a <code>data:image/jai</code> URL.
+hold a <code>data:image/jai</code> URL. The <code>alt</code> is the page’s own text and need not
+equal the description: it is written for readers of the page, often shorter.
 
 
-    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="carrier-2">carrier 2</dfn>: the <code>data-jai</code> attribute
+    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="attribute-carrier">attribute carrier</dfn>: the <code>data-jai</code> attribute, with <code>alt</code> as the first line
 
     <dd>
 <pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle at dusk, seen from below"</c->
@@ -4385,49 +4389,68 @@ the <code>jai:</code> prefix optional. So <code>alt</code> is both what screen r
 start of what the model draws, and nothing is written twice. Text that only
 the model needs (camera terms, framing fractions, <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified keys</a>) goes in
 <code>data-jai</code> and is not read aloud. An empty or absent <code>alt</code> adds nothing, and
-an empty <code>data-jai</code> marks an image whose <code>alt</code> is its whole description.
-<code>data-jai</code> is never read as the JSON form: a JSON object in it is prose. This
-is the inline form for markup that cannot be restructured.
+an empty <code>data-jai</code> marks an image whose <code>alt</code> is its whole description:
+<code>&lt;img src="castle.png" alt="A rich description…" data-jai></code>. <code>data-jai</code> is
+never read as the JSON form: a JSON object in it is prose.
 
 
-     <div class="note" role="note">
-HTML intends <code>data-*</code> attributes for a page’s own scripts and recommends type
-negotiation for extensions shared across tools, which is why carrier 1 is
-preferred. Carrier 2 is kept because it survives most sanitisers and needs
-no extra element.
-</div>
-    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="carrier-3">carrier 3</dfn>: <code>src</code> is a <code>data:image/jai</code> URL
+    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="src-carrier">src carrier</dfn>: <code>src</code> is a <code>data:image/jai</code> URL or a <code>.jai</code> file
 
     <dd>
-<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"data:image/jai,A%20magical%20castle%20at%20dusk;style=anime"</c->
-     <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle at dusk"</c-> <c- e>width</c-><c- o>=</c-><c- s>"800"</c-> <c- e>height</c-><c- o>=</c-><c- s>"600"</c-><c- p>></c->
+<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.jai"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A castle at dusk"</c-> <c- e>width</c-><c- o>=</c-><c- s>"800"</c-> <c- e>height</c-><c- o>=</c-><c- s>"600"</c-><c- p>></c->
+<c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%20afternoon%20sun"</c->
+     <c- e>alt</c-><c- o>=</c-><c- s>"A leaning red bicycle, afternoon sun"</c-> <c- e>width</c-><c- o>=</c-><c- s>"1024"</c-> <c- e>height</c-><c- o>=</c-><c- s>"1024"</c-><c- p>></c->
 </pre>
      
 The pure form: the image <em>is</em> the description and there are no fallback
-pixels. In every current browser this is an unavailable image whose <code>alt</code>
-text is what the reader sees; see <a href="#html-carrier-3">§ 11.1.2 Requirements for carrier 3</a>.
+pixels. In every current browser it is an unavailable image whose <code>alt</code> text
+is what the reader sees (<a href="#html-carrier-src">§ 11.1.3 Requirements for the src carrier</a>). The document is the resource
+alone: <code>alt</code> is not used, and is the page’s own text, usually shorter than the
+description. In Markdown this is <code>![A castle at dusk](castle.jai)</code>.
 
 
    </dl>
-   <p>Carriers 1 and 3 are HTML’s own extension points and are the only carriers a
-user agent that decodes <code>image/jai</code> natively implements. Carrier 2 is defined
-for scripts and extensions acting for a user on a page that opted in; a native
-user agent ignores it unless the user enables such a viewer.</p>
-   <p><code>alt</code> is never a carrier. It is the image’s text for people who cannot see it,
-and a screen reader would read JAI syntax in it aloud, parameter by parameter.
-An <code>alt</code> that begins with <code>jai:</code> is ordinary alternative text.</p>
-   <p>An <code>alt</code> attribute that does not begin, after leading <a data-link-type="dfn" href="#jai-whitespace" id="ref-for-jai-whitespace⑤">JAI whitespace</a>, with
-<code>jai:</code> is never a JAI document. A <code>jai:</code> string in any URL slot (<code>src</code>,
-<code>href</code>, <code>srcset</code>, CSS <code>url()</code>) is not a carrier: <code>jai:</code> is a text prefix and
-this specification defines no <code>jai:</code> URL scheme (<code>jai-scheme-url</code>).</p>
-   <h4 class="heading settled" data-level="11.1.1" id="html-discovery"><span class="secno">11.1.1. </span><span class="content">Discovery</span><a class="self-link" href="#html-discovery"></a></h4>
+   <p>The picture and src carriers are HTML’s own image slots and the only carriers
+a user agent that decodes <code>image/jai</code> natively implements: decoding an image
+turns bytes into pixels and never sees the element’s <code>alt</code>, so documents in
+those slots are complete on their own and travel as files or URLs. The
+attribute carrier is defined for scripts and extensions acting for a user;
+a native user agent ignores it unless the user enables such a viewer.</p>
+   <p><code>alt</code> is never a carrier by itself. It is the image’s text for people who
+cannot see it, and a screen reader would read JAI syntax in it aloud,
+parameter by parameter: an <code>alt</code> that begins with <code>jai:</code> is ordinary
+alternative text. A <code>jai:</code> string in any URL slot (<code>src</code>, <code>href</code>, <code>srcset</code>,
+CSS <code>url()</code>) is not a carrier: <code>jai:</code> is a text prefix and this specification
+defines no <code>jai:</code> URL scheme (<code>jai-scheme-url</code>).</p>
+   <h4 class="heading settled" data-level="11.1.1" id="html-choosing"><span class="secno">11.1.1. </span><span class="content">Choosing a carrier</span><a class="self-link" href="#html-choosing"></a></h4>
+   <p><em>This section is informative.</em></p>
+   <ul>
+    <li data-md>
+     <p><strong>The attribute carrier is the everyday default</strong> when the page has a raster
+image: write a real description in <code>alt</code>, which serves screen readers and
+models alike, and put settings, extra detail and per-model refinements in
+<code>data-jai</code>. It survives most sanitisers, but strict allow-list sanitisers
+(GitHub’s) strip <code>data-*</code>, and only scripts and extensions read it.</p>
+    <li data-md>
+     <p><strong>The picture carrier</strong> is the path a native user agent takes, and the form
+for hosts that strip <code>data-*</code> but keep <code>&lt;picture></code>. The description lives
+in the <code>.jai</code> resource or <code>data:</code> URL, and <code>alt</code> stays the page’s own text.</p>
+    <li data-md>
+     <p><strong>The src carrier</strong> is for images that have no pixels at all: JAI-only
+content, Markdown, documents produced by an <a data-link-type="dfn" href="#image-encoder" id="ref-for-image-encoder②">image encoder</a>, and
+documents reused across pages. A <code>.jai</code> file keeps the markup short; a
+<code>data:</code> URL keeps everything in one tag.</p>
+   </ul>
+   <h4 class="heading settled" data-level="11.1.2" id="html-discovery"><span class="secno">11.1.2. </span><span class="content">Discovery</span><a class="self-link" href="#html-discovery"></a></h4>
    <p>A viewer runs <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="discovery">discovery</dfn> over the <code>&lt;img></code> elements of a document in
 tree order, descending into open shadow roots (an open shadow root’s tree is visited immediately after its host element and before the host’s children) and skipping closed ones, and
 re-runs it on the mutations HTML considers relevant for source selection
 (changes to <code>src</code>, <code>srcset</code>, <code>sizes</code>, <code>media</code>, <code>type</code>, and to the children of
 a <code>&lt;picture></code>), as well as on <code>data-jai</code> and <code>alt</code> changes. Discovery MUST NOT
 depend on the image having been fetched or having failed: lazily loaded
-images fire no events until they approach the viewport.</p>
+images fire no events until they approach the viewport. Discovery never
+fetches: a <code>.jai</code> resource is fetched only when the user opens the image’s
+controls or a render starts (<a href="#security-inputs">§ 13.2 Permitted inputs</a>).</p>
    <p>For an <code>&lt;img></code> element:</p>
    <ol>
     <li data-md>
@@ -4443,31 +4466,54 @@ descriptors play no further part. If <em>url</em> is a <code>data:</code> URL an
 URL processor <a data-link-type="biblio" href="#biblio-fetch" title="Fetch Standard">[FETCH]</a> returns failure, or returns a MIME type whose
 essence is not <code>image/jai</code>, skip the <code>&lt;source></code>. Otherwise the document is
 the resource at <em>url</em>, resolved against the element’s base URL, and no
-later <code>&lt;source></code> is examined. <code>width</code> and <code>height</code> on the <code>&lt;source></code> are
-layout hints. An implementation that cannot evaluate media queries treats
-every <code>media</code> value as matching.</p>
+later <code>&lt;source></code> is examined (picture carrier). <code>width</code> and <code>height</code> on
+the <code>&lt;source></code> are layout hints. An implementation that cannot evaluate
+media queries treats every <code>media</code> value as matching.</p>
     <li data-md>
      <p>Otherwise, for a script or extension viewer: if the element has a
 <code>data-jai</code> attribute, the document is its value parsed with the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm①">text parsing algorithm</a>; then, if the element’s <code>alt</code> attribute, after
 <a data-link-type="dfn" href="#value-normalisation" id="ref-for-value-normalisation④">value normalisation</a>, is not empty, it is inserted as the first
-<code>prompt</code> value.</p>
+<code>prompt</code> value (attribute carrier).</p>
     <li data-md>
-     <p>Otherwise, if the element’s <code>src</code> attribute, parsed against the base URL,
-is a <code>data:</code> URL that the data: URL processor accepts and whose MIME type
-essence is <code>image/jai</code>: the document is its body (<a href="#data-urls">§ 7.5 data: URLs</a>).</p>
+     <p>Otherwise, if the element has no <code>srcset</code> attribute and no <code>&lt;source></code>
+precedes it in a <code>&lt;picture></code> parent (otherwise HTML never uses <code>src</code>;
+validators report <code>src-shadowed</code>), let <em>url</em> be its <code>src</code> attribute
+parsed against the base URL (src carrier):</p>
+     <ol>
+      <li data-md>
+       <p>if <em>url</em> is a <code>data:</code> URL that the data: URL processor accepts and
+whose MIME type essence is <code>image/jai</code>, the document is its body
+(<a href="#data-urls">§ 7.5 data: URLs</a>);</p>
+      <li data-md>
+       <p>otherwise, if <em>url</em> is an <code>http</code> or <code>https</code> URL whose path, as the URL
+parser leaves it, ends in <code>.jai</code> (<a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑦">ASCII case-insensitively</a>; the
+query and fragment play no part), the document is the resource at
+<em>url</em>.</p>
+     </ol>
     <li data-md>
      <p>Otherwise the element carries no document.</p>
    </ol>
-   <p>If the element’s <code>currentSrc</code> is the URL selected in step 1 and the element
-is complete with a natural width greater than zero, the user agent decodes
-<code>image/jai</code> natively and the viewer stands down.</p>
+   <p>The user agent decodes <code>image/jai</code> natively, or the address delivered pixels
+(a service worker or content negotiation), and the viewer stands down, if the
+element’s <code>currentSrc</code> is the URL selected in step 1 or step 3 and the element
+is complete with a natural width greater than zero. This is checked when a
+render starts, never during discovery. A fetched resource that is served as
+<code>text/html</code>, or that does not decode as JAI, carries no document; the viewer
+removes its control without reporting a failure.</p>
+   <p>A native user agent decides by the response’s media type, whatever the URL;
+a script or extension viewer decides by the <code>.jai</code> path and decodes by
+inspection (<a href="#decoding">§ 7.4 Decoding</a>). Servers SHOULD send <code>Content-Type: image/jai</code>
+(<a href="#media-type">§ 7.3 Media type and file extension</a>); many static hosts send <code>application/octet-stream</code>, which
+script viewers accept and native user agents may not.</p>
    <p>A <code>&lt;source></code> without a <code>type</code> attribute is selected by the browser and
 yields a broken image; validators report <code>source-missing-type</code>. A <code>&lt;source></code>
 after the <code>&lt;img></code> is ignored by HTML (<code>source-after-img</code>). A JAI URL MUST NOT
 appear in the <code>&lt;img></code>’s own <code>srcset</code>. Authors place the <code>image/jai</code> source
 before raster sources when JAI-capable user agents should prefer it; an
-extension’s discovery does not depend on the order. A <code>&lt;source type="image/jai"></code> for a document with <code>mode=keep</code> is unusual, since a native
-decoder would then never show the raster (<code>keep-in-source</code>).</p>
+extension’s discovery does not depend on the order. A document with
+<code>mode=keep</code> in the picture or src carrier is unusual, since a native decoder
+would then never show the raster, and a src image has none
+(<code>keep-in-source</code>).</p>
    <div class="note" role="note">
 A user agent that decodes <code>image/jai</code> natively would select the JAI source
 and never load the raster original; <code>mode</code> then applies only with an
@@ -4476,33 +4522,37 @@ native support will need a rule that a declined or failed render re-selects
 the next candidate; the editors intend to raise this with the HTML
 Standard’s maintainers when a native implementation exists.
 </div>
-   <h4 class="heading settled" data-level="11.1.2" id="html-carrier-3"><span class="secno">11.1.2. </span><span class="content">Requirements for carrier 3</span><a class="self-link" href="#html-carrier-3"></a></h4>
-   <p>An <code>&lt;img></code> whose <code>src</code> is a <code>data:image/jai</code> URL:</p>
+   <h4 class="heading settled" data-level="11.1.3" id="html-carrier-src"><span class="secno">11.1.3. </span><span class="content">Requirements for the src carrier</span><a class="self-link" href="#html-carrier-src"></a></h4>
+   <p><span id="html-carrier-3"></span>An <code>&lt;img></code> whose <code>src</code> is a <code>data:image/jai</code>
+URL or a <code>.jai</code> resource:</p>
    <ul>
     <li data-md>
-     <p>MUST have a non-empty <code>alt</code> that is prose (the description or a human
-summary); in every current browser the <code>alt</code> is what the reader gets;</p>
+     <p>MUST have a non-empty <code>alt</code> that is prose; in every current browser the
+<code>alt</code> is what the reader gets. It need not repeat the description;</p>
     <li data-md>
      <p>SHOULD have <code>width</code> and <code>height</code> attributes or a CSS <code>aspect-ratio</code>, since
-it has no intrinsic size until a render arrives;</p>
+it has no intrinsic size until a render arrives (<code>missing-size</code>). Images
+written in Markdown have none; a viewer then lays the render out at the
+document’s <code>aspect</code>, or 1:1, at the available width;</p>
     <li data-md>
-     <p>MUST NOT have a <code>srcset</code>;</p>
-    <li data-md>
-     <p>SHOULD NOT be the <code>&lt;img></code> of a <code>&lt;picture></code> that also carries a JAI
-<code>&lt;source></code>.</p>
+     <p>MUST NOT have a <code>srcset</code>, and SHOULD NOT be the <code>&lt;img></code> of a <code>&lt;picture></code>
+with any <code>&lt;source></code> (<code>src-shadowed</code>).</p>
    </ul>
    <p>Authors are warned that pages without a JAI viewer show an unavailable
 image; that <code>onerror</code> handlers and lazy-loading libraries rewrite a broken
 image’s <code>src</code> (viewers capture the carrier at discovery); that a Content
-Security Policy must list <code>data:</code> in <code>img-src</code>; and that carrier 1 is
-preferred whenever fallback pixels exist. The inline pure form with a
-fallback is carrier 1 with a <code>data:</code> URL in <code>srcset</code>:</p>
+Security Policy must list <code>data:</code> in <code>img-src</code> for the <code>data:</code> form; and that
+the browser requests a <code>.jai</code> file in <code>src</code> itself, with the page’s cookies
+and referrer, before any viewer does, so the src form saves no bandwidth
+today. When fallback pixels exist, the attribute or picture carrier is the
+better choice. The inline pure form with a fallback is the picture carrier
+with a <code>data:</code> URL in <code>srcset</code>:</p>
 <pre class="highlight language-html"><c- p>&lt;</c-><c- f>picture</c-><c- p>></c->
   <c- p>&lt;</c-><c- f>source</c-> <c- e>type</c-><c- o>=</c-><c- s>"image/jai"</c-> <c- e>srcset</c-><c- o>=</c-><c- s>"data:image/jai,A%20magical%20castle;style=anime"</c-><c- p>></c->
-  <c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle"</c-><c- p>></c->
+  <c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A castle"</c-><c- p>></c->
 <c- p>&lt;/</c-><c- f>picture</c-><c- p>></c->
 </pre>
-   <h4 class="heading settled" data-level="11.1.3" id="html-serving"><span class="secno">11.1.3. </span><span class="content">Serving <code>.jai</code> resources</span><a class="self-link" href="#html-serving"></a></h4>
+   <h4 class="heading settled" data-level="11.1.4" id="html-serving"><span class="secno">11.1.4. </span><span class="content">Serving <code>.jai</code> resources</span><a class="self-link" href="#html-serving"></a></h4>
    <p><em>This section is informative.</em> See <a href="#media-type">§ 7.3 Media type and file extension</a> for the server
 requirements. A script on another origin can read a <code>.jai</code> resource only when
 it is served with CORS headers; browser extensions with host permissions
@@ -4513,17 +4563,18 @@ fetch it from their privileged context but are still bound by
 <a data-link-type="dfn" href="#decoding-algorithm" id="ref-for-decoding-algorithm">decoding algorithm</a> or the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm②">text parsing algorithm</a> runs:</p>
    <ul>
     <li data-md>
-     <p><code>data:</code> URL (carrier 1 with a <code>data:</code> URL in <code>srcset</code>, carrier 3): parse
+     <p><code>data:</code> URL (picture carrier with a <code>data:</code> URL in <code>srcset</code>, or src carrier): parse
 the attribute value against the document’s base URL and run the data: URL
 processor of the Fetch Standard <a data-link-type="biblio" href="#biblio-fetch" title="Fetch Standard">[FETCH]</a>. The fragment is excluded; the
 percent-decoding is the URL Standard’s byte-level percent-decode <a data-link-type="biblio" href="#biblio-url" title="URL Standard">[URL]</a>,
 which leaves a <code>%</code> not followed by two hexadecimal digits in place and
 never fails. Decode the resulting bytes with <a href="#decoding">§ 7.4 Decoding</a>.</p>
     <li data-md>
-     <p>http(s) URL (carrier 1 with a resource URL): the response body, decoded
-with <a href="#decoding">§ 7.4 Decoding</a> regardless of the served <code>Content-Type</code>.</p>
+     <p>http(s) URL (picture or src carrier with a <code>.jai</code> resource): the response
+body, decoded with <a href="#decoding">§ 7.4 Decoding</a> regardless of the served <code>Content-Type</code>,
+except that a <code>text/html</code> response carries no document.</p>
     <li data-md>
-     <p>the <code>data-jai</code> attribute (carrier 2): no transport decoding;
+     <p>the <code>data-jai</code> attribute (attribute carrier): no transport decoding;
 the attribute value, as the HTML parser produced it, is the input.</p>
     <li data-md>
      <p>Query forms: <a href="#url-query">§ 11.3 Query forms</a>.</p>
@@ -4576,14 +4627,16 @@ consent, decode the parameter locally instead of fetching the gateway.</p>
    <p><em>This section is informative.</em></p>
    <ul>
     <li data-md>
-     <p><strong>Markdown.</strong> CommonMark image syntax exposes only <code>src</code> and <code>alt</code>. Where a
-Markdown host keeps <code>data:</code> URLs, carrier 3 works
-(<code>![A magical castle](data:image/jai,A%20magical%20castle)</code>); otherwise use
-a gateway URL in the parameter form. Where a Markdown host allows raw
-HTML, carrier 1 is preferred. Bare spaces break Markdown destinations; use
+     <p><strong>Markdown.</strong> CommonMark image syntax exposes only <code>src</code> and <code>alt</code>, which is
+exactly the src carrier: <code>![A castle at dusk](castle.jai)</code>, or inline
+<code>![A castle at dusk](&lt;data:image/jai,A%20magical%20castle%20at%20dusk>)</code>
+where the host keeps <code>data:</code> URLs. Hosts that proxy external images (GitHub
+rewrites them through its image proxy) lose the <code>.jai</code> path; relative
+images in a repository keep it. Where a Markdown host allows raw HTML, the
+attribute or picture carrier gives readers fallback pixels. Bare spaces break Markdown destinations; use
 percent-encoding or angle brackets.</p>
     <li data-md>
-     <p><strong>CSS.</strong> <code>image-set(url("castle.jai") type("image/jai"), url("castle.png")     type("image/png"))</code> is the CSS twin of carrier 1; this edition does not
+     <p><strong>CSS.</strong> <code>image-set(url("castle.jai") type("image/jai"), url("castle.png")     type("image/png"))</code> is the CSS twin of the picture carrier; this edition does not
 require viewers to act on CSS images or on SVG <code>&lt;image></code>.</p>
     <li data-md>
      <p>**<code>&lt;object type="image/jai" data="castle.jai"></code>** renders its fallback
@@ -4594,9 +4647,9 @@ by <code>object-src</code>; it is not a carrier.</p>
 browser cannot display. There is no navigable JAI link form in this
 edition.</p>
     <li data-md>
-     <p><strong>Service workers.</strong> A site can serve <code>&lt;img src="castle.jai"></code> to its own
-visitors today by rendering in a service worker; this works over http(s)
-only and not on a first visit.</p>
+     <p><strong>Service workers.</strong> A site can render <code>&lt;img src="castle.jai"></code> for its own
+visitors in a service worker, over http(s) and not on a first visit; the
+image then has pixels and viewers stand down (<a href="#html-discovery">§ 11.1.2 Discovery</a>).</p>
     <li data-md>
      <p><strong>Clipboard.</strong> The interoperable clipboard representation is <code>text/plain</code>
 containing the canonical text form with its <code>jai:</code> prefix.</p>
@@ -4613,19 +4666,19 @@ can use depends on the pipeline:</p>
     <tbody>
      <tr>
       <td>HTML the author controls
-      <td>all; prefer carrier 1
+      <td>all; the attribute carrier is the everyday default (<a href="#html-choosing">§ 11.1.1 Choosing a carrier</a>)
 
      <tr>
       <td>User content through DOMPurify defaults
-      <td>carriers 2 and 3, and carrier 1 with an http(s) or relative <code>.jai</code> URL (<code>data:</code> URLs in <code>srcset</code> are removed)
+      <td>all three: attribute, src (<code>data:</code> or <code>.jai</code>), and picture with an http(s) or relative <code>.jai</code> URL (<code>data:</code> URLs in <code>srcset</code> are removed)
 
      <tr>
       <td>User content through GitHub-style allow-list sanitisers
-      <td>carrier 1 as raw HTML (<code>&lt;picture></code>, <code>&lt;source></code>, <code>srcset</code>, <code>type</code> survive; <code>data-*</code> and <code>data:</code> <code>src</code> do not), else the text form beside the image
+      <td>picture as raw HTML (<code>&lt;picture></code>, <code>&lt;source></code>, <code>srcset</code>, <code>type</code> survive; <code>data-*</code> and <code>data:</code> <code>src</code> do not), and src with a relative <code>.jai</code> image
 
      <tr>
       <td>CommonMark image syntax
-      <td>carrier 3 where the host keeps <code>data:</code> URLs, else a gateway URL
+      <td>src: <code>!<a href="castle.jai">alt</a></code>, or a <code>data:</code> URL where the host keeps it
 
      <tr>
       <td>Chat, documentation, email text
@@ -4847,6 +4900,17 @@ originals serve them with CORS headers and <code>crossorigin="anonymous"</code>.
 only after the consent the render requires. Renders that transmit an input
 image SHOULD require a per-image confirmation that shows the image and names
 its origin.</p>
+   <p>A <code>.jai</code> resource named by the picture or src carrier is fetched only when the
+user opens that image’s controls or a render starts (including automatic
+rendering the user enabled for the site), never during discovery, and each
+URL at most once per page. A viewer that can fetch from a privileged context
+(an extension’s background with host permissions) MUST NOT let that context
+become a way for a page to reach other servers. It fetches only <code>http</code> and
+<code>https</code> URLs whose path ends in <code>.jai</code>, without credentials, referrer or
+redirects; it refuses loopback, link-local, private-network and single-label
+host names when the page itself is on a public host; and it limits how many
+such fetches a page can cause. A script viewer on a page with a Content
+Security Policy also needs <code>connect-src</code> to allow the <code>.jai</code> host.</p>
    <h3 class="heading settled" data-level="13.3" id="security-selectors"><span class="secno">13.3. </span><span class="content">Selectors, never locators</span><a class="self-link" href="#security-selectors"></a></h3>
    <p><code>model</code> is a selector: a viewer matches its values only against renderers
 and models the user has configured and enabled. A viewer MUST NOT dispatch to
@@ -4920,7 +4984,8 @@ image bytes it decoded and re-encoded locally. It MUST NOT send the page URL,
 title, referrer, cookies, identity or other page content, and SHOULD send
 image bytes rather than URLs. The viewer’s disclosure names the provider and
 links its retention terms. Any in-page UI, replacement or <code>.jai</code> fetch
-reveals to the page that the user runs a viewer.</p>
+reveals to the page that the user runs a viewer, and a <code>.jai</code> fetch reveals it to the
+host that serves the file.</p>
    <p>Credentials of the reference viewer are stored extension-locally, used only
 from its background context, never exposed to pages or content scripts,
 requested only in viewer UI, sent only to the configured endpoint, and
@@ -4946,9 +5011,11 @@ apply to playgrounds and validators, which are cross-site scripting surfaces
 for <code>preview</code> values and generated HTML snippets.</p>
    <h3 class="heading settled" data-level="13.9" id="security-publishers"><span class="secno">13.9. </span><span class="content">Guidance for publishers</span><a class="self-link" href="#security-publishers"></a></h3>
    <p>Sites that accept user markup and do not intend to publish JAI SHOULD strip
-<code>data-jai</code>, <code>alt</code> values beginning with <code>jai:</code> in any case, <code>data:image/jai</code>
-URLs in <code>src</code> and <code>srcset</code>, and <code>&lt;source type="image/jai"></code>. DOMPurify’s
-defaults keep all of them; strict allow-list sanitisers remove all but <code>alt</code>.
+<code>data-jai</code>, <code>data:image/jai</code> URLs in <code>src</code> and <code>srcset</code>, <code>src</code> URLs whose
+path ends in <code>.jai</code>, and <code>&lt;source type="image/jai"></code>. DOMPurify’s defaults
+keep all of them; strict allow-list sanitisers remove <code>data-jai</code> and <code>data:</code>
+URLs but keep <code>&lt;picture></code> sources and ordinary image URLs, including <code>.jai</code>
+ones.
 A <code>.jai</code> referenced by URL is fetched per viewer at render time and may change
 after review; publishers who need stability inline the document or record its
 identity. Injection through templated prose (<a href="#text-escaping">§ 5.3 Escaping arbitrary text</a>) can truncate
@@ -5103,7 +5170,7 @@ key.</p>
       <td><code>alt-repeated</code>
       <td>validator
       <td>none
-      <td>Carrier 2: the first prompt value in <code>data-jai</code> repeats the element’s <code>alt</code>, so the model receives it twice.
+      <td>Attribute carrier: the first prompt value in <code>data-jai</code> repeats the element’s <code>alt</code>, so the model receives it twice.
 
      <tr>
       <td><code>unknown-key</code>
@@ -5283,7 +5350,7 @@ key.</p>
       <td><code>missing-size</code>
       <td>validator
       <td>none
-      <td>A carrier-3 image without <code>width</code>/<code>height</code> or <code>aspect-ratio</code>.
+      <td>A src-carrier image without <code>width</code>/<code>height</code> or <code>aspect-ratio</code> (expected for Markdown images).
 
      <tr>
       <td><code>attribute-split</code>
@@ -5319,7 +5386,13 @@ key.</p>
       <td><code>keep-in-source</code>
       <td>validator
       <td>none
-      <td>A <code>&lt;source type="image/jai"></code> carries a <code>mode=keep</code> document.
+      <td>The picture or src carrier holds a <code>mode=keep</code> document.
+
+     <tr>
+      <td><code>src-shadowed</code>
+      <td>validator
+      <td>none
+      <td>A JAI <code>src</code> (a <code>data:image/jai</code> URL or a <code>.jai</code> path) on an <code>&lt;img></code> with its own <code>srcset</code> or a preceding <code>&lt;source></code>, so HTML never uses it.
 
      <tr>
       <td><code>no-matching-model</code>
@@ -5453,11 +5526,12 @@ applies <a href="#data-urls">§ 7.5 data: URLs</a>; <code>query</code> and <co
      <p><code>html</code> (a fragment parsed as HTML’s fragment parsing algorithm does, with
 declarative shadow roots attached; base URL <code>https://example.test/page/</code>;
 every <code>media</code> value matches) → <code>discovered</code>, one entry per <code>&lt;img></code> that
-carries a document, in the order of <a href="#html-discovery">§ 11.1.1 Discovery</a>: <code>carrier</code> (1 to
-3), and either <code>document</code> and <code>diagnostics</code>, or <code>url</code>, the candidate URL as
-written in <code>srcset</code>, compared after resolving it against the base URL.
-Optional <code>advisories</code> and <code>no_advisories</code> apply to all carriers in the
-fragment.</p>
+carries a document, in the order of <a href="#html-discovery">§ 11.1.2 Discovery</a>: <code>carrier</code>
+(<code>picture</code>, <code>attribute</code> or <code>src</code>), and either <code>document</code> and
+<code>diagnostics</code>, or <code>url</code>, the URL as written in <code>srcset</code> or <code>src</code>, compared
+after resolving it against the base URL. Optional <code>advisories</code> and
+<code>no_advisories</code> apply to every <code>&lt;img></code> in the fragment, whether it carries
+a document or not.</p>
     <dt data-md><code>interpret</code>
     <dd data-md>
      <p><code>document</code>; optional <code>catalog</code>, the configured models in configuration
@@ -5501,10 +5575,13 @@ the medium. Ordinary punctuation, including semicolons, is fine.</p>
 items rather than listing them in one value.</p>
     <li data-md>
      <p>Put <code>jai:</code> in front when the place you are writing in does not already say
-it is JAI (a chat message, a document). On a web page, write the
-description in the image’s <code>alt</code> and the settings in a <code>data-jai</code>
-attribute (no prefix needed), or use the <code>&lt;picture></code> form. Never put JAI
-syntax in <code>alt</code>: screen readers read it aloud.</p>
+it is JAI (a chat message, a document). On a web page with an image,
+write the description in the image’s <code>alt</code> and the settings in a
+<code>data-jai</code> attribute (no prefix needed; an empty <code>data-jai</code> is enough to
+mark the image). For an image with no pixels, save the document as a
+<code>.jai</code> file and use <code>&lt;img src="castle.jai" alt="…"></code>, or in Markdown
+<code>![…](castle.jai)</code>. Never put JAI syntax in <code>alt</code>: screen readers read
+it aloud.</p>
     <li data-md>
      <p>Describe what can be seen, concretely, with the essentials in the first
 sentence: a listener can stop once they have heard enough, and models
@@ -5894,6 +5971,7 @@ the repository’s design record.</p>
    <li><a href="#ascii-lowercase">ASCII lowercase</a><span>, in § 3</span>
    <li><a href="#assignment">assignment</a><span>, in § 5.2</span>
    <li><a href="#assignment-pattern">assignment pattern</a><span>, in § 5.5</span>
+   <li><a href="#attribute-carrier">attribute carrier</a><span>, in § 11.1</span>
    <li><a href="#author">author</a><span>, in § 3</span>
    <li><a href="#authoring-tool">authoring tool</a><span>, in § 2.1</span>
    <li><a href="#bare-serialisation">bare serialisation</a><span>, in § 5.5.1</span>
@@ -5901,16 +5979,13 @@ the repository’s design record.</p>
    <li><a href="#canonical-json-form">canonical JSON form</a><span>, in § 6.4</span>
    <li><a href="#canonical-url-form">canonical URL form</a><span>, in § 7.5</span>
    <li><a href="#carrier">carrier</a><span>, in § 3</span>
-   <li><a href="#carrier-1">carrier 1</a><span>, in § 11.1</span>
-   <li><a href="#carrier-2">carrier 2</a><span>, in § 11.1</span>
-   <li><a href="#carrier-3">carrier 3</a><span>, in § 11.1</span>
    <li><a href="#conforming-document">conforming document</a><span>, in § 2.1</span>
    <li><a href="#continuation">continuation</a><span>, in § 5.2</span>
    <li><a href="#decoder">decoder</a><span>, in § 2.1</span>
    <li><a href="#decoding-algorithm">decoding algorithm</a><span>, in § 7.4</span>
    <li><a href="#description">description</a><span>, in § 3</span>
    <li><a href="#diagnostic">diagnostic</a><span>, in § 14</span>
-   <li><a href="#discovery">discovery</a><span>, in § 11.1.1</span>
+   <li><a href="#discovery">discovery</a><span>, in § 11.1.2</span>
    <li><a href="#document">document</a><span>, in § 3</span>
    <li><a href="#encoder">encoder</a><span>, in § 2.1</span>
    <li><a href="#escape-prose">escape-prose</a><span>, in § 5.3</span>
@@ -5935,6 +6010,7 @@ the repository’s design record.</p>
    <li><a href="#parameter">parameter</a><span>, in § 3</span>
    <li><a href="#parameter-form">parameter form</a><span>, in § 11.3</span>
    <li><a href="#parser">parser</a><span>, in § 2.1</span>
+   <li><a href="#picture-carrier">picture carrier</a><span>, in § 11.1</span>
    <li><a href="#prompt">prompt</a><span>, in § 3</span>
    <li><a href="#prose">prose</a><span>, in § 5.2</span>
    <li><a href="#provider">provider</a><span>, in § 3</span>
@@ -5945,6 +6021,7 @@ the repository’s design record.</p>
    <li><a href="#scalar-value-string">scalar value string</a><span>, in § 3</span>
    <li><a href="#selected-model">selected model</a><span>, in § 8.3</span>
    <li><a href="#serialiser">serialiser</a><span>, in § 2.1</span>
+   <li><a href="#src-carrier">src carrier</a><span>, in § 11.1</span>
    <li><a href="#standard-key">standard key</a><span>, in § 3</span>
    <li><a href="#text-form">text form</a><span>, in § 3</span>
    <li><a href="#text-parsing-algorithm">text parsing algorithm</a><span>, in § 5.4</span>
@@ -6208,10 +6285,11 @@ function parseHTML(markup) {
 {
 let dfnPanelData = {
 "advisory": {"dfnID":"advisory","dfnText":"advisory","external":false,"refSections":[{"refs":[{"id":"ref-for-advisory"}],"title":"8. Standard parameters"}],"url":"#advisory"},
-"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"5.5.1. Bare serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2464"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2465"}],"title":"8.3. Per-model refinements"}],"url":"#ascii-case-insensitive"},
+"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"5.5.1. Bare serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2464"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2465"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2466"}],"title":"11.1.2. Discovery"}],"url":"#ascii-case-insensitive"},
 "ascii-lowercase": {"dfnID":"ascii-lowercase","dfnText":"ASCII lowercase","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-lowercase"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-ascii-lowercase\u2460"}],"title":"4.1. Keys"},{"refs":[{"id":"ref-for-ascii-lowercase\u2461"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-lowercase\u2462"}],"title":"6.3. Reading"}],"url":"#ascii-lowercase"},
 "assignment": {"dfnID":"assignment","dfnText":"assignment","external":false,"refSections":[],"url":"#assignment"},
 "assignment-pattern": {"dfnID":"assignment-pattern","dfnText":"assignment pattern","external":false,"refSections":[],"url":"#assignment-pattern"},
+"attribute-carrier": {"dfnID":"attribute-carrier","dfnText":"attribute carrier","external":false,"refSections":[],"url":"#attribute-carrier"},
 "author": {"dfnID":"author","dfnText":"author","external":false,"refSections":[],"url":"#author"},
 "authoring-tool": {"dfnID":"authoring-tool","dfnText":"authoring tool","external":false,"refSections":[],"url":"#authoring-tool"},
 "bare-serialisation": {"dfnID":"bare-serialisation","dfnText":"bare serialisation","external":false,"refSections":[{"refs":[{"id":"ref-for-bare-serialisation"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-bare-serialisation\u2460"}],"title":"7.5. data: URLs"}],"url":"#bare-serialisation"},
@@ -6219,9 +6297,6 @@ let dfnPanelData = {
 "canonical-json-form": {"dfnID":"canonical-json-form","dfnText":"canonical JSON form","external":false,"refSections":[{"refs":[{"id":"ref-for-canonical-json-form"}],"title":"7.1. File form"}],"url":"#canonical-json-form"},
 "canonical-url-form": {"dfnID":"canonical-url-form","dfnText":"canonical URL form","external":false,"refSections":[],"url":"#canonical-url-form"},
 "carrier": {"dfnID":"carrier","dfnText":"carrier","external":false,"refSections":[{"refs":[{"id":"ref-for-carrier"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-carrier\u2460"}],"title":"11.1. Carriers"}],"url":"#carrier"},
-"carrier-1": {"dfnID":"carrier-1","dfnText":"carrier 1","external":false,"refSections":[],"url":"#carrier-1"},
-"carrier-2": {"dfnID":"carrier-2","dfnText":"carrier 2","external":false,"refSections":[],"url":"#carrier-2"},
-"carrier-3": {"dfnID":"carrier-3","dfnText":"carrier 3","external":false,"refSections":[],"url":"#carrier-3"},
 "conforming-document": {"dfnID":"conforming-document","dfnText":"conforming document","external":false,"refSections":[],"url":"#conforming-document"},
 "continuation": {"dfnID":"continuation","dfnText":"continuation","external":false,"refSections":[],"url":"#continuation"},
 "decoder": {"dfnID":"decoder","dfnText":"decoder","external":false,"refSections":[{"refs":[{"id":"ref-for-decoder"}],"title":"5.5.1. Bare serialisation"}],"url":"#decoder"},
@@ -6236,12 +6311,12 @@ let dfnPanelData = {
 "file-form": {"dfnID":"file-form","dfnText":"file form","external":false,"refSections":[{"refs":[{"id":"ref-for-file-form"}],"title":"6.2. The jai marker"},{"refs":[{"id":"ref-for-file-form\u2460"}],"title":"7.1. File form"}],"url":"#file-form"},
 "governing-ratio": {"dfnID":"governing-ratio","dfnText":"governing ratio","external":false,"refSections":[{"refs":[{"id":"ref-for-governing-ratio"}],"title":"14.1. Conformance fixtures"}],"url":"#governing-ratio"},
 "identity": {"dfnID":"identity","dfnText":"identity","external":false,"refSections":[{"refs":[{"id":"ref-for-identity"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-identity\u2460"}],"title":"11.5.1. Replacement"},{"refs":[{"id":"ref-for-identity\u2461"}],"title":"13.7. Caches"}],"url":"#identity"},
-"image-encoder": {"dfnID":"image-encoder","dfnText":"image encoder","external":false,"refSections":[{"refs":[{"id":"ref-for-image-encoder"}],"title":"1.1.1. A description is compression"},{"refs":[{"id":"ref-for-image-encoder\u2460"}],"title":"8.3. Per-model refinements"}],"url":"#image-encoder"},
+"image-encoder": {"dfnID":"image-encoder","dfnText":"image encoder","external":false,"refSections":[{"refs":[{"id":"ref-for-image-encoder"}],"title":"1.1.1. A description is compression"},{"refs":[{"id":"ref-for-image-encoder\u2460"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-image-encoder\u2461"}],"title":"11.1.1. Choosing a carrier"}],"url":"#image-encoder"},
 "image-jai": {"dfnID":"image-jai","dfnText":"image/jai","external":false,"refSections":[],"url":"#image-jai"},
 "interpreted-parameters": {"dfnID":"interpreted-parameters","dfnText":"interpreted parameters","external":false,"refSections":[],"url":"#interpreted-parameters"},
 "interpreter": {"dfnID":"interpreter","dfnText":"interpreter","external":false,"refSections":[{"refs":[{"id":"ref-for-interpreter"}],"title":"8.1. Interpretation"}],"url":"#interpreter"},
 "jai-context": {"dfnID":"jai-context","dfnText":"JAI context","external":false,"refSections":[{"refs":[{"id":"ref-for-jai-context"}],"title":"6.2. The jai marker"},{"refs":[{"id":"ref-for-jai-context\u2460"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-jai-context\u2461"}],"title":"7.5. data: URLs"},{"refs":[{"id":"ref-for-jai-context\u2462"},{"id":"ref-for-jai-context\u2463"}],"title":"14.1. Conformance fixtures"}],"url":"#jai-context"},
-"jai-whitespace": {"dfnID":"jai-whitespace","dfnText":"JAI whitespace","external":false,"refSections":[{"refs":[{"id":"ref-for-jai-whitespace"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-jai-whitespace\u2460"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-jai-whitespace\u2461"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-jai-whitespace\u2462"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-jai-whitespace\u2463"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-jai-whitespace\u2464"}],"title":"11.1. Carriers"}],"url":"#jai-whitespace"},
+"jai-whitespace": {"dfnID":"jai-whitespace","dfnText":"JAI whitespace","external":false,"refSections":[{"refs":[{"id":"ref-for-jai-whitespace"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-jai-whitespace\u2460"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-jai-whitespace\u2461"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-jai-whitespace\u2462"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-jai-whitespace\u2463"}],"title":"5.5. Canonical text serialisation"}],"url":"#jai-whitespace"},
 "json-form": {"dfnID":"json-form","dfnText":"JSON form","external":false,"refSections":[{"refs":[{"id":"ref-for-json-form"}],"title":"4.1. Keys"}],"url":"#json-form"},
 "json-reader": {"dfnID":"json-reader","dfnText":"JSON reader","external":false,"refSections":[],"url":"#json-reader"},
 "json-reading-algorithm": {"dfnID":"json-reading-algorithm","dfnText":"JSON reading algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-json-reading-algorithm"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-json-reading-algorithm\u2460"}],"title":"14.1. Conformance fixtures"}],"url":"#json-reading-algorithm"},
@@ -6253,6 +6328,7 @@ let dfnPanelData = {
 "parameter": {"dfnID":"parameter","dfnText":"parameter","external":false,"refSections":[],"url":"#parameter"},
 "parameter-form": {"dfnID":"parameter-form","dfnText":"parameter form","external":false,"refSections":[],"url":"#parameter-form"},
 "parser": {"dfnID":"parser","dfnText":"parser","external":false,"refSections":[],"url":"#parser"},
+"picture-carrier": {"dfnID":"picture-carrier","dfnText":"picture carrier","external":false,"refSections":[],"url":"#picture-carrier"},
 "prompt": {"dfnID":"prompt","dfnText":"prompt","external":false,"refSections":[],"url":"#prompt"},
 "prose": {"dfnID":"prose","dfnText":"prose","external":false,"refSections":[],"url":"#prose"},
 "provider": {"dfnID":"provider","dfnText":"provider","external":false,"refSections":[],"url":"#provider"},
@@ -6263,14 +6339,15 @@ let dfnPanelData = {
 "scalar-value-string": {"dfnID":"scalar-value-string","dfnText":"scalar value string","external":false,"refSections":[{"refs":[{"id":"ref-for-scalar-value-string"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-scalar-value-string\u2460"}],"title":"6.4. Canonical JSON"}],"url":"#scalar-value-string"},
 "selected-model": {"dfnID":"selected-model","dfnText":"selected model","external":false,"refSections":[{"refs":[{"id":"ref-for-selected-model"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-selected-model\u2460"}],"title":"6.5. Identity"},{"refs":[{"id":"ref-for-selected-model\u2461"},{"id":"ref-for-selected-model\u2462"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-selected-model\u2463"}],"title":"13.5. Consent, budgets and cancellation"},{"refs":[{"id":"ref-for-selected-model\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#selected-model"},
 "serialiser": {"dfnID":"serialiser","dfnText":"serialiser","external":false,"refSections":[{"refs":[{"id":"ref-for-serialiser"}],"title":"5.5. Canonical text serialisation"}],"url":"#serialiser"},
+"src-carrier": {"dfnID":"src-carrier","dfnText":"src carrier","external":false,"refSections":[],"url":"#src-carrier"},
 "standard-key": {"dfnID":"standard-key","dfnText":"standard key","external":false,"refSections":[{"refs":[{"id":"ref-for-standard-key"}],"title":"8. Standard parameters"}],"url":"#standard-key"},
 "text-form": {"dfnID":"text-form","dfnText":"text form","external":false,"refSections":[{"refs":[{"id":"ref-for-text-form"}],"title":"4.1. Keys"}],"url":"#text-form"},
-"text-parsing-algorithm": {"dfnID":"text-parsing-algorithm","dfnText":"text parsing algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-text-parsing-algorithm"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2460"}],"title":"11.1.1. Discovery"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2461"}],"title":"11.2. Transport decoding"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2462"},{"id":"ref-for-text-parsing-algorithm\u2463"}],"title":"11.3. Query forms"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#text-parsing-algorithm"},
+"text-parsing-algorithm": {"dfnID":"text-parsing-algorithm","dfnText":"text parsing algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-text-parsing-algorithm"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2460"}],"title":"11.1.2. Discovery"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2461"}],"title":"11.2. Transport decoding"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2462"},{"id":"ref-for-text-parsing-algorithm\u2463"}],"title":"11.3. Query forms"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#text-parsing-algorithm"},
 "trim": {"dfnID":"trim","dfnText":"trim","external":false,"refSections":[{"refs":[{"id":"ref-for-trim"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-trim\u2460"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-trim\u2461"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-trim\u2462"}],"title":"8.1. Interpretation"}],"url":"#trim"},
 "user": {"dfnID":"user","dfnText":"user","external":false,"refSections":[],"url":"#user"},
 "validator": {"dfnID":"validator","dfnText":"validator","external":false,"refSections":[],"url":"#validator"},
 "value": {"dfnID":"value","dfnText":"value","external":false,"refSections":[{"refs":[{"id":"ref-for-value"}],"title":"4. Data model"},{"refs":[{"id":"ref-for-value\u2460"}],"title":"4.2. Values"}],"url":"#value"},
-"value-normalisation": {"dfnID":"value-normalisation","dfnText":"value normalisation","external":false,"refSections":[{"refs":[{"id":"ref-for-value-normalisation"}],"title":"5.3. Escaping arbitrary text"},{"refs":[{"id":"ref-for-value-normalisation\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-value-normalisation\u2461"}],"title":"6.1. Shape"},{"refs":[{"id":"ref-for-value-normalisation\u2462"}],"title":"6.3. Reading"},{"refs":[{"id":"ref-for-value-normalisation\u2463"}],"title":"11.1.1. Discovery"}],"url":"#value-normalisation"},
+"value-normalisation": {"dfnID":"value-normalisation","dfnText":"value normalisation","external":false,"refSections":[{"refs":[{"id":"ref-for-value-normalisation"}],"title":"5.3. Escaping arbitrary text"},{"refs":[{"id":"ref-for-value-normalisation\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-value-normalisation\u2461"}],"title":"6.1. Shape"},{"refs":[{"id":"ref-for-value-normalisation\u2462"}],"title":"6.3. Reading"},{"refs":[{"id":"ref-for-value-normalisation\u2463"}],"title":"11.1.2. Discovery"}],"url":"#value-normalisation"},
 "viewer": {"dfnID":"viewer","dfnText":"viewer","external":false,"refSections":[{"refs":[{"id":"ref-for-viewer"}],"title":"11.5. Viewer requirements"}],"url":"#viewer"},
 "whole-query-form": {"dfnID":"whole-query-form","dfnText":"whole-query form","external":false,"refSections":[],"url":"#whole-query-form"},
 };

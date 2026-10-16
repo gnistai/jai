@@ -233,6 +233,11 @@ const runners = {
     });
     if (c.advisories || c.no_advisories) {
       const all = found.flatMap(f => [...J.validateDelivery({ carrier: f.carrier, element: f.element, decoded: f.document ? { document: f.document } : null }), ...(f.document ? J.validate(f.document, f.info) : [])]);
+      // Advisories also cover images that carry nothing (for example a JAI src that HTML would never use).
+      const imgs = [];
+      const visit = n => { for (const el of Array.from(n.children || [])) { if (el.localName === 'img') imgs.push(el); if (el.shadowRoot) visit(el.shadowRoot); visit(el); } };
+      visit(root);
+      for (const el of imgs) if (!found.some(f => f.element === el)) all.push(...J.validateDelivery({ element: el }));
       if (c.advisories && !hasAll(all, c.advisories)) errs.push(`advisories [${fmtDiags(all)}] missing some of [${c.advisories.join(', ')}]`);
       if (c.no_advisories && !hasNone(all, c.no_advisories)) errs.push(`advisories [${fmtDiags(all)}] include one of [${c.no_advisories.join(', ')}]`);
     }

@@ -283,6 +283,24 @@ change the render (keeping picture and text in sync), and the document of a
 `data-jai` image spans two attributes. The accessible-name truncation was
 removed with the carrier it was written for.
 
+## 6f. Named carriers, the src file, and what to recommend (owner decision)
+
+Carriers are named (picture, attribute, src) because numbers read as a
+ranking. Discovery precedence (picture, attribute, src) is kept and stated as
+precedence only. The owner prefers the attribute carrier as the everyday
+default: one description in `alt` serves screen readers and models. Its cost
+is that only scripts and extensions read `data-*`; the picture and src
+carriers are what a native browser implements, because image decoding never
+sees `alt`, so documents in those slots are complete on their own. The src
+carrier gained `.jai` files: the hosted twin of `data:image/jai`, the natural
+native form, and the clean Markdown form. Viewers recognise it by the `.jai`
+path; native user agents by `Content-Type`.
+
+A design review found that the reference viewer fetched `.jai` URLs during
+discovery and that its privileged fallback fetch would request any URL, which
+let a page probe the user's network without a click. Both are fixed and the
+rules are normative in #security-inputs.
+
 ## 7. Extensibility
 
 Undotted keys are reserved for the spec; vendors use `vendor.name`; `dc.`

@@ -775,9 +775,35 @@ export function firstSrcsetURL(srcset) {
 }
 
 /**
+ * A .jai resource URL for the src carrier (spec §Carriers): an http(s) URL, after
+ * resolving against the base, whose path ends in ".jai" (ASCII case-insensitive;
+ * query and fragment ignored). Returns the absolute URL or null.
+ */
+export function jaiResourceURL(value, baseURL) {
+  if (value == null) return null;
+  let u;
+  try { u = new URL(value, baseURL || undefined); } catch { return null; }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+  return /\.jai$/i.test(u.pathname) ? u.href : null;
+}
+
+/** Whether HTML's image source selection would use the element's src at all (no own srcset, no preceding <source>). */
+function srcIsSelected(img) {
+  if (img.getAttribute('srcset') !== null) return false;
+  const parent = img.parentElement;
+  if (parent && parent.localName === 'picture') {
+    for (const child of Array.from(parent.children)) {
+      if (child === img) break;
+      if (child.localName === 'source') return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Discovery for one <img> element (spec §Discovery). Returns null or
- * {carrier, kind: 'inline'|'url', document?, diagnostics?, url?, source?}.
- * For carrier 1 with a non-data: URL the caller fetches and decodes the bytes.
+ * {carrier: 'picture'|'attribute'|'src', kind: 'inline'|'url', document?, diagnostics?, url?, source?}.
+ * For a 'url' kind (picture or src carrier) the caller fetches and decodes the bytes, only when rendering.
  */
 export function discover(img, { baseURL } = {}) {
   const parent = img.parentElement;
@@ -793,22 +819,24 @@ export function discover(img, { baseURL } = {}) {
       if (/^data:/i.test(url)) {
         const r = decodeDataURL(url);
         if (!r) continue;
-        return { carrier: 1, kind: 'inline', document: r.document, diagnostics: r.diagnostics, source: child };
+        return { carrier: 'picture', kind: 'inline', document: r.document, diagnostics: r.diagnostics, source: child };
       }
       let abs = url;
       try { abs = new URL(url, baseURL || (img.ownerDocument && img.ownerDocument.baseURI) || undefined).href; } catch { /* keep */ }
-      return { carrier: 1, kind: 'url', url: abs, source: child };
+      return { carrier: 'picture', kind: 'url', url: abs, source: child };
     }
   }
   const dj = img.getAttribute('data-jai');
   if (dj !== null) {
     const r = parse(dj);
-    return { carrier: 2, kind: 'inline', document: withAltPrompt(r.document, img.getAttribute('alt')), diagnostics: r.diagnostics, info: r.info };
+    return { carrier: 'attribute', kind: 'inline', document: withAltPrompt(r.document, img.getAttribute('alt')), diagnostics: r.diagnostics, info: r.info };
   }
   const src = img.getAttribute('src');
-  if (src !== null) {
+  if (src !== null && srcIsSelected(img)) {
     const r = decodeDataURL(src);
-    if (r) return { carrier: 3, kind: 'inline', document: r.document, diagnostics: r.diagnostics };
+    if (r) return { carrier: 'src', kind: 'inline', document: r.document, diagnostics: r.diagnostics };
+    const url = jaiResourceURL(src, baseURL || (img.ownerDocument && img.ownerDocument.baseURI));
+    if (url) return { carrier: 'src', kind: 'url', url };
   }
   // `alt` is never a carrier: it is the image's text for screen readers.
   return null;
@@ -1102,7 +1130,7 @@ function dataURLAdvisories(url) {
 }
 
 /**
- * Carrier 2 (spec §Carriers): the element's alt text, taken literally and never
+ * Attribute carrier (spec §Carriers): the element's alt text, taken literally and never
  * parsed, is the first prompt value; the prose in data-jai follows it.
  */
 export function withAltPrompt(doc, alt) {
@@ -1122,14 +1150,16 @@ export function validateDelivery({ decoded, carrier, element, viaDataURL = false
   const d = [];
   if (decoded && !viaDataURL && (decoded.form === 'json' || decoded.form === 'text')) d.push(diag('non-canonical-encoding'));
   const doc = decoded && decoded.document;
-  if (carrier === 3 && element && !(element.getAttribute('width') && element.getAttribute('height'))) d.push(diag('missing-size'));
-  if (carrier === 2 && doc) { const p = doc.get('prompt'); if (p && p.length > 1 && p[0] === p[1] && element && element.getAttribute('alt') !== null) d.push(diag('alt-repeated')); }
-  if (carrier === 1 && doc) { const m = doc.get('mode'); if (m && asciiLower(trim(m[m.length - 1])) === 'keep') d.push(diag('keep-in-source')); }
+  if (carrier === 'src' && element && !(element.getAttribute('width') && element.getAttribute('height'))) d.push(diag('missing-size'));
+  if (carrier === 'attribute' && doc) { const p = doc.get('prompt'); if (p && p.length > 1 && p[0] === p[1] && element && element.getAttribute('alt') !== null) d.push(diag('alt-repeated')); }
+  if ((carrier === 'picture' || carrier === 'src') && doc) { const m = doc.get('mode'); if (m && asciiLower(trim(m[m.length - 1])) === 'keep') d.push(diag('keep-in-source')); }
   if (element) {
     const names = typeof element.getAttributeNames === 'function' ? element.getAttributeNames() : [];
     if (names.some(n => /["';=]/.test(n))) d.push(diag('attribute-split'));
     const src = element.getAttribute('src');
     if (src) d.push(...dataURLAdvisories(src));
+    // A JAI src that HTML's image selection would never use (own srcset, or a preceding <source>).
+    if (src && !srcIsSelected(element) && (/^\s*data:image\/jai(?=[;,]|$)/i.test(src) || /\.jai(?:[?#]|$)/i.test(src))) d.push(diag('src-shadowed'));
     const parent = element.parentElement;
     if (parent && parent.localName === 'picture') {
       let after = false;

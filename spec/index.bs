@@ -1730,17 +1730,19 @@ person had written them by hand:
 
 ## Carriers ## {#html-carriers}
 
-A document reaches an `<img>` element through one of three [=carriers=]. A
-viewer examines them in the order below and takes the first one found; the
-same order is the recommended order for authors.
+A document reaches an `<img>` element through one of three [=carriers=]. The
+order below is the precedence a viewer applies when one element carries more
+than one; it is not a recommendation ([[#html-choosing]] says which to use).
+Each carrier also marks the image as JAI: a plain `<img>` with ordinary
+`alt` text is never a JAI image.
 
 <dl>
-<dt><dfn export>carrier 1</dfn>: `<picture>` with `<source type="image/jai">`
+<dt><dfn export>picture carrier</dfn>: `<picture>` with `<source type="image/jai">`
 <dd>
 ```html
 <picture>
   <source type="image/jai" srcset="castle.jai">
-  <img src="castle.png" alt="A magical castle at dusk">
+  <img src="castle.png" alt="A castle at dusk">
 </picture>
 ```
 This is HTML's own format negotiation: a browser that does not support
@@ -1748,9 +1750,10 @@ This is HTML's own format negotiation: a browser that does not support
 [[!HTML]]. `src` and `alt` stay untouched, the `.jai` is fetched only when a
 viewer wants to render, and a browser that one day decodes `image/jai`
 natively needs no markup change. The `srcset` may name a `.jai` resource or
-hold a `data:image/jai` URL.
+hold a `data:image/jai` URL. The `alt` is the page's own text and need not
+equal the description: it is written for readers of the page, often shorter.
 
-<dt><dfn export>carrier 2</dfn>: the `data-jai` attribute
+<dt><dfn export>attribute carrier</dfn>: the `data-jai` attribute, with `alt` as the first line
 <dd>
 ```html
 <img src="castle.png" alt="A magical castle at dusk, seen from below"
@@ -1762,42 +1765,55 @@ the `jai:` prefix optional. So `alt` is both what screen readers speak and the
 start of what the model draws, and nothing is written twice. Text that only
 the model needs (camera terms, framing fractions, [=qualified keys=]) goes in
 `data-jai` and is not read aloud. An empty or absent `alt` adds nothing, and
-an empty `data-jai` marks an image whose `alt` is its whole description.
-`data-jai` is never read as the JSON form: a JSON object in it is prose. This
-is the inline form for markup that cannot be restructured.
+an empty `data-jai` marks an image whose `alt` is its whole description:
+`<img src="castle.png" alt="A rich description…" data-jai>`. `data-jai` is
+never read as the JSON form: a JSON object in it is prose.
 
-<div class=note>
-HTML intends `data-*` attributes for a page's own scripts and recommends type
-negotiation for extensions shared across tools, which is why carrier 1 is
-preferred. Carrier 2 is kept because it survives most sanitisers and needs
-no extra element.
-</div>
-
-<dt><dfn export>carrier 3</dfn>: `src` is a `data:image/jai` URL
+<dt><dfn export>src carrier</dfn>: `src` is a `data:image/jai` URL or a `.jai` file
 <dd>
 ```html
-<img src="data:image/jai,A%20magical%20castle%20at%20dusk;style=anime"
-     alt="A magical castle at dusk" width="800" height="600">
+<img src="castle.jai" alt="A castle at dusk" width="800" height="600">
+<img src="data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%20afternoon%20sun"
+     alt="A leaning red bicycle, afternoon sun" width="1024" height="1024">
 ```
 The pure form: the image *is* the description and there are no fallback
-pixels. In every current browser this is an unavailable image whose `alt`
-text is what the reader sees; see [[#html-carrier-3]].
+pixels. In every current browser it is an unavailable image whose `alt` text
+is what the reader sees ([[#html-carrier-src]]). The document is the resource
+alone: `alt` is not used, and is the page's own text, usually shorter than the
+description. In Markdown this is `![A castle at dusk](castle.jai)`.
 
 </dl>
 
-Carriers 1 and 3 are HTML's own extension points and are the only carriers a
-user agent that decodes `image/jai` natively implements. Carrier 2 is defined
-for scripts and extensions acting for a user on a page that opted in; a native
-user agent ignores it unless the user enables such a viewer.
+The picture and src carriers are HTML's own image slots and the only carriers
+a user agent that decodes `image/jai` natively implements: decoding an image
+turns bytes into pixels and never sees the element's `alt`, so documents in
+those slots are complete on their own and travel as files or URLs. The
+attribute carrier is defined for scripts and extensions acting for a user;
+a native user agent ignores it unless the user enables such a viewer.
 
-`alt` is never a carrier. It is the image's text for people who cannot see it,
-and a screen reader would read JAI syntax in it aloud, parameter by parameter.
-An `alt` that begins with `jai:` is ordinary alternative text.
+`alt` is never a carrier by itself. It is the image's text for people who
+cannot see it, and a screen reader would read JAI syntax in it aloud,
+parameter by parameter: an `alt` that begins with `jai:` is ordinary
+alternative text. A `jai:` string in any URL slot (`src`, `href`, `srcset`,
+CSS `url()`) is not a carrier: `jai:` is a text prefix and this specification
+defines no `jai:` URL scheme (`jai-scheme-url`).
 
-An `alt` attribute that does not begin, after leading [=JAI whitespace=], with
-`jai:` is never a JAI document. A `jai:` string in any URL slot (`src`,
-`href`, `srcset`, CSS `url()`) is not a carrier: `jai:` is a text prefix and
-this specification defines no `jai:` URL scheme (`jai-scheme-url`).
+### Choosing a carrier ### {#html-choosing}
+
+*This section is informative.*
+
+- **The attribute carrier is the everyday default** when the page has a raster
+    image: write a real description in `alt`, which serves screen readers and
+    models alike, and put settings, extra detail and per-model refinements in
+    `data-jai`. It survives most sanitisers, but strict allow-list sanitisers
+    (GitHub's) strip `data-*`, and only scripts and extensions read it.
+- **The picture carrier** is the path a native user agent takes, and the form
+    for hosts that strip `data-*` but keep `<picture>`. The description lives
+    in the `.jai` resource or `data:` URL, and `alt` stays the page's own text.
+- **The src carrier** is for images that have no pixels at all: JAI-only
+    content, Markdown, documents produced by an [=image encoder=], and
+    documents reused across pages. A `.jai` file keeps the markup short; a
+    `data:` URL keeps everything in one tag.
 
 ### Discovery ### {#html-discovery}
 
@@ -1807,7 +1823,9 @@ re-runs it on the mutations HTML considers relevant for source selection
 (changes to `src`, `srcset`, `sizes`, `media`, `type`, and to the children of
 a `<picture>`), as well as on `data-jai` and `alt` changes. Discovery MUST NOT
 depend on the image having been fetched or having failed: lazily loaded
-images fire no events until they approach the viewport.
+images fire no events until they approach the viewport. Discovery never
+fetches: a `.jai` resource is fetched only when the user opens the image's
+controls or a render starts ([[#security-inputs]]).
 
 For an `<img>` element:
 
@@ -1823,31 +1841,50 @@ For an `<img>` element:
     URL processor [[!FETCH]] returns failure, or returns a MIME type whose
     essence is not `image/jai`, skip the `<source>`. Otherwise the document is
     the resource at *url*, resolved against the element's base URL, and no
-    later `<source>` is examined. `width` and `height` on the `<source>` are
-    layout hints. An implementation that cannot evaluate media queries treats
-    every `media` value as matching.
+    later `<source>` is examined (picture carrier). `width` and `height` on
+    the `<source>` are layout hints. An implementation that cannot evaluate
+    media queries treats every `media` value as matching.
 2. Otherwise, for a script or extension viewer: if the element has a
     `data-jai` attribute, the document is its value parsed with the [=text
     parsing algorithm=]; then, if the element's `alt` attribute, after
     [=value normalisation=], is not empty, it is inserted as the first
-    `prompt` value.
-3. Otherwise, if the element's `src` attribute, parsed against the base URL,
-    is a `data:` URL that the data: URL processor accepts and whose MIME type
-    essence is `image/jai`: the document is its body ([[#data-urls]]).
+    `prompt` value (attribute carrier).
+3. Otherwise, if the element has no `srcset` attribute and no `<source>`
+    precedes it in a `<picture>` parent (otherwise HTML never uses `src`;
+    validators report `src-shadowed`), let *url* be its `src` attribute
+    parsed against the base URL (src carrier):
+    1. if *url* is a `data:` URL that the data: URL processor accepts and
+        whose MIME type essence is `image/jai`, the document is its body
+        ([[#data-urls]]);
+    2. otherwise, if *url* is an `http` or `https` URL whose path, as the URL
+        parser leaves it, ends in `.jai` ([=ASCII case-insensitively=]; the
+        query and fragment play no part), the document is the resource at
+        *url*.
 4. Otherwise the element carries no document.
 
-If the element's `currentSrc` is the URL selected in step 1 and the element
-is complete with a natural width greater than zero, the user agent decodes
-`image/jai` natively and the viewer stands down.
+The user agent decodes `image/jai` natively, or the address delivered pixels
+(a service worker or content negotiation), and the viewer stands down, if the
+element's `currentSrc` is the URL selected in step 1 or step 3 and the element
+is complete with a natural width greater than zero. This is checked when a
+render starts, never during discovery. A fetched resource that is served as
+`text/html`, or that does not decode as JAI, carries no document; the viewer
+removes its control without reporting a failure.
+
+A native user agent decides by the response's media type, whatever the URL;
+a script or extension viewer decides by the `.jai` path and decodes by
+inspection ([[#decoding]]). Servers SHOULD send `Content-Type: image/jai`
+([[#media-type]]); many static hosts send `application/octet-stream`, which
+script viewers accept and native user agents may not.
 
 A `<source>` without a `type` attribute is selected by the browser and
 yields a broken image; validators report `source-missing-type`. A `<source>`
 after the `<img>` is ignored by HTML (`source-after-img`). A JAI URL MUST NOT
 appear in the `<img>`'s own `srcset`. Authors place the `image/jai` source
 before raster sources when JAI-capable user agents should prefer it; an
-extension's discovery does not depend on the order. A `<source
-type="image/jai">` for a document with `mode=keep` is unusual, since a native
-decoder would then never show the raster (`keep-in-source`).
+extension's discovery does not depend on the order. A document with
+`mode=keep` in the picture or src carrier is unusual, since a native decoder
+would then never show the raster, and a src image has none
+(`keep-in-source`).
 
 <div class=note>
 A user agent that decodes `image/jai` natively would select the JAI source
@@ -1858,29 +1895,34 @@ the next candidate; the editors intend to raise this with the HTML
 Standard's maintainers when a native implementation exists.
 </div>
 
-### Requirements for carrier 3 ### {#html-carrier-3}
+### Requirements for the src carrier ### {#html-carrier-src}
 
-An `<img>` whose `src` is a `data:image/jai` URL:
+<span id=html-carrier-3></span>An `<img>` whose `src` is a `data:image/jai`
+URL or a `.jai` resource:
 
-- MUST have a non-empty `alt` that is prose (the description or a human
-    summary); in every current browser the `alt` is what the reader gets;
+- MUST have a non-empty `alt` that is prose; in every current browser the
+    `alt` is what the reader gets. It need not repeat the description;
 - SHOULD have `width` and `height` attributes or a CSS `aspect-ratio`, since
-    it has no intrinsic size until a render arrives;
-- MUST NOT have a `srcset`;
-- SHOULD NOT be the `<img>` of a `<picture>` that also carries a JAI
-    `<source>`.
+    it has no intrinsic size until a render arrives (`missing-size`). Images
+    written in Markdown have none; a viewer then lays the render out at the
+    document's `aspect`, or 1:1, at the available width;
+- MUST NOT have a `srcset`, and SHOULD NOT be the `<img>` of a `<picture>`
+    with any `<source>` (`src-shadowed`).
 
 Authors are warned that pages without a JAI viewer show an unavailable
 image; that `onerror` handlers and lazy-loading libraries rewrite a broken
 image's `src` (viewers capture the carrier at discovery); that a Content
-Security Policy must list `data:` in `img-src`; and that carrier 1 is
-preferred whenever fallback pixels exist. The inline pure form with a
-fallback is carrier 1 with a `data:` URL in `srcset`:
+Security Policy must list `data:` in `img-src` for the `data:` form; and that
+the browser requests a `.jai` file in `src` itself, with the page's cookies
+and referrer, before any viewer does, so the src form saves no bandwidth
+today. When fallback pixels exist, the attribute or picture carrier is the
+better choice. The inline pure form with a fallback is the picture carrier
+with a `data:` URL in `srcset`:
 
 ```html
 <picture>
   <source type="image/jai" srcset="data:image/jai,A%20magical%20castle;style=anime">
-  <img src="castle.png" alt="A magical castle">
+  <img src="castle.png" alt="A castle">
 </picture>
 ```
 
@@ -1897,15 +1939,16 @@ fetch it from their privileged context but are still bound by
 Exactly one transport decoding is applied per carrier, before the
 [=decoding algorithm=] or the [=text parsing algorithm=] runs:
 
-- `data:` URL (carrier 1 with a `data:` URL in `srcset`, carrier 3): parse
+- `data:` URL (picture carrier with a `data:` URL in `srcset`, or src carrier): parse
     the attribute value against the document's base URL and run the data: URL
     processor of the Fetch Standard [[!FETCH]]. The fragment is excluded; the
     percent-decoding is the URL Standard's byte-level percent-decode [[!URL]],
     which leaves a `%` not followed by two hexadecimal digits in place and
     never fails. Decode the resulting bytes with [[#decoding]].
-- http(s) URL (carrier 1 with a resource URL): the response body, decoded
-    with [[#decoding]] regardless of the served `Content-Type`.
-- the `data-jai` attribute (carrier 2): no transport decoding;
+- http(s) URL (picture or src carrier with a `.jai` resource): the response
+    body, decoded with [[#decoding]] regardless of the served `Content-Type`,
+    except that a `text/html` response carries no document.
+- the `data-jai` attribute (attribute carrier): no transport decoding;
     the attribute value, as the HTML parser produced it, is the input.
 - Query forms: [[#url-query]].
 
@@ -1962,14 +2005,16 @@ and links in text channels.
 
 *This section is informative.*
 
-- **Markdown.** CommonMark image syntax exposes only `src` and `alt`. Where a
-    Markdown host keeps `data:` URLs, carrier 3 works
-    (`![A magical castle](data:image/jai,A%20magical%20castle)`); otherwise use
-    a gateway URL in the parameter form. Where a Markdown host allows raw
-    HTML, carrier 1 is preferred. Bare spaces break Markdown destinations; use
+- **Markdown.** CommonMark image syntax exposes only `src` and `alt`, which is
+    exactly the src carrier: `![A castle at dusk](castle.jai)`, or inline
+    `![A castle at dusk](<data:image/jai,A%20magical%20castle%20at%20dusk>)`
+    where the host keeps `data:` URLs. Hosts that proxy external images (GitHub
+    rewrites them through its image proxy) lose the `.jai` path; relative
+    images in a repository keep it. Where a Markdown host allows raw HTML, the
+    attribute or picture carrier gives readers fallback pixels. Bare spaces break Markdown destinations; use
     percent-encoding or angle brackets.
 - **CSS.** `image-set(url("castle.jai") type("image/jai"), url("castle.png")
-    type("image/png"))` is the CSS twin of carrier 1; this edition does not
+    type("image/png"))` is the CSS twin of the picture carrier; this edition does not
     require viewers to act on CSS images or on SVG `<image>`.
 - **`<object type="image/jai" data="castle.jai">`** renders its fallback
     content in current browsers but may download the resource and is governed
@@ -1977,9 +2022,9 @@ and links in text channels.
 - **Links.** A link to a `.jai` file behaves like a link to any file the
     browser cannot display. There is no navigable JAI link form in this
     edition.
-- **Service workers.** A site can serve `<img src="castle.jai">` to its own
-    visitors today by rendering in a service worker; this works over http(s)
-    only and not on a first visit.
+- **Service workers.** A site can render `<img src="castle.jai">` for its own
+    visitors in a service worker, over http(s) and not on a first visit; the
+    image then has pixels and viewers stand down ([[#html-discovery]]).
 - **Clipboard.** The interoperable clipboard representation is `text/plain`
     containing the canonical text form with its `jai:` prefix.
 
@@ -1991,10 +2036,10 @@ can use depends on the pipeline:
 <table class=data>
 <thead><tr><th>Context<th>Usable carriers
 <tbody>
-<tr><td>HTML the author controls<td>all; prefer carrier 1
-<tr><td>User content through DOMPurify defaults<td>carriers 2 and 3, and carrier 1 with an http(s) or relative <code>.jai</code> URL (<code>data:</code> URLs in <code>srcset</code> are removed)
-<tr><td>User content through GitHub-style allow-list sanitisers<td>carrier 1 as raw HTML (<code>&lt;picture&gt;</code>, <code>&lt;source&gt;</code>, <code>srcset</code>, <code>type</code> survive; <code>data-*</code> and <code>data:</code> <code>src</code> do not), else the text form beside the image
-<tr><td>CommonMark image syntax<td>carrier 3 where the host keeps <code>data:</code> URLs, else a gateway URL
+<tr><td>HTML the author controls<td>all; the attribute carrier is the everyday default ([[#html-choosing]])
+<tr><td>User content through DOMPurify defaults<td>all three: attribute, src (<code>data:</code> or <code>.jai</code>), and picture with an http(s) or relative <code>.jai</code> URL (<code>data:</code> URLs in <code>srcset</code> are removed)
+<tr><td>User content through GitHub-style allow-list sanitisers<td>picture as raw HTML (<code>&lt;picture&gt;</code>, <code>&lt;source&gt;</code>, <code>srcset</code>, <code>type</code> survive; <code>data-*</code> and <code>data:</code> <code>src</code> do not), and src with a relative <code>.jai</code> image
+<tr><td>CommonMark image syntax<td>src: <code>![alt](castle.jai)</code>, or a <code>data:</code> URL where the host keeps it
 <tr><td>Chat, documentation, email text<td>the text form with its prefix
 </table>
 
@@ -2198,6 +2243,18 @@ only after the consent the render requires. Renders that transmit an input
 image SHOULD require a per-image confirmation that shows the image and names
 its origin.
 
+A `.jai` resource named by the picture or src carrier is fetched only when the
+user opens that image's controls or a render starts (including automatic
+rendering the user enabled for the site), never during discovery, and each
+URL at most once per page. A viewer that can fetch from a privileged context
+(an extension's background with host permissions) MUST NOT let that context
+become a way for a page to reach other servers. It fetches only `http` and
+`https` URLs whose path ends in `.jai`, without credentials, referrer or
+redirects; it refuses loopback, link-local, private-network and single-label
+host names when the page itself is on a public host; and it limits how many
+such fetches a page can cause. A script viewer on a page with a Content
+Security Policy also needs `connect-src` to allow the `.jai` host.
+
 ## Selectors, never locators ## {#security-selectors}
 
 `model` is a selector: a viewer matches its values only against renderers
@@ -2270,7 +2327,8 @@ image bytes it decoded and re-encoded locally. It MUST NOT send the page URL,
 title, referrer, cookies, identity or other page content, and SHOULD send
 image bytes rather than URLs. The viewer's disclosure names the provider and
 links its retention terms. Any in-page UI, replacement or `.jai` fetch
-reveals to the page that the user runs a viewer.
+reveals to the page that the user runs a viewer, and a `.jai` fetch reveals it to the
+host that serves the file.
 
 Credentials of the reference viewer are stored extension-locally, used only
 from its background context, never exposed to pages or content scripts,
@@ -2303,9 +2361,11 @@ for `preview` values and generated HTML snippets.
 ## Guidance for publishers ## {#security-publishers}
 
 Sites that accept user markup and do not intend to publish JAI SHOULD strip
-`data-jai`, `alt` values beginning with `jai:` in any case, `data:image/jai`
-URLs in `src` and `srcset`, and `<source type="image/jai">`. DOMPurify's
-defaults keep all of them; strict allow-list sanitisers remove all but `alt`.
+`data-jai`, `data:image/jai` URLs in `src` and `srcset`, `src` URLs whose
+path ends in `.jai`, and `<source type="image/jai">`. DOMPurify's defaults
+keep all of them; strict allow-list sanitisers remove `data-jai` and `data:`
+URLs but keep `<picture>` sources and ordinary image URLs, including `.jai`
+ones.
 A `.jai` referenced by URL is fetched per viewer at render time and may change
 after review; publishers who need stability inline the document or record its
 identity. Injection through templated prose ([[#text-escaping]]) can truncate
@@ -2369,7 +2429,7 @@ key.
 <tr><td>`undecodable`<td>parser<td>none<td>The bytes are not well-formed UTF-8 or exceed the text bound; the document is empty.
 <tr><td>`first-segment-assignment`<td>validator<td>the key concerned<td>The first segment was an assignment to a key this specification does not define (not a standard key, not `prompt`, `style` or `avoid` with a target, not a dotted name) and the document has no prompt.
 <tr><td>`invalid-qualifier`<td>validator<td>the key concerned<td>A [=qualified key=] whose name is not `prompt`, `style` or `avoid`, vendor names included.
-<tr><td>`alt-repeated`<td>validator<td>none<td>Carrier 2: the first prompt value in `data-jai` repeats the element's `alt`, so the model receives it twice.
+<tr><td>`alt-repeated`<td>validator<td>none<td>Attribute carrier: the first prompt value in `data-jai` repeats the element's `alt`, so the model receives it twice.
 <tr><td>`unknown-key`<td>validator<td>the key concerned<td>A key whose name (the part before any `/`) has no `.` and is not a standard key.
 <tr><td>`continuation-into-single-valued-key`<td>validator<td>the key concerned<td>Prose continued the value of `aspect`, `mode`, `strength`, `seed` or `animate` (not `source` or `preview`, whose `data:` URLs contain semicolons; see `split-data-uri`).
 <tr><td>`no-prompt`<td>validator<td>none<td>No prompt, and the interpreted `mode` is `generate`.
@@ -2399,13 +2459,14 @@ key.
 <tr><td>`unencoded-url-text`<td>validator<td>none<td>A URL-slot value contains whitespace, `#` or a bare `%`.
 <tr><td>`srcset-unparseable`<td>validator<td>none<td>The `srcset` of a `<source type="image/jai">` yields no candidate under HTML's srcset parsing (for example because of an unencoded space).
 <tr><td>`jai-scheme-url`<td>validator<td>none<td>A `jai:` string in a URL slot.
-<tr><td>`missing-size`<td>validator<td>none<td>A carrier-3 image without `width`/`height` or `aspect-ratio`.
+<tr><td>`missing-size`<td>validator<td>none<td>A src-carrier image without `width`/`height` or `aspect-ratio` (expected for Markdown images).
 <tr><td>`attribute-split`<td>validator<td>none<td>An element carrying a JAI carrier has an attribute whose name contains `"`, `'`, `;` or `=`: an unescaped quote probably ended the carrier attribute early.
 <tr><td>`data-url-missing-comma`<td>validator<td>none<td>A `data:image/jai` URL in a carrier has no `,`.
 <tr><td>`data-url-parameter`<td>validator<td>none<td>A `data:image/jai` URL has a media-type parameter other than `base64` or `charset`.
 <tr><td>`source-missing-type`<td>validator<td>none<td>A `<source>` naming a `.jai` or `data:image/jai` URL has no `type`.
 <tr><td>`source-after-img`<td>validator<td>none<td>A JAI `<source>` follows the `<img>`.
-<tr><td>`keep-in-source`<td>validator<td>none<td>A `<source type="image/jai">` carries a `mode=keep` document.
+<tr><td>`keep-in-source`<td>validator<td>none<td>The picture or src carrier holds a `mode=keep` document.
+<tr><td>`src-shadowed`<td>validator<td>none<td>A JAI `src` (a `data:image/jai` URL or a `.jai` path) on an `<img>` with its own `srcset` or a preceding `<source>`, so HTML never uses it.
 <tr><td>`no-matching-model`<td>interpreter, renderer<td>`model`<td>No `model` value selected a model (or the document has none); the default was used.
 <tr><td>`substituted-model`<td>interpreter, renderer<td>`model`<td>A family match selected a model the author did not name exactly.
 <tr><td>`version-ignored`<td>interpreter, renderer<td>`model`<td>A version suffix of a `model` value was ignored.
@@ -2464,11 +2525,12 @@ validator codes that it MUST NOT emit.
 :: `html` (a fragment parsed as HTML's fragment parsing algorithm does, with
     declarative shadow roots attached; base URL `https://example.test/page/`;
     every `media` value matches) → `discovered`, one entry per `<img>` that
-    carries a document, in the order of [[#html-discovery]]: `carrier` (1 to
-    3), and either `document` and `diagnostics`, or `url`, the candidate URL as
-    written in `srcset`, compared after resolving it against the base URL.
-    Optional `advisories` and `no_advisories` apply to all carriers in the
-    fragment.
+    carries a document, in the order of [[#html-discovery]]: `carrier`
+    (`picture`, `attribute` or `src`), and either `document` and
+    `diagnostics`, or `url`, the URL as written in `srcset` or `src`, compared
+    after resolving it against the base URL. Optional `advisories` and
+    `no_advisories` apply to every `<img>` in the fragment, whether it carries
+    a document or not.
 : `interpret`
 :: `document`; optional `catalog`, the configured models in configuration
     order, each `{id, aliases, family, image_input, default}` (`family` may be
@@ -2511,10 +2573,13 @@ is a new case id with an erratum, never a silent edit.
     `;aspect=16:9`, `;avoid=text`. Repeat `style` and `avoid` for several
     items rather than listing them in one value.
 3. Put `jai:` in front when the place you are writing in does not already say
-    it is JAI (a chat message, a document). On a web page, write the
-    description in the image's `alt` and the settings in a `data-jai`
-    attribute (no prefix needed), or use the `<picture>` form. Never put JAI
-    syntax in `alt`: screen readers read it aloud.
+    it is JAI (a chat message, a document). On a web page with an image,
+    write the description in the image's `alt` and the settings in a
+    `data-jai` attribute (no prefix needed; an empty `data-jai` is enough to
+    mark the image). For an image with no pixels, save the document as a
+    `.jai` file and use `<img src="castle.jai" alt="…">`, or in Markdown
+    `![…](castle.jai)`. Never put JAI syntax in `alt`: screen readers read
+    it aloud.
 4. Describe what can be seen, concretely, with the essentials in the first
     sentence: a listener can stop once they have heard enough, and models
     with a short prompt window read only the beginning. Prefer visible facts

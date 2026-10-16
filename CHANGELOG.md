@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0-draft, named carriers and `.jai` files in `src` — 2026-10-16
+
+- Carriers have names instead of numbers: the **picture**, **attribute** and
+  **src** carriers. Their order is precedence when one element carries
+  several, not a recommendation; a new "Choosing a carrier" section makes the
+  attribute carrier (`alt` as the description plus `data-jai`) the everyday
+  default, the picture carrier the native path, and the src carrier the form
+  for images without pixels. Fixtures use the names.
+- The src carrier accepts a `.jai` file: an http(s) `src` whose path ends in
+  `.jai`. `alt` is not used for it, and Markdown's `![…](castle.jai)` is now a
+  JAI image. A JAI `src` that HTML would never use (own `srcset`, preceding
+  `<source>`) is not a carrier (`src-shadowed`). A viewer stands down when the
+  address delivers pixels, and treats `text/html` responses as no document.
+- `.jai` resources are fetched only when the user opens an image's controls or
+  a render starts, never during discovery. A privileged context may fetch only
+  `.jai` paths over http(s), without redirects, never private-network hosts
+  from public pages, and within a per-page limit.
+- Examples show an `alt` that differs from the description for the picture and
+  src carriers: `alt` is the page's own text there, not a duplicate.
+- Fixtures: 537.
+
 ## 1.0-draft, alt is the description — 2026-10-16
 
 - The `alt` carrier (`alt` beginning with `jai:`) is removed. `alt` is the

@@ -901,7 +901,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" data-jai=\"fallback\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "fallback"
@@ -915,7 +915,7 @@
    ],
    "since": "1.0-draft",
    "_action": "replace",
-   "_replaces": "html-picture-unencoded-space (was carrier 1, prompt A)"
+   "_replaces": "html-picture-unencoded-space (was picture carrier, prompt A)"
   },
   {
    "id": "html-picture-srcset-trailing-comma",
@@ -923,7 +923,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,a, b.jai 2x\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "a"
@@ -941,7 +941,7 @@
    "html": "<img src=\"a.png\" data-jai='{\"jai\":1,\"prompt\":\"x\"}'>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "{\"jai\":1,\"prompt\":\"x\"}"
@@ -955,11 +955,11 @@
   },
   {
    "id": "html-source-other-data-type",
-   "rationale": "A carrier-1 data: URL whose essence is not image/jai is skipped (R2-7).",
+   "rationale": "A picture carrier data: URL whose essence is not image/jai is skipped (R2-7).",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:text/plain,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "two"
@@ -977,7 +977,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "two"
@@ -991,11 +991,11 @@
   },
   {
    "id": "html-source-data-bad-base64",
-   "rationale": "A carrier-1 data: URL the processor rejects is skipped (R2-7).",
+   "rationale": "A picture carrier data: URL the processor rejects is skipped (R2-7).",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai;base64,!!!\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "two"
@@ -1009,7 +1009,7 @@
   },
   {
    "id": "html-src-data-bad-base64",
-   "rationale": "A carrier-3 data: URL the processor rejects: the element carries no document (alt is never a carrier).",
+   "rationale": "A src carrier data: URL the processor rejects: the element carries no document (alt is never a carrier).",
    "html": "<img src=\"data:image/jai;base64,!!!\" alt=\"jai:fallback\">",
    "discovered": [],
    "since": "1.0-draft",
@@ -1021,7 +1021,7 @@
    "html": "<div><template shadowrootmode=\"open\"><img src=\"a.png\" data-jai=\"in shadow\"></template></div><img src=\"b.png\" data-jai=\"after host\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "in shadow"
@@ -1030,7 +1030,7 @@
      "diagnostics": []
     },
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "after host"
@@ -1048,7 +1048,7 @@
    "html": "<div><template shadowrootmode=\"closed\"><img src=\"a.png\" data-jai=\"hidden\"></template></div><img src=\"b.png\" data-jai=\"visible\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "visible"
@@ -1066,7 +1066,7 @@
    "html": "<picture><source type=\"image/jai\" media=\"all\" srcset=\"data:image/jai,x\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "x"
@@ -1084,7 +1084,7 @@
    "html": "<picture><source type=\"image/jai\" media=\"print\" srcset=\"data:image/jai,first\"><source type=\"image/jai\" srcset=\"data:image/jai,second\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "first"
@@ -1102,7 +1102,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A%20team%20photo;mode=keep\"><img src=\"team.jpg\" alt=\"The team\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "A team photo"
@@ -1122,11 +1122,11 @@
   },
   {
    "id": "html-missing-size",
-   "rationale": "Carrier 3 without width and height (S-45).",
+   "rationale": "src carrier without width and height (S-45).",
    "html": "<img src=\"data:image/jai,A%20castle\" alt=\"A castle\">",
    "discovered": [
     {
-     "carrier": 3,
+     "carrier": "src",
      "document": {
       "prompt": [
        "A castle"
@@ -1145,37 +1145,12 @@
    "_action": "add"
   },
   {
-   "id": "html-alt-carrier-payload",
-   "rationale": "A data: URL inside an alt carrier (S-11).",
-   "html": "<img src=\"a.png\" alt=\"jai:A castle;preview=data:image/png;base64,iVBORw0KGgo=\">",
-   "discovered": [
-    {
-     "carrier": 4,
-     "document": {
-      "prompt": [
-       "A castle"
-      ],
-      "preview": [
-       "data:image/png;base64,iVBORw0KGgo="
-      ]
-     },
-     "diagnostics": []
-    }
-   ],
-   "advisories": [
-    "alt-carrier",
-    "alt-carrier-payload"
-   ],
-   "since": "1.0-draft",
-   "_action": "add"
-  },
-  {
    "id": "html-attribute-split",
    "rationale": "A raw \" ends the attribute early; validators flag the junk attributes (R2-30).",
    "html": "<img src=\"a.png\" data-jai=\"A sign reading \"OPEN\" above a door;style=photo\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A sign reading"

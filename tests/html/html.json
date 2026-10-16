@@ -5,11 +5,11 @@
  "cases": [
   {
    "id": "html-picture-data",
-   "rationale": "Carrier 1 with a data: URL.",
+   "rationale": "Picture carrier with a data: URL.",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A%20magical%20castle;style=anime\"><img src=\"castle.png\" alt=\"A castle\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "A magical castle"
@@ -25,11 +25,11 @@
   },
   {
    "id": "html-picture-url",
-   "rationale": "Carrier 1 with a resource URL (fetched by the viewer).",
+   "rationale": "Picture carrier with a resource URL (fetched by the viewer when rendering).",
    "html": "<picture><source type=\"image/jai\" srcset=\"castle.jai\"><img src=\"castle.png\" alt=\"A castle\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "url": "castle.jai"
     }
    ],
@@ -41,7 +41,7 @@
    "html": "<picture><source type=\"IMAGE/JAI; charset=utf-8\" srcset=\"data:image/jai,x\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "x"
@@ -58,7 +58,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,x 2x\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "x"
@@ -75,7 +75,7 @@
    "html": "<picture><source type=\"image/webp\" srcset=\"a.webp\"><source type=\"image/jai\" srcset=\"data:image/jai,first\"><source type=\"image/jai\" srcset=\"data:image/jai,second\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "first"
@@ -106,7 +106,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" data-jai=\"fallback\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "fallback"
@@ -126,7 +126,7 @@
    "html": "<img src=\"castle.png\" alt=\"A magical castle\" data-jai=\"style=anime\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A magical castle"
@@ -146,7 +146,7 @@
    "html": "<img src=\"c.png\" data-jai=\"Salt &amp; pepper;style=&quot;ink&quot;\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "Salt & pepper"
@@ -166,7 +166,7 @@
    "html": "<img src=\"c.png\" data-jai=\"A castle&#10;Mist below\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A castle\nMist below"
@@ -183,7 +183,7 @@
    "html": "<img src=\"c.png\" data-jai=\"100%20 cotton\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "100%20 cotton"
@@ -199,11 +199,11 @@
   },
   {
    "id": "html-src-data",
-   "rationale": "Carrier 3.",
+   "rationale": "Src carrier with a data: URL.",
    "html": "<img src=\"data:image/jai,A%20magical%20castle;style=anime\" alt=\"A magical castle\" width=\"800\" height=\"600\">",
    "discovered": [
     {
-     "carrier": 3,
+     "carrier": "src",
      "document": {
       "prompt": [
        "A magical castle"
@@ -247,11 +247,11 @@
   },
   {
    "id": "html-order-picture-wins",
-   "rationale": "Carrier 1 before 2; alt is ignored.",
+   "rationale": "The picture carrier takes precedence over the attribute carrier; alt is ignored.",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,one\"><img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "one"
@@ -268,7 +268,7 @@
    "html": "<img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "jai:four",
@@ -286,7 +286,7 @@
    "html": "<img src=\"data:image/jai,three\" alt=\"jai:four\">",
    "discovered": [
     {
-     "carrier": 3,
+     "carrier": "src",
      "document": {
       "prompt": [
        "three"
@@ -303,7 +303,7 @@
    "html": "<p><img src=\"a.png\" alt=\"a\"><img src=\"b.png\" alt=\"A bee\" data-jai=\"on a sunflower\"><img src=\"c.png\" alt=\"jai:sea\"></p>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A bee",
@@ -316,12 +316,188 @@
    "since": "1.0-draft"
   },
   {
+   "id": "html-src-jai-file",
+   "rationale": "A src whose path ends in .jai is a src carrier; the viewer fetches it when rendering; alt is not used.",
+   "html": "<img src=\"castle.jai\" alt=\"A castle at dusk\" width=\"800\" height=\"600\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "castle.jai"
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-file-uppercase",
+   "rationale": "The .jai suffix is matched ASCII case-insensitively.",
+   "html": "<img src=\"/img/CASTLE.JAI\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "/img/CASTLE.JAI"
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-file-query",
+   "rationale": "Query and fragment are ignored when testing the suffix.",
+   "html": "<img src=\"castle.jai?v=2#top\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "castle.jai?v=2#top"
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-absolute",
+   "rationale": "Absolute http(s) URLs.",
+   "html": "<img src=\"https://cdn.example/a/b.jai\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "https://cdn.example/a/b.jai"
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-dotfile",
+   "rationale": "A path ending in .jai, however short.",
+   "html": "<img src=\"/.jai\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "/.jai"
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-double-ext",
+   "rationale": "The path must end in .jai.",
+   "html": "<img src=\"castle.jai.png\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-in-name",
+   "rationale": "Only the suffix counts.",
+   "html": "<img src=\"jai.png\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-encoded-dot",
+   "rationale": "The path is tested as the URL parser leaves it: %2E is not a dot.",
+   "html": "<img src=\"castle%2Ejai\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-trailing-slash",
+   "rationale": "A trailing slash is a different path.",
+   "html": "<img src=\"castle.jai/\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-ftp",
+   "rationale": "Only http(s) URLs.",
+   "html": "<img src=\"ftp://example.test/castle.jai\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-blob",
+   "rationale": "Only http(s) URLs.",
+   "html": "<img src=\"blob:https://example.test/1234.jai\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-attribute-wins",
+   "rationale": "The attribute carrier takes precedence over the src carrier.",
+   "html": "<img src=\"castle.jai\" alt=\"A castle\" data-jai=\"style=anime\">",
+   "discovered": [
+    {
+     "carrier": "attribute",
+     "document": {
+      "prompt": [
+       "A castle"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-picture-wins",
+   "rationale": "The picture carrier takes precedence over the src carrier.",
+   "html": "<picture><source type=\"image/jai\" srcset=\"one.jai\"><img src=\"two.jai\" alt=\"x\"></picture>",
+   "discovered": [
+    {
+     "carrier": "picture",
+     "url": "one.jai"
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-shadowed-srcset",
+   "rationale": "HTML uses the img's own srcset, never its src: no src carrier.",
+   "html": "<img src=\"castle.jai\" srcset=\"castle.png 1x\" alt=\"x\" width=\"1\" height=\"1\">",
+   "discovered": [],
+   "advisories": [
+    "src-shadowed"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-shadowed-source",
+   "rationale": "A preceding <source> is selected before src: no src carrier.",
+   "html": "<picture><source srcset=\"castle.webp\" type=\"image/webp\"><img src=\"data:image/jai,A%20castle\" alt=\"x\" width=\"1\" height=\"1\"></picture>",
+   "discovered": [],
+   "advisories": [
+    "src-shadowed"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-missing-size",
+   "rationale": "A src carrier without a size (common in Markdown output).",
+   "html": "<img src=\"castle.jai\" alt=\"A castle\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "castle.jai"
+    }
+   ],
+   "advisories": [
+    "missing-size"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-img-srcset-jai-not-carrier",
+   "rationale": "Only src is examined on the img; its own srcset is not a carrier.",
+   "html": "<img srcset=\"castle.jai\" alt=\"x\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
    "id": "html-data-jai-empty",
    "rationale": "An empty data-jai without alt is an empty document (carrier present).",
    "html": "<img src=\"a.png\" data-jai=\"\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {},
      "diagnostics": []
     }
@@ -334,7 +510,7 @@
    "html": "<img src=\"a.png\" alt=\"A lighthouse at night\" data-jai=\"\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A lighthouse at night"
@@ -351,7 +527,7 @@
    "html": "<img src=\"c.png\" alt=\"Twelve colleagues in ski gear laughing on a slope in a white-out\" data-jai=\"One raises a beer;style=35mm film photo;aspect=3:2\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "Twelve colleagues in ski gear laughing on a slope in a white-out",
@@ -375,7 +551,7 @@
    "html": "<img src=\"c.png\" alt=\"Ratio 1:2; style=bold\\; x\" data-jai=\"aspect=1:1\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "Ratio 1:2; style=bold\\; x"
@@ -395,7 +571,7 @@
    "html": "<img src=\"c.png\" alt=\"  A castle&#13;&#10;at dusk  \" data-jai=\"style=anime\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A castle\nat dusk"
@@ -415,7 +591,7 @@
    "html": "<img src=\"c.png\" alt=\"\" data-jai=\"A castle\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A castle"
@@ -427,12 +603,12 @@
    "since": "1.0-draft"
   },
   {
-   "id": "html-alt-not-carrier-3",
-   "rationale": "Only carrier 2 takes its first prompt line from alt.",
+   "id": "html-alt-not-src-carrier",
+   "rationale": "Only the attribute carrier takes its first prompt line from alt.",
    "html": "<img src=\"data:image/jai,style=anime\" alt=\"A castle\" width=\"10\" height=\"10\">",
    "discovered": [
     {
-     "carrier": 3,
+     "carrier": "src",
      "document": {
       "style": [
        "anime"
@@ -449,7 +625,7 @@
    "html": "<img src=\"c.png\" alt=\"A castle\" data-jai=\"A castle;style=anime\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A castle",
@@ -473,7 +649,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,a, b.jai 2x\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "a"
@@ -490,7 +666,7 @@
    "html": "<img src=\"a.png\" data-jai='{\"jai\":1,\"prompt\":\"x\"}'>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "{\"jai\":1,\"prompt\":\"x\"}"
@@ -503,11 +679,11 @@
   },
   {
    "id": "html-source-other-data-type",
-   "rationale": "A carrier-1 data: URL whose essence is not image/jai is skipped (R2-7).",
+   "rationale": "A picture carrier data: URL whose essence is not image/jai is skipped (R2-7).",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:text/plain,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "two"
@@ -524,7 +700,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:,hello\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "two"
@@ -537,11 +713,11 @@
   },
   {
    "id": "html-source-data-bad-base64",
-   "rationale": "A carrier-1 data: URL the processor rejects is skipped (R2-7).",
+   "rationale": "A picture carrier data: URL the processor rejects is skipped (R2-7).",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai;base64,!!!\"><img src=\"a.png\" data-jai=\"two\"></picture>",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "two"
@@ -554,7 +730,7 @@
   },
   {
    "id": "html-src-data-bad-base64",
-   "rationale": "A carrier-3 data: URL the processor rejects: the element carries no document (alt is never a carrier).",
+   "rationale": "A src carrier data: URL the processor rejects: the element carries no document (alt is never a carrier).",
    "html": "<img src=\"data:image/jai;base64,!!!\" alt=\"jai:fallback\">",
    "discovered": [],
    "since": "1.0-draft"
@@ -565,7 +741,7 @@
    "html": "<div><template shadowrootmode=\"open\"><img src=\"a.png\" data-jai=\"in shadow\"></template></div><img src=\"b.png\" data-jai=\"after host\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "in shadow"
@@ -574,7 +750,7 @@
      "diagnostics": []
     },
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "after host"
@@ -591,7 +767,7 @@
    "html": "<div><template shadowrootmode=\"closed\"><img src=\"a.png\" data-jai=\"hidden\"></template></div><img src=\"b.png\" data-jai=\"visible\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "visible"
@@ -608,7 +784,7 @@
    "html": "<picture><source type=\"image/jai\" media=\"all\" srcset=\"data:image/jai,x\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "x"
@@ -625,7 +801,7 @@
    "html": "<picture><source type=\"image/jai\" media=\"print\" srcset=\"data:image/jai,first\"><source type=\"image/jai\" srcset=\"data:image/jai,second\"><img src=\"a.png\" alt=\"a\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "first"
@@ -642,7 +818,7 @@
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A%20team%20photo;mode=keep\"><img src=\"team.jpg\" alt=\"The team\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": "picture",
      "document": {
       "prompt": [
        "A team photo"
@@ -661,11 +837,11 @@
   },
   {
    "id": "html-missing-size",
-   "rationale": "Carrier 3 without width and height (S-45).",
+   "rationale": "src carrier without width and height (S-45).",
    "html": "<img src=\"data:image/jai,A%20castle\" alt=\"A castle\">",
    "discovered": [
     {
-     "carrier": 3,
+     "carrier": "src",
      "document": {
       "prompt": [
        "A castle"
@@ -688,7 +864,7 @@
    "html": "<img src=\"a.png\" data-jai=\"A sign reading \"OPEN\" above a door;style=photo\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A sign reading"
@@ -708,7 +884,7 @@
    "html": "<div><template shadowrootmode=\"open\"><img src=\"b.png\" data-jai=\"B\"></template><img src=\"c.png\" data-jai=\"C\"></div><img src=\"a.png\" data-jai=\"A\">",
    "discovered": [
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "B"
@@ -717,7 +893,7 @@
      "diagnostics": []
     },
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "C"
@@ -726,7 +902,7 @@
      "diagnostics": []
     },
     {
-     "carrier": 2,
+     "carrier": "attribute",
      "document": {
       "prompt": [
        "A"

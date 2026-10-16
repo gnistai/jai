@@ -245,41 +245,51 @@ value takes a string; a key with several takes an array.
 
 ## Embedding JAI
 
+There are three forms. Pick by what the page has:
+
 | Destination | Use |
 |---|---|
-| HTML you control | option 1 (`<picture>` + `<source type="image/jai">`, file or `data:` URL) |
-| User content cleaned by DOMPurify (many CMSs and comment systems) | option 2 (`data-jai`), or option 1 with a `.jai` file URL; `data:` URLs in `srcset` are removed |
-| GitHub README or issue | option 1 with a committed file, `srcset="images/hero.jai"`; `data-jai` and `data:` `src` are stripped |
-| Markdown with no raw HTML | option 4; viewers render it only when the reader asks |
+| A page with a real image (HTML you control, most CMSs) | the attribute form (1) |
+| A host that strips `data-*` (GitHub READMEs and issues) | the picture form (2) with a committed `.jai` file, or the src form (3) with a relative `.jai` image |
+| An image with no pixels at all, or Markdown | the src form (3): `<img src="castle.jai" alt="…">` or `![…](castle.jai)` |
 | Chat, docs, email | the text form with `jai:` |
 
-The options:
-
-1. **HTML you control, with a real image:** progressive enhancement. Browsers
-   without JAI support show the PNG.
+1. **Attribute form, the default when there is an image.** Write a real
+   description in `alt`; it is what screen readers speak and the first line
+   the model receives. Put settings, extra detail and per-model refinements in
+   `data-jai`, never repeating the `alt`:
+   ```html
+   <img src="castle.png" alt="A magical castle at dusk, lit windows, mist in the valley"
+        data-jai="style=watercolor;aspect=16:9" width="1200" height="675">
+   ```
+   An empty `data-jai` is enough to mark the image: `<img src="castle.png" alt="…" data-jai>`.
+2. **Picture form, the path native browsers take.** Browsers without JAI show
+   the PNG. The description lives in the `.jai` file (or an inline `data:`
+   URL); the `alt` is the page's own text and can be shorter:
    ```html
    <picture>
      <source type="image/jai" srcset="castle.jai">
-     <img src="castle.png" alt="A magical castle at dusk" width="1200" height="675">
+     <img src="castle.png" alt="A castle at dusk" width="1200" height="675">
    </picture>
    ```
-   Inline instead of a file: `srcset="data:image/jai,A%20magical%20castle%20at%20dusk;style=watercolor"`.
-   On a page, the image's own shape wins: `width` and `height`, or else the
-   original's ratio. Make `aspect` agree with them; a differing `aspect` is ignored there.
-2. **HTML where you cannot restructure markup:** `<img src="castle.png" alt="A
-   magical castle at dusk" data-jai="style=watercolor">`. The `alt` text is the
-   first line of the description, so write it as a real description and do not
-   repeat it in `data-jai`; put only extra detail and settings there.
-3. **A JAI-aware surface with no pixels at all:**
-   `<img src="data:image/jai,A%20magical%20castle%20at%20dusk" alt="A magical castle at dusk" width="800" height="600">`.
-   It shows as an unavailable image everywhere else, so the `alt` must be
-   real prose and the size must be set.
-4. **Markdown with only image syntax:** carrier 3, where the host keeps
-   `data:` URLs: `![A magical castle at dusk](<data:image/jai,A%20magical%20castle%20at%20dusk>)`.
-   Prefer raw HTML `<picture>` where the Markdown host allows it.
+3. **Src form, for images with no pixels.** The image itself is JAI, as a file
+   or inline. Everywhere without a viewer it is an unavailable image, so the
+   `alt` must be real prose (it need not repeat the description) and the size
+   must be set:
+   ```html
+   <img src="castle.jai" alt="A castle at dusk" width="800" height="600">
+   <img src="data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%20afternoon%20sun"
+        alt="A leaning red bicycle, afternoon sun" width="1024" height="1024">
+   ```
+   In Markdown: `![A castle at dusk](castle.jai)`. Save the file with the
+   reference library's `encode()` (gzip JSON) and serve it as `image/jai` if
+   you can.
 
-Never put JAI in `alt`. It is the text screen readers speak; viewers ignore an
-`alt` that begins with `jai:`, and readers would hear the syntax.
+On a page, the image's own shape wins: `width` and `height`, or else the
+original's ratio. Make `aspect` agree with them; a differing `aspect` is ignored there.
+
+Never put JAI syntax in `alt`. It is the text screen readers speak; viewers
+ignore an `alt` that begins with `jai:`, and readers would hear the syntax.
 
 In any URL (`src`, `srcset`, Markdown links) percent-encode spaces as `%20`,
 tabs and line breaks as `%09` and `%0A`, `%` as `%25`, `#` as `%23`, `"` as

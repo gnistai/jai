@@ -16,14 +16,16 @@ jai:A magical castle at dusk;style=storybook illustration;aspect=16:9
 
 The simplest JAI document is a sentence. The same document also has a JSON
 form and a compressed file form (`.jai`, media type `image/jai`), and can be
-embedded in HTML so that browsers without JAI support show ordinary pixels:
+embedded in HTML so that browsers without JAI support show ordinary pixels.
+The everyday form puts the description in `alt`, where screen readers and
+models both read it, and the settings in `data-jai`:
 
 ```html
-<picture>
-  <source type="image/jai" srcset="castle.jai">
-  <img src="castle.png" alt="A magical castle at dusk">
-</picture>
+<img src="castle.png" alt="A magical castle at dusk, mist in the valley" data-jai="style=anime">
 ```
+
+Images with no pixels can be JAI themselves: `<img src="castle.jai" alt="A castle at dusk">`,
+or in Markdown `![A castle at dusk](castle.jai)`.
 
 - **Specification:** [`spec/index.bs`](spec/index.bs), published at <https://jai.gnist.ai/spec/>
 - **Conformance fixtures:** [`tests/`](tests/) (normative)
