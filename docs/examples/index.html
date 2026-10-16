@@ -139,37 +139,52 @@ data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%2
 <section id="encoding">
   <div class="wrap">
     <div class="eyebrow">5 · Encoding</div>
-    <h2>From a photograph to 465 bytes</h2>
-    <p class="lede">An encoder runs the decoder inside the loop: a vision model describes the image, the target models render the description, the renders are scored against the original, and the description is revised. This is NASA's <em>Earthrise</em>, taken by Bill Anders on Apollo 8 (public domain), encoded for FLUX.1 schnell and Stable Diffusion XL with the reference encoder in <a href="https://github.com/gnistai/jai-tools">jai-tools</a>.</p>
-    <div class="gallery three" style="margin-top:20px">
+    <h2>From a photograph to a few hundred bytes</h2>
+    <p class="lede">The reference encoder in <a href="https://github.com/gnistai/jai-tools">jai-tools</a> runs the decoder inside the loop. A vision model measures the original: where each subject is, how large, where the horizon lies. Every candidate description is rendered with two seeds and measured the same way, and an optimiser rewrites the descriptions from the measured differences ("the Earth is 1.7× too tall and 7% of the frame too high; the ground is too bright"). Both results below came from single, fully automatic runs for FLUX.1 schnell, picked by their measured fitness.</p>
+
+    <h3 style="margin-top:28px">Earthrise: 64,374 bytes to 449</h3>
+    <div class="gallery">
       <figure class="shot">
         <img src="../assets/images/encoding/earthrise-target.webp" width="640" height="640" loading="lazy" alt="Photograph from lunar orbit: a small, partly lit blue and white Earth above the grey lunar horizon in a black sky.">
-        <figcaption><strong>The original</strong><span class="meta">64,374 bytes as a 960 × 960 JPEG. Photo: NASA / Bill Anders, Apollo 8.</span></figcaption>
+        <figcaption><strong>The original</strong><span class="meta">NASA's Earthrise, taken by Bill Anders on Apollo 8 (public domain). 64,374 bytes as a 960 × 960 JPEG.</span></figcaption>
       </figure>
       <figure class="shot">
-        <img src="../assets/images/encoding/earthrise-g0-flux.webp" width="640" height="640" loading="lazy" alt="Render: a larger, full blue Earth high above a bright, curved lunar surface.">
-        <figcaption><strong>First description, FLUX.1 schnell</strong><span class="meta">The best of the first four drafts. The Earth is too large and the horizon curves.</span></figcaption>
+        <img src="../assets/images/encoding/earthrise-first.webp" width="640" height="640" loading="lazy" alt="Render: a large Earth high above a bright, curved lunar surface.">
+        <figcaption><strong>First description</strong><span class="meta">Best of the first six drafts, fitness 0.54: the Earth is far too large and the ground too bright.</span></figcaption>
       </figure>
       <figure class="shot">
-        <img src="../assets/images/encoding/earthrise-final-flux.webp" width="640" height="640" loading="lazy" alt="Render: a small gibbous Earth just above a flat, bright lunar horizon in a black sky.">
-        <figcaption><strong>Final document, FLUX.1 schnell</strong><span class="meta">After six generations and one per-model refinement: a small Earth over a flat horizon. The lunar ground is too bright.</span></figcaption>
-      </figure>
-      <div class="spacer" aria-hidden="true"></div>
-      <figure class="shot">
-        <img src="../assets/images/encoding/earthrise-g0-sdxl.webp" width="640" height="640" loading="lazy" alt="Render: a large dark planet with a thin lit rim floating above a cloudy blue Earth seen from orbit.">
-        <figcaption><strong>First description, Stable Diffusion XL</strong><span class="meta">The Moon is gone: a dark planet hangs above Earth's clouds.</span></figcaption>
+        <img src="../assets/images/encoding/earthrise-final-s1.webp" width="640" height="640" loading="lazy" alt="Render: a small Earth slightly right of centre above a low, dark grey lunar horizon in a black sky.">
+        <figcaption><strong>Encoded, seed 1</strong><span class="meta">Fitness 0.72 after two rounds of measured feedback.</span></figcaption>
       </figure>
       <figure class="shot">
-        <img src="../assets/images/encoding/earthrise-final-sdxl.webp" width="640" height="640" loading="lazy" alt="Render: a large crescent Earth above a flat, cratered lunar horizon against a dark blue-black sky.">
-        <figcaption><strong>Final document, Stable Diffusion XL</strong><span class="meta">Flat horizon and a crescent, but the Earth is still too large. SDXL reads only about the first 60 words.</span></figcaption>
+        <img src="../assets/images/encoding/earthrise-final-s2.webp" width="640" height="640" loading="lazy" alt="Render: a small Earth above a low, dark grey-brown lunar plain in a black sky.">
+        <figcaption><strong>Encoded, seed 2</strong><span class="meta">The same document with another seed: the layout holds.</span></figcaption>
       </figure>
     </div>
-    <h3 style="margin-top:28px">The encoded document</h3>
-    <div class="jai-line"><code id="earthrise" data-jai-highlight>jai:A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.;prompt/flux=Ensure the Earth is the central subject, clearly distinct from the light grey, gently rolling lunar surface.;aspect=1:1;model=black-forest-labs/flux-schnell;model=stability-ai/sdxl;style=documentary photography</code><button type="button" data-copy="#earthrise">Copy</button></div>
-    <p>The <code>model</code> list is ordered by how well each model reproduced the original. The refinement after <code>prompt/flux=</code> reaches FLUX models only; every other model gets the core description. Download the <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise.jai">.jai file</a> (465 bytes, gzip JSON) or the <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise-report.json">full report</a> with every candidate and score.</p>
-    <p class="muted">The run used Gemini 2.5 Flash to describe, revise and rate, and CLIP embeddings plus a thumbnail colour and layout distance to score. It made 40 renders in about eight minutes for an estimated $0.38. The score blends those measures with the vision model's rating, which is noisy, so the encoder re-rates the current best alongside every new generation. Fidelity is bounded by the decoders: neither model reliably draws a small Earth where it is asked to. The rate, a few hundred bytes, does not change when the decoders get better; the distortion does.</p>
-    <p class="muted"><strong>How this was chosen.</strong> This is the best of five exploratory runs on this one image, made while the encoder itself was being tuned (scoring, judge and prompts changed between runs), and it was picked by eye. The five runs together cost about $1.60. A single run of today's encoder can land well below it: results vary a lot between runs with one seed.</p>
-    <p class="muted"><strong>What this run got wrong.</strong> The refinement is phrased as an instruction ("Ensure…"), which the specification now rules out: refinements describe the picture, like the core. The core also says "from the moon's surface", while Earthrise was taken from lunar orbit. The encoder's prompts were corrected after review; a rerun with them plateaued at a lower score, which says as much about run-to-run variance with one seed as about the prompts. Scores measure resemblance, not truth.</p>
+    <div class="jai-line" style="margin-top:16px"><code id="earthrise" data-jai-highlight>jai:Photograph of a distant Earthrise over the Moon: one small, horizontally compressed blue-and-white Earth sits slightly right of centre, around one seventh of the frame wide, with its centre just below the middle of the square frame. Vast pure black, starless space fills nearly three quarters of the view. The lunar ground is dark gray-brown and lightly textured, occupying only the lowest quarter; its low curved horizon is very near the bottom edge, higher on the left and descending gently to the right. Even bright sunlight illuminates both Earth and lunar dust without glare.;aspect=1:1;avoid=text;avoid=stars;model=black-forest-labs/flux-schnell;style=Apollo space photography;style=natural realism</code><button type="button" data-copy="#earthrise">Copy</button></div>
+    <p class="muted">Seven generations, 29 candidates, 58 renders, about five minutes and $0.24 on Replicate. A second independent run of the same encoder reached the same fitness, 0.73. <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise.jai">.jai file</a> · <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise-report.json">full report</a> with every candidate, measurement and cost.</p>
+
+    <h3 style="margin-top:32px">Buzz Aldrin on the Moon: 280,403 bytes to 585</h3>
+    <div class="gallery">
+      <figure class="shot">
+        <img src="../assets/images/encoding/aldrin-target.webp" width="636" height="640" loading="lazy" alt="Photograph: an astronaut in a white suit stands on the grey lunar surface, his visor reflecting the scene, a long shadow and bootprints in the foreground and gold foil at the lower right.">
+        <figcaption><strong>The original</strong><span class="meta">Buzz Aldrin photographed by Neil Armstrong on Apollo 11 (NASA, public domain). 280,403 bytes as a 960 × 966 JPEG.</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="../assets/images/encoding/aldrin-first.webp" width="640" height="640" loading="lazy" alt="Render: a small astronaut far away on a grey plain under a black sky.">
+        <figcaption><strong>First description</strong><span class="meta">Fitness 0.35: the astronaut is too small and the horizon far too low.</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="../assets/images/encoding/aldrin-final-s1.webp" width="640" height="640" loading="lazy" alt="Render: an astronaut in a white suit standing large in the frame on the lunar surface, a long shadow, a gold foil object in the foreground, a high horizon.">
+        <figcaption><strong>Encoded, seed 1</strong><span class="meta">Fitness 0.47: the figure's size, the high horizon, the shadow and the gold foil arrive.</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="../assets/images/encoding/aldrin-final-s2.webp" width="640" height="640" loading="lazy" alt="Render: an astronaut standing on the lunar surface with a shadow and a gold foil object, a high horizon.">
+        <figcaption><strong>Encoded, seed 2</strong><span class="meta">The same document with another seed.</span></figcaption>
+      </figure>
+    </div>
+    <div class="jai-line" style="margin-top:16px"><code id="aldrin" data-jai-highlight>jai:Photograph of a lone moon astronaut, near full height and slightly right of centre, standing at medium distance with helmet at the top and boots just below the middle. Bulky white Apollo suit, life-support backpack, chest controls, gray gloves, flag shoulder patch, and a large curved visor reflecting the sunlit terrain. The lunar horizon is a high shallow curve near the upper edge, with black empty sky above it. Gray dusty ground stretches from horizon to camera and visibly contains abundant overlapping bootprints, crisp sole patterns, pits and scattered rocks. Strong sunlight from upper right produces a massive dark shadow attached to the boots and stretching far toward the lower-left and bottom edge. A small gold foil-covered object is cropped along the lower-right edge.;aspect=1:1;avoid=stars;avoid=additional astronauts;model=black-forest-labs/flux-schnell;style=35mm archival space photograph;style=hard directional sunlight</code><button type="button" data-copy="#aldrin">Copy</button></div>
+    <p class="muted">Six generations, 30 candidates, 60 renders, about seven minutes and $0.26. <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/aldrin.jai">.jai file</a> · <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/aldrin-report.json">full report</a>.</p>
   </div>
 </section>
 

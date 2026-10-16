@@ -1658,29 +1658,33 @@ make encoded documents easy to recognise and reuse.
 An image encoder searches for the description whose renders look most like
 the original, using the target models themselves as the decoder:
 
-1. **Describe.** A vision-capable model writes a first description of the
-    original, following [[#authoring]]: medium first, subject and counts,
-    composition, light and colour, literal text in quotes.
-2. **Render.** Each candidate description is rendered with every target model,
-    with fixed seeds so that differences between candidates come from the
-    text, not from noise.
-3. **Compare.** Each render is scored against the original. Useful measures
-    are semantic (cosine similarity of image embeddings such as CLIP),
-    perceptual (colour and layout distance between small thumbnails), and a
-    vision model's rating of how closely each render matches. Embedding
-    similarity saturates for any render of the right subject, so it cannot
-    rank layout on its own. The fitness of a candidate blends its mean and its
-    worst score across the target models, so that the core does not sacrifice
-    one model.
-4. **Revise.** The best candidates are kept, and new ones are written from
-    them by addressing the listed differences, while keeping what already
-    matches.
-5. **Refine per model.** Once the core description stops improving, the
-    encoder looks at models that lag behind and tries short
-    [[#model-refinements|per-model refinements]] for them, keeping a refinement
-    only when it raises that model's score.
-6. **Stop.** On a budget, a time limit, or when scores reach a plateau, the
-    encoder returns the best document found so far.
+1. **Measure the original.** A vision model lists the main subjects with
+    their bounding boxes, the horizon's height and shape, the camera, the
+    light and the medium; the palette and lightness come from the pixels.
+    This measurement is the yardstick for every render.
+2. **Describe.** The vision model writes first descriptions of the original,
+    following [[#authoring]]: medium first, subject and counts, composition,
+    light and colour, literal text in quotes.
+3. **Render.** Each candidate is rendered with every target model and a few
+    fixed seeds, so that differences between candidates come from the text
+    and a lucky seed does not decide.
+4. **Measure the renders.** Each render is measured the same way, looking for
+    the original's subjects by name. The fitness is computed from the
+    differences (positions, sizes, horizon, palette, lightness), not judged:
+    computed scores are stable between calls and comparable across runs. A
+    candidate's fitness blends its mean and its worst score across the target
+    models, so that the core does not sacrifice one model.
+5. **Optimise from the history.** An optimiser sees the original's
+    measurements and the best earlier candidates with their scores and their
+    measured differences in words, largest first ("the Earth is 1.7× too
+    tall and 7% of the frame too high; the ground is too bright"), and writes
+    the next candidates. Seeing what was tried and what moved the numbers is
+    what lets it make progress instead of repeating itself.
+6. **Refine per model.** Models that still lag get short
+    [[#model-refinements|per-model refinements]] written the same way from
+    their own measurements, kept only when they raise that model's score.
+7. **Stop.** At a target fitness, on a plateau, a time limit or the budget.
+    Independent restarts can share the budget; the best by fitness wins.
 
 This resembles the loop a CELP speech coder runs, with a description in place
 of codebook indices and a generative model in place of the synthesis filter,
@@ -1691,9 +1695,11 @@ the image.
 
 The quality of an encoded document is bounded by its decoders: a model that
 cannot draw hands, legible text or exact counts will not do so because the
-description is better. Scores measure resemblance, not truth; an encoder that
-optimises an embedding score alone can drift towards text that games the
-metric, which is why the comparison step also uses a reader of the images.
+description is better. Holistic similarity scores (image embeddings, a vision
+model's 0 to 100 rating) are poor guides: embeddings rate every render of the
+right subject alike, and ratings drift between calls, so an evolutionary loop
+driven by them selects almost at random. Measured differences fed back as
+numbers are what make the loop converge.
 
 ## Output conventions ## {#image-encoding-output}
 

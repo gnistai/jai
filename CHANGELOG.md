@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0-draft, an encoder that measures — 2026-10-16
+
+- *Encoding images* now describes the loop that works: measure the original
+  (subjects' boxes, horizon height and shape, palette, lightness), render each
+  candidate with a few seeds, measure every render the same way, compute the
+  fitness from the differences, and let an optimiser write new candidates from
+  the best earlier ones and their measured differences, largest first.
+  Holistic similarity scores are named as poor guides.
+- Examples: Earthrise (449 bytes) and Buzz Aldrin on the Moon (585 bytes),
+  each from a single automatic run of the reference encoder for FLUX.1
+  schnell, with full reports in `examples/encoding/`.
+
 ## 1.0-draft, named carriers and `.jai` files in `src` — 2026-10-16
 
 - Carriers have names instead of numbers: the **picture**, **attribute** and

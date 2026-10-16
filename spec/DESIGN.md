@@ -269,6 +269,17 @@ the text:
   the worst model's score.
 - Models with a 77-token text encoder never see refinements appended after a
   long core, hence the note in *Per-model refinements*.
+- The first encoder selected by CLIP plus a thumbnail colour term plus a vision
+  model's 0–100 rating, and revised from the current best only. It did not
+  converge on its own: the scores were noise, and the reviser had no memory.
+  What worked when done by hand was measuring geometry and feeding back exact
+  differences. The encoder now does exactly that: a vision model measures
+  subjects' boxes, the horizon and the medium in the original and in every
+  render; fitness is computed from the differences; an OPRO-style optimiser
+  sees the best earlier candidates with their measured errors, largest first.
+  On Earthrise with FLUX.1 schnell this climbed from 0.50 to 0.73 by itself.
+  GPT-5.6 luna measured the original's boxes within about half a percent;
+  Gemini 2.5 Flash was 17 points off vertically, so luna is the default.
 
 ## 6e. alt is the description (owner decision)
 
