@@ -1,0 +1,702 @@
+{
+ "class": "json",
+ "edition": "1.0-draft",
+ "note": "JSON text -> document + exact parser diagnostics; 'optional' codes may or may not be emitted.",
+ "cases": [
+  {
+   "id": "json-simple",
+   "rationale": "Basic.",
+   "input": "{\"jai\":1,\"prompt\":\"A magical castle\",\"style\":\"anime\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-array",
+   "rationale": "Arrays keep order.",
+   "input": "{\"jai\":1,\"model\":[\"flux\",\"sdxl\"]}",
+   "context": true,
+   "document": {
+    "model": [
+     "flux",
+     "sdxl"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-trim",
+   "rationale": "Value normalisation trims.",
+   "input": "{\"jai\":1,\"prompt\":\" A castle \"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-crlf",
+   "rationale": "CR normalisation applies to JSON too.",
+   "input": "{\"jai\":1,\"prompt\":\"a\\r\\nb\\rc\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "a\nb\nc"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-empty-string",
+   "rationale": "Empty strings dropped.",
+   "input": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "empty-value:style"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-empty-array",
+   "rationale": "An empty array contributes nothing.",
+   "input": "{\"jai\":1,\"prompt\":\"x\",\"style\":[]}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-null",
+   "rationale": "null dropped.",
+   "input": "{\"jai\":1,\"prompt\":\"x\",\"style\":null}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "empty-value:style"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-mixed-array",
+   "rationale": "Only the offending element is dropped.",
+   "input": "{\"jai\":1,\"prompt\":[\"a\",null,\"\",[\"b\"],{\"x\":1},\" c \"]}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "a",
+     "c"
+    ]
+   },
+   "diagnostics": [
+    "empty-value",
+    "empty-value",
+    "unsupported-member",
+    "unsupported-member"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-object-member",
+   "rationale": "Objects are reserved.",
+   "input": "{\"jai\":1,\"prompt\":\"x\",\"acme.cfg\":{\"a\":1}}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "unsupported-member:acme.cfg"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-1p0",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":1.0}",
+   "context": true,
+   "document": {
+    "strength": [
+     "1"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-0p60",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":0.60}",
+   "context": true,
+   "document": {
+    "strength": [
+     "0.6"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-1E2",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":1E2}",
+   "context": true,
+   "document": {
+    "strength": [
+     "100"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-1e21",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":1e21}",
+   "context": true,
+   "document": {
+    "strength": [
+     "1e+21"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-m0",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":-0}",
+   "context": true,
+   "document": {
+    "strength": [
+     "0"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-5em324",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":5e-324}",
+   "context": true,
+   "document": {
+    "strength": [
+     "5e-324"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-9007199254740993",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":9007199254740993}",
+   "context": true,
+   "document": {
+    "strength": [
+     "9007199254740992"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-12345678901234567890",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":12345678901234567890}",
+   "context": true,
+   "document": {
+    "strength": [
+     "12345678901234567000"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-1em7",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":1e-7}",
+   "context": true,
+   "document": {
+    "strength": [
+     "1e-7"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-123em2",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":123e-2}",
+   "context": true,
+   "document": {
+    "strength": [
+     "1.23"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-0p1",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":0.1}",
+   "context": true,
+   "document": {
+    "strength": [
+     "0.1"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-number-100",
+   "rationale": "ECMAScript Number::toString of the binary64 value.",
+   "input": "{\"jai\":1,\"strength\":100}",
+   "context": true,
+   "document": {
+    "strength": [
+     "100"
+    ]
+   },
+   "diagnostics": [
+    "number-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-true",
+   "rationale": "Booleans become their spelling.",
+   "input": "{\"jai\":1,\"animate\":true}",
+   "context": true,
+   "document": {
+    "animate": [
+     "true"
+    ]
+   },
+   "diagnostics": [
+    "number-value:animate"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-false",
+   "rationale": "Booleans become their spelling.",
+   "input": "{\"jai\":1,\"animate\":false}",
+   "context": true,
+   "document": {
+    "animate": [
+     "false"
+    ]
+   },
+   "diagnostics": [
+    "number-value:animate"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-nan",
+   "rationale": "NaN is not JSON.",
+   "input": "{\"jai\":1,\"strength\":NaN}",
+   "context": true,
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-infinity",
+   "rationale": "Infinity is not JSON.",
+   "input": "{\"jai\":1,\"strength\":Infinity}",
+   "context": true,
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-trailing-comma",
+   "rationale": "Trailing commas are not JSON.",
+   "input": "{\"jai\":1,\"prompt\":\"x\",}",
+   "context": true,
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-comment",
+   "rationale": "Comments are not JSON.",
+   "input": "{\"jai\":1,/*c*/\"prompt\":\"x\"}",
+   "context": true,
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-not-object",
+   "rationale": "Top level must be an object.",
+   "input": "[\"jai\",1]",
+   "context": true,
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-truncated",
+   "rationale": "Truncated.",
+   "input": "{\"jai\":1,\"prompt\":\"x\"",
+   "context": true,
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-case-merge",
+   "rationale": "Names colliding after lowercasing are concatenated in member order.",
+   "input": "{\"jai\":1,\"prompt\":\"a\",\"Prompt\":\"b\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "a",
+     "b"
+    ]
+   },
+   "diagnostics": [
+    "duplicate-key:prompt"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-case-merge-4",
+   "rationale": "Three spellings.",
+   "input": "{\"jai\":1,\"Prompt\":\"a\",\"prompt\":\"b\",\"PROMPT\":\"c\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "a",
+     "b",
+     "c"
+    ]
+   },
+   "diagnostics": [
+    "duplicate-key:prompt",
+    "duplicate-key:prompt"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-exact-repeat",
+   "rationale": "An exact repeat replaces in place (first position).",
+   "input": "{\"jai\":1,\"prompt\":\"a\",\"b.x\":\"x\",\"prompt\":\"c\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "c"
+    ],
+    "b.x": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "optional": [
+    "duplicate-member"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-missing-marker-context",
+   "rationale": "Accepted in JAI context.",
+   "input": "{\"prompt\":\"x\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "missing-marker"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-missing-marker-no-context",
+   "rationale": "Not a JAI document outside a JAI context.",
+   "input": "{\"prompt\":\"x\"}",
+   "context": false,
+   "document": {},
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-marker-1p0",
+   "rationale": "1.0 is the number 1.",
+   "input": "{\"jai\":1.0,\"prompt\":\"x\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-marker-string",
+   "rationale": "A string marker.",
+   "input": "{\"jai\":\"1\",\"prompt\":\"x\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "invalid-marker"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-marker-true",
+   "rationale": "A boolean marker.",
+   "input": "{\"jai\":true,\"prompt\":\"x\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "invalid-marker"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-marker-2",
+   "rationale": "Other integers: parse, never auto-render.",
+   "input": "{\"jai\":2,\"prompt\":\"x\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "unsupported-version"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-marker-0",
+   "rationale": "0 is an integer other than 1.",
+   "input": "{\"jai\":0,\"prompt\":\"x\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "unsupported-version"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-marker-1p5",
+   "rationale": "Not an integer.",
+   "input": "{\"jai\":1.5,\"prompt\":\"x\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "invalid-marker"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-jai-case-variant",
+   "rationale": "A case variant of jai is never a parameter.",
+   "input": "{\"jai\":1,\"JAI\":\"x\",\"prompt\":\"y\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "y"
+    ]
+   },
+   "diagnostics": [
+    "duplicate-member:jai"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-invalid-key",
+   "rationale": "Invalid names are dropped.",
+   "input": "{\"jai\":1,\"my key\":\"x\",\"prompt\":\"y\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "y"
+    ]
+   },
+   "diagnostics": [
+    "invalid-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-proto",
+   "rationale": "__proto__ is not a key.",
+   "input": "{\"jai\":1,\"__proto__\":\"x\",\"prompt\":\"y\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "y"
+    ]
+   },
+   "diagnostics": [
+    "invalid-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-constructor",
+   "rationale": "constructor is a valid key.",
+   "input": "{\"jai\":1,\"constructor\":\"x\"}",
+   "context": true,
+   "document": {
+    "constructor": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-uppercase-key",
+   "rationale": "Names are lowercased.",
+   "input": "{\"jai\":1,\"Style\":\"anime\"}",
+   "context": true,
+   "document": {
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-lone-surrogate",
+   "rationale": "Lone surrogates become U+FFFD.",
+   "input": "{\"jai\":1,\"prompt\":\"a\\ud800b\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "a�b"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-nul",
+   "rationale": "U+0000 becomes U+FFFD.",
+   "input": "{\"jai\":1,\"prompt\":\"a\\u0000b\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "a�b"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-empty-object",
+   "rationale": "Empty object in context.",
+   "input": "{}",
+   "context": true,
+   "document": {},
+   "diagnostics": [
+    "missing-marker"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-ws",
+   "rationale": "JSON whitespace.",
+   "input": " \n {\"jai\" : 1 , \"prompt\" : \"x\" } \n",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  }
+ ]
+}

@@ -1,0 +1,2154 @@
+<pre class='metadata'>
+Title: JAI: Just AI Images
+Shortname: jai
+Level: none
+Status: LD
+URL: https://jai.gnist.ai/spec/
+Editor: André C. Andersen, Gnist AI https://gnist.ai
+Repository: gnistai/jai
+Abstract: JAI represents an image as a natural-language description plus optional rendering parameters instead of pixels; a generative model acts as the decoder. This specification defines the data model, the human-readable text form, the JSON form, the gzip-compressed file form (<code>.jai</code>, <code>image/jai</code>), the standard parameters and how renderers interpret them, integration with HTML and URLs, and conformance requirements for parsers, serialisers, validators, renderers and viewers.
+Markup Shorthands: markdown yes, css no
+Boilerplate: conformance no, repository-issue-tracking no
+Complain About: accidental-2119 yes, missing-example-ids no
+Date: 2026-10-15
+Text Macro: EDITION 1.0-draft
+</pre>
+
+<pre class=biblio>
+{
+    "AGENT-SKILLS": {
+    "title": "Agent Skills specification",
+    "href": "https://agentskills.io/specification",
+    "publisher": "Anthropic"
+    },
+    "THUMBHASH": {
+    "title": "ThumbHash: A very compact representation of an image placeholder",
+    "href": "https://evanw.github.io/thumbhash/",
+    "authors": ["Evan Wallace"]
+    },
+    "BLURHASH": {
+    "title": "BlurHash",
+    "href": "https://blurha.sh/",
+    "authors": ["Dag Ågren"]
+    },
+    "IPTC-PHOTOMETADATA": {
+    "title": "IPTC Photo Metadata Standard",
+    "href": "https://iptc.org/standards/photo-metadata/iptc-standard/",
+    "publisher": "IPTC"
+    },
+    "C2PA": {
+    "title": "C2PA Technical Specification",
+    "href": "https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html",
+    "publisher": "Coalition for Content Provenance and Authenticity"
+    }
+}
+</pre>
+
+<style>
+table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
+.edition { font-size: 0.9em; color: #555; }
+</style>
+
+<p class=edition>Edition [EDITION]. This is a living document; the edition stamp identifies the vocabulary and fixture set that the Agent Skill and the conformance suite refer to.</p>
+
+# Introduction # {#intro}
+
+*This section is informative.*
+
+A JAI document is an image whose pixels have been discarded and replaced by
+what is needed to regenerate an acceptable image: a natural-language
+description and, optionally, a few rendering parameters. Any JAI-capable
+renderer is a decoder. Two decoders produce different pixels, but the same
+image in intent. JAI is to images roughly what MIDI is to music: the score
+travels, the performance is produced where it is played.
+
+The simplest JAI document is a sentence:
+
+<div class=example id=ex-intro-plain>
+```
+A magical castle
+```
+</div>
+
+Parameters follow the description, separated by semicolons:
+
+<div class=example id=ex-intro-params>
+```
+jai:A magical castle;style=anime;model=flux
+```
+</div>
+
+The same document has a JSON form and a compressed file form, and all three
+are the same document:
+
+<div class=example id=ex-intro-forms>
+Text form:
+```
+jai:A magical castle;style=anime;model=flux
+```
+JSON form:
+```json
+{"jai":1,"prompt":"A magical castle","model":"flux","style":"anime"}
+```
+File form: the JSON above as a single gzip member, in a file named `castle.jai`, served as `image/jai`, or embedded as `data:image/jai;base64,…`.
+</div>
+
+## What JAI is and is not ## {#intro-scope}
+
+*This section is informative.*
+
+JAI describes visual intent, not pixels. It does not specify a neural network,
+a sampler, a provider, or exact output. A decoder produces *an* image
+consistent with the description, not *the* image. Decoding is
+non-deterministic across decoders, versions, hardware and time; it may take
+seconds, cost money, require a network and a user-chosen provider, and be
+refused by a provider's content policy. Unlike every other image format,
+decoding a JAI document has side effects: it transmits the document, and
+possibly an input image, to a renderer, under the account of the person
+viewing it.
+
+Every JAI document also has a textual rendering that is instant, free and
+always available: its description, the `prompt` values joined with line
+breaks. A user agent that will not render pixels presents that instead. For
+the same reason, a JAI document carries its own text alternative in a way no
+pixel format does.
+
+JAI is not a compressor for existing rasters. When acceptable pixels exist,
+ship them, and let the JAI document travel alongside as the editable source:
+HTML's `<picture>` element does exactly this ([[#html-carriers]]).
+
+## Audiences ## {#intro-audiences}
+
+*This section is informative.*
+
+This specification is written for six audiences: people and AI agents who
+write JAI; authoring tools that convert images to JAI or validate it; library
+developers implementing parsers and serialisers; extension developers adding
+parameters or renderers; browser and extension developers implementing
+discovery, rendering and replacement; and renderer developers turning a JAI
+document into a picture. Sections [[#text]] through [[#file]] are the parts a
+library developer needs; [[#parameters]] and [[#rendering]] are for renderer
+developers; [[#html]] is for browser, extension and web developers; and
+[[#authoring]] is a plain-language primer for authors.
+
+# Conformance # {#conformance}
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in BCP 14 [[!RFC2119]]
+[[!RFC8174]] when, and only when, they appear in all capitals, as shown here.
+The same words in lower case have their ordinary English meaning.
+
+Everything in this specification is normative except sections marked
+informative, examples, notes, and the appendices so marked.
+
+## Conformance classes ## {#conformance-classes}
+
+This specification defines requirements for the following classes. An
+implementation may belong to several.
+
+: <dfn export>conforming document</dfn>
+:: A JAI document in any of its forms that satisfies every requirement placed
+    on documents and authors ([[#data-model]], [[#text]], [[#json]], [[#file]],
+    [[#parameters]], [[#html]]).
+: <dfn export>parser</dfn>
+:: Converts the text form to a document ([[#text-parsing]]).
+: <dfn export>JSON reader</dfn>
+:: Converts the JSON form to a document ([[#json-reading]]).
+: <dfn export>decoder</dfn>
+:: Converts the bytes of a `.jai` file, an `image/jai` resource, or the body
+    of a `data:image/jai` URL to a document ([[#decoding]]). A decoder contains
+    a parser and a JSON reader.
+: <dfn export>serialiser</dfn>
+:: Produces the canonical text form and the canonical JSON form of a document
+    ([[#text-serialising]], [[#json-canonical]]).
+: <dfn export>encoder</dfn>
+:: Produces the file form ([[#file-encoding]]). An encoder contains a
+    serialiser.
+: <dfn export>validator</dfn>
+:: Reports advisory diagnostics about a document or its carrier
+    ([[#diagnostics]]).
+: <dfn export>interpreter</dfn>
+:: Derives the interpreted parameters of a document from its values
+    ([[#parameters-interpretation]]). Every renderer and every viewer contains
+    an interpreter.
+: <dfn export>renderer</dfn>
+:: Produces an image from a document ([[#rendering]]).
+: <dfn export>viewer</dfn>
+:: Software acting for a user that discovers JAI documents in content, decides
+    whether and when to render them, and presents the result: a browser, a
+    browser extension, a chat client, an image viewer ([[#html]],
+    [[#viewer-requirements]], [[#security]]).
+: <dfn export>authoring tool</dfn>
+:: Software that produces or edits JAI documents on behalf of an author.
+
+## Determinism ## {#conformance-determinism}
+
+Parsing, reading and decoding are *total* and *deterministic*: for every
+input, including malformed input, a conforming implementation produces a
+document (possibly empty) and a set of diagnostics, and two conforming
+implementations produce the same document and the same parser-level
+diagnostics for the same input. Error recovery is therefore specified, not
+left to implementations. Nothing in this specification may throw, abort or
+produce a partial result on malformed input.
+
+## Conformance test suite ## {#conformance-tests}
+
+The repository at <a href="https://github.com/gnistai/jai">github.com/gnistai/jai</a>
+holds machine-readable fixtures under `tests/` ([[#fixtures]]). The fixtures
+are normative: where the fixtures and the prose of this specification
+disagree, the fixtures are correct and the prose has a bug. An implementation
+may claim conformance for a class when it passes every fixture of that class
+("JAI [EDITION] conforming parser").
+
+# Terminology # {#terminology}
+
+: <dfn export>document</dfn>
+:: An instance of the data model ([[#data-model]]): a map from keys to lists of
+    values, describing one image.
+: <dfn export>key</dfn>
+:: The name of a parameter: an ASCII string matching the [=key grammar=].
+: <dfn export>value</dfn>
+:: One string assigned to a key. A key may have several values, in order.
+: <dfn export>parameter</dfn>
+:: A key together with its values.
+: <dfn export>standard key</dfn>
+:: One of the eleven keys defined in [[#parameters]].
+: <dfn export>prompt</dfn>
+:: The values of the key `prompt`: the description of the image.
+: <dfn export>description</dfn>
+:: The textual rendering of a document: its prompt values joined with U+000A
+    LINE FEED, in order.
+: <dfn export>text form</dfn>
+:: The human-readable serialisation of a document ([[#text]]):
+    `jai:A magical castle;style=anime`.
+: <dfn export>JSON form</dfn>
+:: The JSON serialisation of a document ([[#json]]).
+: <dfn export>file form</dfn>
+:: The gzip-compressed JSON form ([[#file]]); the content of a `.jai` file.
+: <dfn export>canonical form</dfn>
+:: The unique text form or JSON form a serialiser produces for a document
+    ([[#text-serialising]], [[#json-canonical]]).
+: <dfn export>identity</dfn>
+:: The SHA-256 digest of a document's canonical JSON form ([[#document-identity]]).
+: <dfn export>JAI whitespace</dfn>
+:: Exactly the 25 code points that have the Unicode `White_Space` property:
+    U+0009 TAB, U+000A LF, U+000B VT, U+000C FF, U+000D CR, U+0020 SPACE,
+    U+0085 NEL, U+00A0 NO-BREAK SPACE, U+1680 OGHAM SPACE MARK, U+2000 to
+    U+200A inclusive, U+2028 LINE SEPARATOR, U+2029 PARAGRAPH SEPARATOR,
+    U+202F NARROW NO-BREAK SPACE, U+205F MEDIUM MATHEMATICAL SPACE and
+    U+3000 IDEOGRAPHIC SPACE. No other code point is whitespace for the
+    purposes of this specification. U+FEFF is not whitespace.
+: <dfn export>trim</dfn>
+:: To remove every leading and trailing [=JAI whitespace=] code point from a
+    string.
+
+    <div class=note>
+    `String.prototype.trim` (JavaScript), `str.strip()` (Python),
+    `String.trim()` (Java), `strings.TrimSpace` (Go) and the regular-expression
+    class `\s` each remove a different set of code points, and none of them
+    removes exactly this set. Implementations use the list.
+    </div>
+: <dfn export>ASCII lowercase</dfn>
+:: The string with every code point in the range U+0041 (A) to U+005A (Z)
+    replaced by the code point 32 greater, and no other change [[!INFRA]].
+: <dfn export>ASCII case-insensitive</dfn>
+:: Two strings match ASCII case-insensitively when their [=ASCII lowercase=]
+    forms are identical [[!INFRA]]. Implementations MUST NOT use
+    locale-sensitive case mapping or Unicode case folding anywhere in this
+    specification: under those, U+0130 (İ), U+0131 (ı) and U+212A (KELVIN
+    SIGN) would match ASCII letters.
+: <dfn export>scalar value string</dfn>
+:: A string of Unicode scalar values, that is, a string containing no
+    surrogate code points [[!INFRA]].
+: <dfn export>author</dfn>
+:: Whoever wrote a document.
+: <dfn export>publisher</dfn>
+:: The site or channel that delivers a document to a user. On a site that
+    accepts user content the author and the publisher are different parties.
+: <dfn export>user</dfn>
+:: The person on whose behalf a viewer renders a document, and under whose
+    renderer account the pixels are produced.
+: <dfn export>original image</dfn>
+:: Pixels that accompany a document in its carrier: the `<img>` element's own
+    image in HTML, or the image named by the `source` key ([[#key-source]]).
+: <dfn export>carrier</dfn>
+:: A place in a host format where a document is found ([[#html-carriers]]).
+: <dfn export>advisory</dfn>
+:: Of a parameter: a preference the author expresses, which a renderer or
+    viewer honours when it can and ignores, with a diagnostic, when it cannot;
+    an advisory value never selects anything the user has not configured and
+    never overrides a user setting.
+
+# Data model # {#data-model}
+
+A <a>document</a> is an ordered map from [=keys=] to lists of one or more
+[=values=]. The order of values within a key is significant; the relative
+order of distinct keys is not significant and carries no meaning.
+
+A document describes exactly one image.
+
+## Keys ## {#keys}
+
+The <dfn export>key grammar</dfn> is, in ABNF [[!RFC5234]]:
+
+```abnf
+key      = segment *( "." segment )
+segment  = ALPHANUM *( ALPHANUM / "_" / "-" )
+ALPHANUM = %x61-7A / DIGIT          ; a-z, 0-9
+```
+
+A key is a non-empty ASCII string whose first code point is a lowercase ASCII
+letter or digit, whose segments are separated by single full stops, and whose
+only other characters are lowercase ASCII letters, digits, `_` and `-`.
+
+Keys are compared for equality after [=ASCII lowercase=] conversion: readers
+convert every key they receive to ASCII lowercase before anything else, so a
+document never contains two keys that differ only in case.
+
+Keys without a `.` are reserved for this specification ([[#extensibility]]).
+
+The key `jai` is reserved and is never a parameter: in the [=JSON form=] the
+member named `jai` identifies the object as a JAI document ([[#json-marker]]);
+in the [=text form=] an assignment to `jai` is dropped ([[#text-parsing]]).
+
+<div class=note>
+Implementations that use language objects as maps need real maps or
+null-prototype objects: `constructor` is a valid key, and `__proto__`, while
+not a valid key, is a valid JSON member name.
+</div>
+
+## Values ## {#values}
+
+A [=value=] is a non-empty [=scalar value string=] that does not begin or end
+with [=JAI whitespace=] and does not contain U+000D CARRIAGE RETURN or
+U+0000 NULL.
+
+Every reader of every form applies the following <dfn export>value normalisation</dfn>
+to each candidate value before it enters the document, in this order:
+
+1. Replace every surrogate code point with U+FFFD REPLACEMENT CHARACTER.
+2. Replace every U+000D U+000A pair, and then every remaining U+000D, with
+    U+000A.
+3. Replace every U+0000 with U+FFFD. (Other control characters are kept as
+    content; validators report them, see [[#diagnostics]].)
+4. [=Trim=] the string.
+5. If the result is empty, discard the candidate and emit the diagnostic
+    `empty-value`; otherwise the result is the value.
+
+Values are strings and only strings. Numbers, booleans and structured data
+exist only as their spelling (`strength=0.6`, `animate=true`); this is what
+makes the text form able to represent every document.
+
+No Unicode normalisation is applied anywhere in this specification. Two
+strings are the same value if and only if they consist of the same sequence
+of code points; canonically equivalent texts (for example NFC and NFD
+spellings of the same word, or U+037E GREEK QUESTION MARK and `;`) are
+different values and yield different [=identities=]. Parsers MUST NOT
+normalise their input.
+
+## Standard keys and repetition ## {#data-model-arity}
+
+A document may assign any number of values to any key; the data model does not
+know which keys are single-valued. The standard keys `aspect`, `mode`,
+`strength`, `seed`, `source`, `preview` and `animate` are *single-valued at
+interpretation*: an interpreter uses the last value and reports
+`repeated-single` ([[#parameters-interpretation]]). Parsers and serialisers
+keep every value; identity and round-tripping depend on all of them.
+
+# Text form # {#text}
+
+The text form is a string. It is used wherever a string fits: HTML
+attributes, the body of a `data:image/jai` URL, chat messages, clipboards and
+documentation.
+
+## Grammar ## {#text-grammar}
+
+*This grammar is informative; the algorithm in [[#text-parsing]] is
+normative.*
+
+```abnf
+jai-text   = OWS [ prefix ] [ segment *( ";" segment ) ] [ ";" ]
+prefix     = %s"jai:" OWS                  ; "jai:" is ASCII case-insensitive
+segment    = assignment / prose
+assignment = OWS key OWS "=" value
+prose      = value
+value      = *( escape / vchar )
+escape     = "\" ( ";" / "=" / "\" )
+vchar      = <any scalar value except ";" and "\"> / "\"
+OWS        = *( <JAI whitespace> )
+```
+
+A segment is an assignment if it matches `assignment`; otherwise it is prose.
+A `\` that does not begin an `escape` is an ordinary character.
+
+## Structure ## {#text-structure}
+
+- The optional prefix `jai:` marks a string as JAI. It is required where the
+    context does not already establish JAI (an `alt` attribute, a chat
+    message); it is optional where the context does (a `data-jai` attribute,
+    the body of a `data:image/jai` URL, a `.jai` file).
+- Segments are separated by unescaped `;`. A segment whose text before its
+    first unescaped `=` is, after [=trimming=], a [=key=] is an <dfn export>assignment</dfn>
+    of the rest of the segment to that key. Every other segment is
+    <dfn export>prose</dfn>.
+- The first prose segment is the prompt. Any later prose segment is a
+    <dfn export>continuation</dfn>: it belongs to the most recently assigned value,
+    with the `;` that preceded it restored. This is what lets ordinary
+    semicolons appear in descriptions without escaping.
+- Empty segments and segments consisting only of [=JAI whitespace=] are
+    ignored, so a trailing `;` and a doubled `;;` are harmless.
+- Three escape sequences exist: `\;` is a literal semicolon, `\=` a literal
+    equals sign, `\\` a literal backslash. A backslash before any other
+    character is itself literal, so `C:\Users` needs no escaping.
+- Keys are ASCII case-insensitive; `Style=anime` and `style=anime` are the
+    same assignment. Values are never case-converted.
+- Whitespace around keys, around `=` and at the ends of values is ignored;
+    whitespace inside values is preserved.
+
+<div class=example id=ex-text-structure>
+| Input | Document |
+|---|---|
+| `A magical castle` | prompt = `A magical castle` |
+| `jai:A magical castle;style=anime;model=flux;model=sdxl` | prompt = `A magical castle`; style = `anime`; model = `flux`, `sdxl` |
+| `prompt=A magical castle` | prompt = `A magical castle` |
+| `model=flux;prompt=A magical castle` | model = `flux`; prompt = `A magical castle` |
+| `A wizard stands in a doorway; behind him, a dragon sleeps;model=flux` | prompt = `A wizard stands in a doorway; behind him, a dragon sleeps`; model = `flux` |
+| `A castle ; style = anime ;` | prompt = `A castle`; style = `anime` |
+| `source=data:image/webp;base64,UklGRkI=;style=anime` | source = `data:image/webp;base64,UklGRkI=`; style = `anime` (`base64,…` is not an assignment) |
+| `; my key=value` | prose: `my key` contains a space and is not a key |
+| `http://example.org/?a=b` | prompt = `http://example.org/?a=b` (`:` and `/` are not key characters) |
+| `Draw a graph\; y=2x` | prompt = `Draw a graph; y=2x` |
+| `E\=mc2 explained` | prompt = `E=mc2 explained` |
+</div>
+
+### Sharp edges ### {#text-sharp-edges}
+
+*This section is informative.*
+
+The assignment rule is deliberately simple, and three consequences are worth
+knowing. Validators report each of them ([[#diagnostics]]).
+
+1. A description that *begins* with a word, an equals sign and more text is an
+    assignment: `E=mc2 explained` assigns `mc2 explained` to the key `e`.
+    Write `prompt=E=mc2 explained` or `E\=mc2 explained`.
+2. Prose after an assignment continues that assignment, not the prompt:
+    `style=anime;A castle` has no prompt and the style `anime;A castle`.
+    Write the description first, or introduce it with `prompt=`. A new line
+    does not start a parameter either; one-parameter-per-line layouts need
+    `;` at the line ends.
+3. Whitespace is allowed around `=`, so `A chalkboard; e = mc2 written on it`
+    assigns to `e`. Write `e \= mc2`.
+
+## Escaping arbitrary text ## {#text-escaping}
+
+An authoring tool or template that places text it did not write into a
+document MUST protect it. The function <dfn export>escape-prose</dfn>(*s*) replaces
+every `\` with `\\`, then every `;` with `\;` and every `=` with `\=`. For any
+string *s* whose [=value normalisation=] is *s* itself, the segment
+`prompt=escape-prose(s)` parses as exactly one prompt value equal to *s*, and
+`key=escape-prose(s)` as one value of *key*.
+
+The `prompt=` is part of the recipe: a bare first segment that begins with
+`jai:` would lose those characters to prefix removal.
+
+<div class=note>
+This escaping is in addition to the host format's own: HTML attribute
+quoting, JSON string escaping, percent-encoding in URLs. Leading and trailing
+whitespace and carriage returns in *s* are not preserved, because values never
+contain them.
+</div>
+
+<div class=example id=ex-escape-prose>
+A template inserting a product description:
+```
+data-jai="prompt=Red mug\; model\=XZ-200\; colour\=red;style=product photo"
+```
+parses to prompt = `Red mug; model=XZ-200; colour=red` and style =
+`product photo`. Without escaping, `model` and `colour` would have become
+parameters and the prompt would have been cut short.
+</div>
+
+## Parsing ## {#text-parsing}
+
+The <dfn export>text parsing algorithm</dfn> takes a string *input* and returns a
+document and a list of diagnostics. Transport decoding (percent-decoding,
+HTML attribute decoding) has already happened ([[#html-transport]]); the
+algorithm never decodes anything.
+
+1. Let *diagnostics* be an empty list and *doc* an empty document.
+2. Replace every surrogate code point in *input* with U+FFFD.
+3. While *input* begins with U+FEFF, remove it.
+4. Replace every U+000D U+000A pair in *input*, then every remaining U+000D,
+    with U+000A.
+5. Skip leading [=JAI whitespace=]: let *i* be the index of the first code
+    point of *input* that is not JAI whitespace, or the length of *input*.
+6. If *input* from *i* begins with the four code points `jai:` compared
+    [=ASCII case-insensitively=], advance *i* past them.
+7. Split *input* from *i* into <dfn export>raw segments</dfn>: scan left to right;
+    a `\` followed by any code point consumes both code points as part of the
+    current raw segment; an unescaped `;` ends the current raw segment and
+    starts a new one; the end of the input ends the last raw segment. Raw
+    segments keep their escape sequences and their whitespace.
+8. Let *pending* be an empty list of (key, raw text) pairs and let *current*
+    be null.
+9. For each raw segment *raw*, in order:
+    1. If *raw* is empty or consists only of JAI whitespace: unless *raw* is
+        the last raw segment, append `empty-segment` to *diagnostics*; in
+        either case continue with the next raw segment. (A trailing delimiter
+        is allowed and not diagnosed; an interior empty segment is ignored
+        with a diagnostic.)
+    2. Let *eq* be the index of the first `=` in *raw* that is not preceded by
+        a `\` that is part of an escape sequence, determined by the same
+        left-to-right scan as step 7.
+    3. If *eq* exists and the [=trimmed=] text of *raw* before *eq* matches the
+        [=key grammar=] after [=ASCII lowercase=] conversion:
+        1. Let *key* be that ASCII-lowercased text and *rest* the text of
+            *raw* after *eq*.
+        2. If *key* is `jai`: append `reserved-key` to *diagnostics*; set
+            *current* to a discarded pair that is not in *pending*; continue.
+        3. Append the pair (*key*, *rest*) to *pending* and set *current* to it.
+    4. Otherwise, if *current* is null: append the pair (`prompt`, *raw*) to
+        *pending* and set *current* to it.
+    5. Otherwise: append `;` followed by *raw* to the raw text of *current*.
+        (If *current* is the discarded pair, the text is dropped with it.)
+10. For each pair (*key*, *text*) in *pending*, in order:
+    1. Let *unescaped* be *text* with every escape sequence `\;`, `\=`, `\\`
+        replaced by its second character, scanning left to right so that
+        `\;` yields `\` followed by an unescaped `;`.
+    2. Apply [=value normalisation=] to *unescaped*. If it yields a value,
+        append that value to the list for *key* in *doc*; otherwise the
+        diagnostic `empty-value` has been emitted.
+11. Return *doc* and *diagnostics*.
+
+Trimming happens once, in step 10, so interior spacing around restored
+semicolons is preserved exactly as typed (`A wizard ; behind` stays
+`A wizard ; behind`), except that an ignored empty or whitespace-only segment
+disappears together with one delimiter (`A; ;b` becomes `A;b`; write
+`A\; \;b` to keep it).
+
+The result is deterministic for every input and the algorithm runs in time
+linear in the length of the input.
+
+<div class=example id=ex-parse-edge>
+| Input | Document | Diagnostics |
+|---|---|---|
+| `jai:` | empty | |
+| `;;` | empty | `empty-segment` |
+| `A castle;style=` | prompt = `A castle` | `empty-value` |
+| `k=;a` | k = `;a` (the empty assignment was continued) | |
+| `jai:jai=1;prompt=x` | prompt = `x` | `reserved-key` |
+| `jai:A castle;jai=2;more` | prompt = `A castle` (`more` continued the dropped assignment) | `reserved-key` |
+| `  jai:A castle` | prompt = `A castle` | |
+| `jai: jai:A castle` | prompt = `jai:A castle` (the prefix is removed once) | |
+| `JAİ:A castle` (U+0130) | prompt = `JAİ:A castle` (not the prefix) | |
+| `a\=b` | prompt = `a=b` | |
+| `A; ;b` | prompt = `A;b` | `empty-segment` |
+| `a\;style=x` | prompt = `a\`; style = `x` | |
+| `mode=transform;style=anime` | mode = `transform`; style = `anime` (a document without a prompt is valid) | |
+</div>
+
+## Canonical text serialisation ## {#text-serialising}
+
+A [=serialiser=] takes a document whose keys and values satisfy [[#data-model]]
+and produces one string. Serialisers MUST reject or normalise input that does
+not satisfy the data model (keys not lowercase, values not normalised).
+
+1. Let *out* be `jai:`.
+2. Let *segments* be an empty list.
+3. For each value *v* of the key `prompt`, in order: if it is the first prompt
+    value and *v* does not match the <dfn export>assignment pattern</dfn> (optional
+    JAI whitespace, a [=key=], optional JAI whitespace, `=`, matched ASCII
+    case-insensitively at the start of *v*), append [=escape-value=](*v*) to
+    *segments*; otherwise append `prompt=` followed by escape-value(*v*).
+4. For each remaining key, in ascending order of key by code point, for each
+    of its values *v* in order: append the key, `=`, and escape-value(*v*) to
+    *segments*.
+5. Join *segments* with `;`, append the result to *out*, and return *out*.
+
+<dfn export>escape-value</dfn>(*v*) is one left-to-right pass over *v* that inserts a
+`\` before:
+
+- a `\` that is immediately followed by `;`, `=` or `\`, or that is the last
+    code point of *v* (the serialiser, or a later concatenation, will place a
+    delimiter after it);
+- a `;` that is the first code point of *v*, or that is followed by optional
+    JAI whitespace and then either the end of *v*, another `;`, or a [=key=]
+    followed by optional JAI whitespace and `=`.
+
+Each decision looks at the original *v*, never at text already escaped. As an
+ECMAScript regular expression, with `WS` standing for the [=JAI whitespace=]
+class and `KEY` for the [=key grammar=] (case-insensitively):
+
+```js
+v.replace(/\\(?=[;=\\]|$)|^;|;(?=WS*(?:$|;|KEY WS*=))/g, m => '\\' + m)
+```
+
+Implementations that escape in two passes MUST escape backslashes first. `=`
+is never escaped by the serialiser; the `prompt=` form protects the one place
+where it matters.
+
+This escaping is deterministic and regular; it escapes a superset of the
+characters that would be significant and is not the shortest possible
+encoding. The canonical form of ordinary prose stays readable:
+
+<div class=example id=ex-canonical>
+| Document | Canonical text |
+|---|---|
+| prompt = `A wizard stands; behind him, a dragon`; model = `flux` | `jai:A wizard stands; behind him, a dragon;model=flux` |
+| prompt = `E=mc2 explained` | `jai:prompt=E=mc2 explained` |
+| prompt = `;-) a smiley` | `jai:\;-) a smiley` |
+| prompt = `ends with backslash\`; style = `x` | `jai:ends with backslash\;style=x` |
+| prompt = `a;;b` | `jai:a\;;b` |
+| prompt = `A list; item=1` | `jai:A list\; item=1` |
+| prompt = `C:\Users\me` | `jai:C:\Users\me` |
+| style = `anime`; prompt = `A castle`; model = `flux`, `sdxl` | `jai:A castle;model=flux;model=sdxl;style=anime` |
+</div>
+
+Parsing the canonical text of a document yields that document, and
+serialising the result yields the same text (the canonical form is a fixed
+point). The conformance suite checks both properties.
+
+### Bare serialisation ### {#text-bare}
+
+The <dfn export>bare serialisation</dfn> is the canonical text without the `jai:`
+prefix, for contexts that establish JAI and are not displayed as text (the
+body of a `data:image/jai` URL, a `data-jai` attribute). It is produced by the
+same algorithm with one more case in step 3: the first prompt value is also
+written as `prompt=…` when it begins with `jai:` ([=ASCII case-insensitively=]),
+with U+FEFF, or with `{`.
+
+<div class=note>
+The `{` rule keeps a bare document from being mistaken for the JSON form by
+a [=decoder=] ([[#decoding]]).
+</div>
+
+## Bidirectional text ## {#text-bidi}
+
+*This section is informative.*
+
+The structure of the text form is left-to-right: keys and delimiters are
+ASCII. A canonical string always starts with `jai:`, which pins the base
+direction of the whole string under first-strong detection; an
+Arabic or Hebrew prompt therefore displays correctly in a plain text field.
+The bare form, used only in attributes and URL bodies, is not displayed as
+text. Authoring tools that show a document should display the canonical
+string in a left-to-right container and each value with `dir="auto"` or
+`unicode-bidi: isolate`. Trailing punctuation of a right-to-left prompt may
+display beside the following `;key=`; parsing is unaffected. Validators report
+explicit bidirectional controls and invisible formatting characters inside
+values ([[#diagnostics]]).
+
+# JSON form # {#json}
+
+The JSON form is a JSON object [[!RFC8259]].
+
+<div class=example id=ex-json>
+```json
+{"jai":1,"prompt":"A magical castle","model":["flux","sdxl"],"style":"anime"}
+```
+</div>
+
+## Shape ## {#json-shape}
+
+- The object MUST contain a member named `jai` whose value is the JSON number
+    `1` ([[#json-marker]]).
+- Every other member maps a [=key=] to either a JSON string (one value) or a
+    JSON array of JSON strings (one or more values, in order). A string is
+    equivalent to a one-element array.
+- Member names MUST be valid keys (lowercase). A conforming document contains
+    no two members whose names are equal after ASCII lowercasing.
+- Member values are subject to [=value normalisation=] when read, so a
+    conforming document contains no empty strings, no empty arrays and no
+    strings that begin or end with JAI whitespace.
+- A member whose value is an object, or an array containing anything other
+    than strings, is reserved for future revisions of this specification
+    ([[#extensibility]]). Conforming documents of this edition contain none.
+
+## The `jai` marker ## {#json-marker}
+
+The member `jai` identifies a JSON object as a JAI document and gives the
+[=file form=] its decompressed signature `{"jai":1,` ([[#json-canonical]]).
+Its value is the JSON number 1 (so `1.0` is accepted, because it is the same
+number).
+
+This specification does not expect to assign another value to the marker:
+revisions add keys and reserved member shapes, and never change the meaning of
+existing ones. An incompatible future format would use a different member
+name or media type.
+
+Readers behave as follows:
+
+- value 1: proceed;
+- member absent: in a context that already establishes JAI (a `.jai` file, an
+    `image/jai` resource, a `data-jai` attribute) proceed with the diagnostic
+    `missing-marker`; in any other context the object is not a JAI document;
+- any other integer: proceed best-effort with the diagnostic
+    `unsupported-version`; a viewer MUST NOT render such a document
+    automatically;
+- any other value (`"1"`, `true`, `0`, `1.5`): proceed as for 1 with the
+    diagnostic `invalid-marker`.
+
+The text form carries no marker; its prefix plays that role.
+
+## Reading ## {#json-reading}
+
+The <dfn export>JSON reading algorithm</dfn> takes a JSON text and a flag *in JAI
+context* and returns a document and diagnostics.
+
+1. Parse the text as JSON [[!RFC8259]]. Texts that are not valid RFC 8259 JSON
+    (including `NaN`, `Infinity`, comments and trailing commas) yield the
+    empty document with the diagnostic `invalid-json`. If the top-level value
+    is not an object, yield the empty document with `invalid-json`.
+2. Read the members into an insertion-ordered map keyed by the exact member
+    name. A member name that repeats an earlier one replaces that member's
+    value in place and keeps the earlier position (this is what ECMAScript
+    `JSON.parse` and Python `json.loads` do); readers that can detect the
+    repetition emit `duplicate-member`.
+3. Handle the marker as in [[#json-marker]], then remove it from the map.
+4. For each remaining member, in map order:
+    1. Let *name* be the [=ASCII lowercase=] of the member name. If *name*
+        does not match the [=key grammar=], emit `invalid-key` and skip the
+        member. If *name* is `jai`, emit `duplicate-member` and skip it.
+    2. Let *items* be the member value if it is an array, otherwise a
+        one-element list containing the value.
+    3. For each item: a string is a candidate value; a number is converted to
+        a candidate value by the ECMAScript `Number::toString` algorithm
+        applied to its IEEE 754 binary64 value, as RFC 8785 §3.2.2.3 specifies
+        ([[!RFC8785]]), with the diagnostic `number-value`; `true` and `false`
+        become the candidates `true` and `false` with `number-value`; `null`
+        is skipped with `empty-value`; an object or an array is skipped with
+        `unsupported-member`.
+    4. Apply [=value normalisation=] to each candidate and append the resulting
+        values, in order, to the list for *name*. If the list for *name*
+        already existed because an earlier member name lowercased to the same
+        key, emit `duplicate-key`; the values are concatenated in map order.
+5. Return the document and diagnostics.
+
+<div class=note>
+Number conversion follows ECMAScript so that a hand-written
+`"strength": 0.6` is forgiven, and so that it is the same in every language:
+`1.0` → `1`, `1E2` → `100`, `0.60` → `0.6`, `-0` → `0`, `1e21` → `1e+21`,
+`5e-324` → `5e-324`. Integers beyond 2<sup>53</sup> lose precision in this
+conversion; authors MUST write such values (for example 64-bit seeds) as JSON
+strings. Python readers need `parse_constant` to reject `NaN` and `Infinity`
+and a short emulation of `Number::toString`; the conformance suite pins the
+cases.
+</div>
+
+<div class=example id=ex-json-reading>
+| JSON | Document | Diagnostics |
+|---|---|---|
+| `{"jai":1,"prompt":" A castle "}` | prompt = `A castle` | |
+| `{"jai":1,"prompt":"a\r\nb"}` | prompt = `a` U+000A `b` | |
+| `{"jai":1,"Prompt":"a","prompt":"b"}` | prompt = `a`, `b` | `duplicate-key` |
+| `{"jai":1,"strength":0.60,"animate":true}` | strength = `0.6`; animate = `true` | `number-value` ×2 |
+| `{"jai":1,"seed":12345678901234567890}` | seed = `12345678901234567000` | `number-value` (precision lost) |
+| `{"jai":1,"prompt":["a",null,"",["b"],{"x":1}," c "]}` | prompt = `a`, `c` | `empty-value` ×2, `unsupported-member` ×2 |
+| `{"jai":"1","prompt":"x"}` | prompt = `x` | `invalid-marker` |
+| `{"jai":2,"prompt":"x"}` | prompt = `x` | `unsupported-version` |
+| `{"prompt":"x"}` in a `.jai` file | prompt = `x` | `missing-marker` |
+| `{"jai":1,"__proto__":"x","prompt":"x"}` | prompt = `x` | `invalid-key` |
+</div>
+
+## Canonical JSON ## {#json-canonical}
+
+The <dfn export>canonical JSON form</dfn> of a document is the following byte
+sequence, and every serialiser produces exactly it:
+
+- UTF-8 without a byte order mark; no whitespace outside strings.
+- Members in this order: `jai`, then `prompt` if present, then every other
+    key in ascending code point order of the key.
+- The value of `jai` is `1`. Every other member's value is a JSON string when
+    the key has one value and a JSON array of strings when it has several.
+- Strings are serialised exactly as RFC 8785 §3.2.2.2 [[!RFC8785]] specifies:
+    `"` as `\"`, `\` as `\\`, U+0008, U+0009, U+000A, U+000C and U+000D as
+    `\b`, `\t`, `\n`, `\f` and `\r`, every other code point below U+0020 as
+    `\u` followed by four lowercase hexadecimal digits, and every other code
+    point, including U+007F, U+2028, U+2029 and all non-ASCII, literally.
+
+Because values are [=scalar value strings=], canonical JSON never contains
+surrogate escapes.
+
+<div class=note>
+This is RFC 8785 (the JSON Canonicalization Scheme) with one deviation: the
+members `jai` and `prompt` come first, so that every file begins with the
+bytes `{"jai":1,` after decompression and a reader can see the description
+first. An implementation can run a JCS library and move those two members to
+the front; the string and number rules are identical. In JavaScript the
+canonical form is `JSON.stringify` of an object built in this member order;
+in Python, `json.dumps(obj, ensure_ascii=False, separators=(',', ':'))` with
+members inserted in order; Go callers need `SetEscapeHTML(false)`.
+</div>
+
+<div class=example id=ex-json-canonical>
+Document: style = `anime`; prompt = `A castle`, `with a moat`; model = `flux`.
+```json
+{"jai":1,"prompt":["A castle","with a moat"],"model":"flux","style":"anime"}
+```
+</div>
+
+## Identity ## {#document-identity}
+
+The identity of a document is the SHA-256 digest of its canonical
+JSON form, written as 64 lowercase hexadecimal digits.
+
+Identity is syntactic: two documents are the same document if and only if
+their canonical JSON forms are byte-identical. Documents that differ in any
+member, including `preview`, vendor keys, or the spelling `16x9` versus
+`16:9`, are different documents. Identity is the same whichever form or
+carrier delivered the document, and whatever whitespace, key case or key
+order the author used.
+
+Identity names a document, not a render. A render cache key MUST include,
+besides the identity, the renderer and its configuration, and the identity of
+every image input the render used (an explicit `source` or the carrier's
+[=original image=]). See also [[#security-cache]].
+
+Identity is public information and MUST NOT be used as a capability or as a
+key into an allow- or deny-list.
+
+# File form, media type and decoding # {#file}
+
+## File form ## {#file-format}
+
+The [=file form=] of a document is exactly one gzip member [[!RFC1952]] with
+compression method 8 (deflate), followed by nothing, whose decompressed
+content is the [=canonical JSON form=]. A `.jai` file contains the file form.
+
+Decoders MUST reject, as described in [[#decoding]]:
+
+- a member whose reserved FLG bits are set;
+- a CRC32 or ISIZE that does not match the decompressed content;
+- any bytes after the end of the member, including a second member;
+- decompressed output exceeding the decoder's bound ([[#security-bounds]]),
+    which is enforced on the decompressed byte count during inflation and never
+    read from ISIZE;
+- decompressed content that is not a JSON object (including content that is
+    itself gzip).
+
+The header fields FEXTRA, FNAME, FCOMMENT, FHCRC, MTIME, XFL and OS are read
+and ignored; FNAME is never used as a file name. Byte equality of two `.jai`
+files is not a conformance notion: the canonical form is defined at the JSON
+level.
+
+## Encoding ## {#file-encoding}
+
+An [=encoder=] produces the file form from a document. Encoders MUST write
+the canonical JSON form as the member content. Encoders SHOULD write MTIME as
+0 and SHOULD NOT write FNAME or FCOMMENT, so that files carry no timestamps or
+file names and tests are reproducible.
+
+<div class=note>
+`gzip -n` and the default settings of most library encoders already satisfy
+this. A file produced by `gzip -c castle.json > castle.jai` from canonical
+JSON is a conforming file whatever its header fields.
+</div>
+
+<div class=note>
+Why gzip, when a forty-byte description becomes an eighty-byte file: gzip is
+the one compression every browser (`DecompressionStream`), runtime, language
+and CDN decodes natively; it undoes almost all of the base64 inflation of an
+embedded `preview`; and it gives the format one encoding rule instead of
+"compress when large". Contexts where the twenty extra bytes matter use the
+text form in a `data:` URL instead ([[#data-urls]]).
+</div>
+
+## Media type and file extension ## {#media-type}
+
+The media type of a JAI document in any of its three serialisations is
+<dfn export>`image/jai`</dfn>. The file extension is `.jai`. The `type` attribute
+value `image/jai` ([[#html-carriers]]) is matched by its essence, [=ASCII
+case-insensitively=], ignoring parameters. A `charset` parameter has no
+meaning: the text and JSON forms are always UTF-8.
+
+<div class=note>
+`image/jai` is used unregistered, as `image/webp` was for a decade before
+RFC 9649. Appendix [[#iana]] carries the registration template; registration
+in the standards tree requires an IETF or SDO process that the project intends
+to pursue once the format is stable. Should the type be registered under a
+different name, viewers will match both. JAI is unrelated to JPEG AI
+(ISO/IEC 6048), whose registered types are `image/jaii` and `image/jais`.
+</div>
+
+Servers SHOULD send `Content-Type: image/jai` for `.jai` resources, and, as
+for web fonts, SHOULD send `Access-Control-Allow-Origin: *` so that scripts on
+other origins can read them; a `.jai` resource contains no user data. Servers
+need not apply `Content-Encoding: gzip`; if they do, `fetch()` removes it and
+the decoder sees JSON. Decoders apply [[#decoding]] to the bytes of any
+resource referenced from a JAI carrier regardless of the served
+`Content-Type`, because static hosts commonly serve unknown extensions as
+`application/octet-stream`.
+
+## Decoding ## {#decoding}
+
+The <dfn export>decoding algorithm</dfn> takes a byte sequence *bytes* and a flag *in
+JAI context* (true for a `.jai` file, an `image/jai` resource, the body of a
+`data:image/jai` URL, or a `data-jai` attribute) and returns a document and
+diagnostics. It never falls back from one serialisation to another; each
+layer either succeeds or yields the empty document.
+
+1. If *bytes* begins with `1F 8B`:
+    1. Decode exactly one gzip member under the output bound. If the member is
+        malformed in any way listed in [[#file-format]], if bytes follow it, or
+        if the bound is exceeded, return the empty document with
+        `malformed-container`, discarding any partial output.
+    2. Let *bytes* be the decompressed content, and let *from gzip* be true.
+2. Decode *bytes* as UTF-8. If the bytes are not well-formed UTF-8 [[!ENCODING]],
+    return the empty document with `malformed-container` if *from gzip* is
+    true and with `undecodable` otherwise. There is no autodetection of
+    UTF-16 or other encodings and no `charset` handling.
+3. Remove every leading U+FEFF.
+4. Let *i* be the index of the first code point that is not JSON whitespace
+    (U+0009, U+000A, U+000D, U+0020). If the code point at *i* is `{` and the
+    next code point after *i* that is not JSON whitespace is `"` or `}`, the
+    input is in the JSON form: run the [=JSON reading algorithm=] on the
+    text with *in JAI context*. A JSON failure is final: do not try the text
+    form.
+5. Otherwise, if *from gzip* is true, return the empty document with
+    `malformed-container` (a gzip member must contain JSON).
+6. Otherwise, the input is in the text form: run the [=text parsing
+    algorithm=] on the text.
+
+A `.jai` file whose bytes are not gzip is accepted by this algorithm but is
+not a conforming file; validators report `non-canonical-encoding`.
+
+<div class=note>
+The three serialisations are distinguishable at the first non-whitespace
+bytes: `1F 8B`, `{` followed by `"` or `}`, or anything else. A text
+description that begins with `{` but is not followed by a quote, for example
+`{masterpiece}, a castle`, is text. The [=bare serialisation=] writes a
+`{`-initial prompt as `prompt=…` so that canonical output never meets the
+JSON test.
+</div>
+
+<div class=example id=ex-decode>
+| Bytes | Result |
+|---|---|
+| gzip member containing `{"jai":1,"prompt":"A castle"}` | prompt = `A castle` |
+| the same followed by a second gzip member | empty, `malformed-container` |
+| gzip member containing `jai:A castle` | empty, `malformed-container` |
+| `{"jai":1,"prompt":"A castle"}` (uncompressed) | prompt = `A castle`; validator: `non-canonical-encoding` |
+| `{masterpiece}, a castle` | prompt = `{masterpiece}, a castle` |
+| `{"quoted"} prose` | empty, `invalid-json` |
+| `FF FE 6A 00 …` (UTF-16) | empty, `undecodable` |
+| the bytes of a PNG file | empty, `undecodable` |
+| `jai:A castle` | prompt = `A castle` |
+</div>
+
+## `data:` URLs ## {#data-urls}
+
+A document may be embedded in a `data:` URL [[!RFC2397]] with the media type
+`image/jai`, in any of the three serialisations:
+
+<div class=example id=ex-data-urls>
+```
+data:image/jai,A%20magical%20castle;style=anime
+data:image/jai;base64,H4sIAAAAAAACA6tWykrMVLIy1FEqKMrPLShRslJyVMhNTM9MTsxRSE4sLslJVaoFAIWNNfclAAAA
+```
+</div>
+
+The body of the URL, after the data: URL processor of the Fetch Standard has
+percent-decoded or base64-decoded it [[!FETCH]], is decoded with
+[[#decoding]] with *in JAI context* true. The non-base64 text form is the
+most compact and the only human-readable option; the base64 file form is
+permitted and never required. Media-type parameters other than `base64` are
+ignored.
+
+When an encoder writes the text form or the JSON form into the body of a
+`data:image/jai,` URL it MUST percent-encode every byte of the UTF-8 encoding
+that is a C0 control, U+007F, an ASCII whitespace character (U+0020 as `%20`,
+U+000A as `%0A`, U+0009 as `%09`), `%` (as `%25`), `#` (as `%23`), and a `,`
+that would be the last byte of the URL (as `%2C`); a body beginning with `/`
+is written with `%2F`. Every other byte, including `;`, `=`, `,`, `"`, `'`,
+`{`, `}`, `?`, `/`, `&`, `+` and non-ASCII, MAY remain literal. The
+<dfn export>canonical URL form</dfn> of a document is `data:image/jai,` followed by
+its [=bare serialisation=] so encoded.
+
+<div class=note>
+Unencoded whitespace in a `srcset` attribute silently discards the candidate;
+an unencoded `#` ends the URL, so everything after it is lost; a literal `%`
+followed by two hexadecimal digits is decoded as a byte. Line breaks have to be
+`%0A`: every URL parser deletes raw tabs and line feeds. Percent-decoding is
+a transport step performed once by the URL processor; `%3B` and `%3D` become
+`;` and `=` and then parse as delimiters, exactly as if typed. Only `\;` and
+`\=` protect prose ([[#text-escaping]]).
+</div>
+
+# Standard parameters # {#parameters}
+
+This edition defines eleven [=standard keys=]. Each has a meaning a renderer
+can act on without knowing anything about a particular model. All of them are
+[=advisory=] in the sense of [[#terminology]]: a renderer honours what it can
+and reports what it cannot ([[#rendering-diagnostics]]); none of them can
+select, fetch or configure anything the user has not configured.
+
+<table class=keys>
+<thead><tr><th>Key<th>Values<th>Form<th>Meaning
+<tbody>
+<tr><td>`prompt`<td>many<td>text<td>What the image shows. The [=description=] is the values joined with U+000A, in order.
+<tr><td>`style`<td>many<td>text<td>Visual treatment: `anime`, `watercolor`, `35mm film photo`. All values apply.
+<tr><td>`avoid`<td>many<td>text<td>Things or qualities the image should not contain, one per value, stated positively (`people`, not `no people`).
+<tr><td>`model`<td>many<td>identifier<td>Ordered preference list of models or rendering packages. A selector, never a locator.
+<tr><td>`aspect`<td>one<td>`W:H`, `WxH`, decimal, `square`, `landscape`, `portrait`<td>Preferred aspect ratio.
+<tr><td>`mode`<td>one<td>`generate`, `transform`, `keep`<td>How the description relates to an [=original image=]. Default `generate`.
+<tr><td>`strength`<td>one<td>decimal 0 to 1, or percentage<td>In `transform`, how far the result may depart from the source: 0 unchanged, 1 unconstrained.
+<tr><td>`seed`<td>one<td>integer<td>Reproducibility hint, passed through when the model accepts one.
+<tr><td>`source`<td>one<td>URL or `data:` URL of a raster image<td>The image to transform. Takes precedence over the carrier's own image.
+<tr><td>`preview`<td>one<td>`data:` URL of a tiny raster image<td>Placeholder shown while rendering. Never an input to generation.
+<tr><td>`animate`<td>one<td>boolean<td>Requests a looping animated image where supported; otherwise a still frame.
+</table>
+
+## Interpretation ## {#parameters-interpretation}
+
+An [=interpreter=] derives the <dfn export>interpreted parameters</dfn> of a
+document from its values. Interpretation never modifies the document: the
+serialiser writes values as the author wrote them, and `16x9` and `16:9`
+remain different documents with the same interpretation.
+
+For each standard key:
+
+1. If the key is single-valued (`aspect`, `mode`, `strength`, `seed`,
+    `source`, `preview`, `animate`) and has several values, use the last value
+    and emit `repeated-single` for the key. Appending a parameter to a shared
+    default string is how an author overrides it.
+2. Let *v* be the value. If *v* begins and ends with the same ASCII quotation
+    mark (`"` or `'`) and is at least two code points long, remove both and
+    [=trim=] the result (`quoted-value`). If *v* ends with `.` and the key is
+    not `prompt`, `style` or `avoid`, remove it.
+3. Match *v* against the key's value grammar below, [=ASCII
+    case-insensitively=] where keywords are involved. On failure emit
+    `invalid-value` for the key, treat the key as absent, and, where the
+    grammar suggests one, offer the corrected spelling in the diagnostic.
+
+Interpreters MUST NOT use lenient or locale-aware number parsers; the
+grammars below are ASCII and exact. Non-ASCII digits, full-width characters
+and the decimal comma are invalid (an authoring tool offers `0,6` → `0.6`,
+`１６：９` → `16:9`).
+
+### `prompt`, `style`, `avoid` ### {#key-text}
+
+Any value is valid. The interpreted prompt is the [=description=]: the values
+joined with a single U+000A in order. `prompt=a;prompt=b` renders as the same
+input as a single value `a` U+000A `b` but is a different document. Renderers
+MAY normalise whitespace for their model.
+
+`style` values are combined; all apply. `avoid` values are independent
+items; `avoid=text;avoid=people` and `avoid=text, people` reach a negative
+prompt identically but are different documents. Validators report an `avoid`
+value that begins with `no`, `not`, `without` or `never` followed by
+whitespace (`negated-avoid`), because negation inside a negative prompt
+inverts the author's intent on most models.
+
+### `model` ### {#key-model}
+
+Any value is valid. Values are matched against the renderers the user has
+configured as described in [[#model-matching]]. A value promises nothing: the
+same `model` value may select different models on different days or at
+different providers, and a value the user has not configured selects
+nothing.
+
+Values are opaque identifiers. Validators MAY warn when a value looks like a
+URL or a file path (`model-looks-like-locator`), because such values are
+never fetched ([[#security-selectors]]).
+
+### `aspect` ### {#key-aspect}
+
+```abnf
+aspect  = ratio / number / %s"square" / %s"landscape" / %s"portrait"
+ratio   = number OWS ( ":" / "x" / "X" / %x00D7 / "/" ) OWS number
+number  = 1*DIGIT [ "." *DIGIT ] / "." 1*DIGIT
+```
+
+A ratio denotes width divided by height; `1920x1080` and `16:9` denote the
+same ratio, 16/9. A bare number denotes the ratio itself (`1.5`). Both
+numbers of a ratio MUST be greater than zero; a ratio or number of zero, or
+exceeding 100 or below 0.01, is invalid. `square` is 1:1. `landscape` and
+`portrait` express intent (wider than tall, taller than wide) without a
+number; renderers SHOULD treat them as 4:3 and 3:4 unless they have a
+different default for the model. `W:H` with integers is the canonical
+spelling for authoring tools to suggest.
+
+Renderers use the nearest ratio they support and report `adjusted-value`
+when the result differs materially from the request. The relationship between
+`aspect` and an original image is defined in [[#rendering-size]].
+
+### `mode` ### {#key-mode}
+
+One of `generate`, `transform`, `keep`, matched ASCII case-insensitively.
+Semantics in [[#rendering-modes]]. Absent or invalid: `generate`.
+
+### `strength` ### {#key-strength}
+
+```abnf
+strength = number [ OWS "%" ]
+```
+
+A number from 0 to 1 inclusive, or a percentage from 0% to 100% which is
+divided by 100 (`60%` is 0.6). A value outside the range is clamped to it
+with `adjusted-value`. 0 means the source is unchanged, 1 means the source
+constrains nothing. Renderers map this linearly onto the model's own control;
+a control that measures image influence rather than departure takes
+1 − strength. `strength` has an effect only in `transform` mode; validators
+report `strength-without-transform` otherwise.
+
+### `seed` ### {#key-seed}
+
+One to twenty ASCII digits. Renderers pass the value through when it lies
+within the model's accepted range and otherwise reduce it deterministically
+(for example modulo the range) with `adjusted-value`. A seed promises
+nothing across renderers, model versions or hardware; a renderer that cannot
+honour it reports `unsupported-parameter`, and one that runs a
+non-deterministic mode reports `seed-nondeterministic`. Authors MUST write
+seeds above 2<sup>53</sup> as strings in the JSON form ([[#json-reading]]).
+
+### `source` ### {#key-source}
+
+A URL, absolute or relative to the carrier's base URL, or a `data:` URL,
+resolving to a raster image of type `image/png`, `image/jpeg`, `image/webp`,
+`image/gif` or `image/avif`. Other types, including SVG, HTML and
+`image/jai`, are invalid (`invalid-image`): a document never contains another
+document as an input.
+
+`source` is used only in `transform` mode (otherwise `ignored-value`). When
+present it takes precedence over the carrier's [=original image=]. A `source`
+URL is fetched only with the privileges of the document that carries it, and
+only after the consent that the render itself requires ([[#security-inputs]]).
+Documents intended for text channels SHOULD reference a URL rather than embed
+bytes.
+
+### `preview` ### {#key-preview}
+
+A `data:` URL of a raster image of one of the types listed for `source`,
+RECOMMENDED at most 64 pixels on the long side and at most 1 KiB. A viewer
+shows it, scaled to the layout box, while a render is pending or when no
+original image exists. It is never an input to generation and never fetched
+from a network. Other values are ignored with `unsupported-preview`.
+
+<div class=note>
+A 4×4 to 8×8 pixel lossy WebP is about 80 to 130 bytes, or 110 to 180
+characters of `data:` URL, and shows the image's colour layout. Hash-based
+placeholders such as ThumbHash [[THUMBHASH]] and BlurHash [[BLURHASH]] are
+three to four times smaller but need decoder code; a later edition might admit
+them as prefixed values without affecting this edition's viewers.
+</div>
+
+### `animate` ### {#key-animate}
+
+`true`, `yes`, `1`, `on` (true) or `false`, `no`, `0`, `off` (false), matched
+ASCII case-insensitively. True requests a looping animated image resource
+(GIF, APNG, animated WebP or animated AVIF) of renderer-chosen length that is
+displayable wherever a still image is; video containers are not JAI render
+results. A renderer that cannot produce one renders a still frame and reports
+`unsupported-parameter`. Viewer obligations for motion are in
+[[#viewer-accessibility]].
+
+## Model matching ## {#model-matching}
+
+A renderer, or a viewer choosing among configured renderers, resolves the
+`model` values as follows. Only models the user has configured and enabled
+take part ([[#security-selectors]]); "a model the renderer knows" always
+means one of those.
+
+1. For each `model` value in document order:
+    1. Let *v* be the value with one trailing `:version` or `@version`
+        suffix removed when the renderer does not pin versions (report
+        `version-ignored` if removed).
+    2. If *v* matches, [=ASCII case-insensitively=], the identifier or any
+        alias of a known model, select that model.
+    3. Otherwise, let the *words* of *v* be its maximal runs of ASCII letters
+        and digits, ASCII-lowercased, taken first from the last `/`-separated
+        segment of *v* and then from the whole of *v*. If the name of a
+        known model family, or one of the family's listed spellings, occurs
+        as a contiguous run of those words, select the renderer's default
+        model of that family and report `substituted-model`.
+2. If no value selected a model, use the user's default renderer and model
+    and report `no-matching-model`.
+3. In `transform` mode with an input image, steps 1.2 and 1.3 consider only
+    models that accept an image input ([[#rendering-modes]]).
+
+<div class=example id=ex-model-matching>
+With families `flux` (spellings `flux`), `sdxl` (`sdxl`, `stable diffusion
+xl`): `black-forest-labs/FLUX.1-dev` → words of the last segment are `flux`,
+`1`, `dev` → family flux. `stable-diffusion-xl-base-1.0` → `stable`,
+`diffusion`, `xl`, … → family sdxl. `https://example.org/flux-schnell` →
+last segment `flux-schnell` → flux (and a validator warns that the value
+looks like a URL). `replicate:stability-ai/sdxl:7762fd07` → version
+removed, exact id or family sdxl.
+</div>
+
+Appendix [[#families]] lists family names informatively. There is no
+registry of models: a renderer advertises what it knows, and the user
+configures what the renderer may use.
+
+## Never document intent ## {#parameters-not-intent}
+
+The following are settings of the user's renderer, never parameters of a
+document, and no key, standard or vendor, may set them: output format,
+number of candidates, quality or speed tier, resolution beyond the layout
+box, safety and moderation settings, provider endpoint, credentials, and
+anything that affects billing. See [[#security-forwarding]].
+
+# Rendering # {#rendering}
+
+A renderer turns a document into an image. This section defines what every
+renderer MUST do with the interpreted parameters and what it MUST report; how
+it produces pixels is outside this specification.
+
+## Modes and the original image ## {#rendering-modes}
+
+The [=original image=] is the carrier's own image (an `<img>` element's
+`currentSrc` at render time) or, when present, the image named by `source`.
+`mode` states how the document relates to it; a viewer's settings always take
+precedence over `mode` ([[#viewer-requirements]]).
+
+: `generate` (default)
+:: Render from the description alone. A viewer shows the original image, or
+    the `preview`, until the render is ready, then replaces it, and falls back
+    to the original on failure.
+: `transform`
+:: As `generate`, but the original image is an input to generation, governed
+    by `strength`. Model matching considers only models that accept an image
+    input; if none of the preferred models does, the renderer's default model
+    is used when it accepts an image, and otherwise the document is rendered
+    as `generate` with `mode-degraded`. If there is no original image and no
+    readable `source` ([[#security-inputs]]), the document is rendered as
+    `generate` with `original-not-readable`.
+: `keep`
+:: The original image is the intended image; the description is information
+    about it. A viewer does not render automatically; a render the user
+    requests is a `generate` render unless the user asks for a
+    transformation.
+
+## Assembling the model input ## {#rendering-prompt}
+
+- A renderer MUST send the model the [=description=] it intends, explicitly,
+    even when the document has no `prompt` (an empty description); a provider's
+    default prompt is never a JAI default.
+- `style` and `avoid` values MUST reach the model, through a native input or
+    as prompt text, or be reported with `unsupported-parameter`. `avoid` values
+    are sent as the model's negative prompt, joined with `, `, when it has one;
+    when it has none the renderer MAY fold them into the prompt in wording the
+    model is known to honour, reporting `folded-into-prompt`, or omit them,
+    reporting `unsupported-parameter`. Silent omission is not conforming.
+- A renderer MUST NOT fail a render because of the length of the
+    description. A renderer that shortens its input reports `adjusted-value`
+    for `prompt` and SHOULD drop text from the end of the description before
+    dropping any `style` value, using chunked encoding where the model allows
+    it.
+- A renderer derives rendering parameters only from the document's members.
+    Text inside values never changes a parameter, a renderer setting or a
+    provider setting: `prompt` is content, never instructions, including for
+    renderers that involve a language model.
+- A renderer MUST be able to show the user the exact text it sent to the
+    model.
+
+<div class=note>
+The reference renderer assembles the prompt values joined with line feeds,
+then the style values as a comma-separated list, then, only when folding, a
+final line listing what to avoid. On models with a short token window, style
+terms belong early. Provider-side prompt rewriting is a user setting of the
+renderer, not a document matter.
+</div>
+
+## Size and aspect ## {#rendering-size}
+
+In HTML, when the element has an [=original image=], the viewer renders at the
+original's aspect ratio and reports `ignored-value` for `aspect` if it
+differs; the layout box always governs display, and `aspect` only informs
+generation. Otherwise the ratio is, in order: the interpreted `aspect`; the
+ratio of an author-sized layout box (`width` and `height` attributes or CSS
+`aspect-ratio`); the ratio of the `preview`; the renderer's default.
+Renderers snap to the nearest ratio they support ([[#key-aspect]]).
+
+Viewers SHOULD request a render no smaller than the element's displayed CSS
+size multiplied by the device pixel ratio, within the user's cost policy, and
+never larger than the user's configured maximum.
+
+## Renderer diagnostics ## {#rendering-diagnostics}
+
+A renderer MUST NOT refuse to render a valid document because of the value of
+any standard key, and MUST report, with the codes in [[#diagnostics]], every
+standard key it did not honour as written: `no-matching-model`,
+`substituted-model`, `version-ignored`, `mode-degraded`,
+`original-not-readable`, `unsupported-parameter`, `folded-into-prompt`,
+`adjusted-value`, `ignored-value`, `seed-nondeterministic`,
+`parameter-not-allowed`, `value-truncated`, `unsupported-preview`,
+`invalid-image`. A viewer MUST make those reports available to the user.
+
+## Failure ## {#rendering-failure}
+
+A render fails when it produces no usable image: a provider or network error,
+a refusal or content filter (including a blank or black frame), a timeout,
+or a cancellation. On failure a viewer restores the original image, or in the
+absence of one the `preview` or the description, never a permanent
+placeholder, and does not retry with an altered description. A refusal is a
+normal outcome: nothing in a document or a viewer may rewrite the description
+to evade it.
+
+# HTML and URL integration # {#html}
+
+## Carriers ## {#html-carriers}
+
+A document reaches an `<img>` element through one of four [=carriers=]. A
+viewer examines them in the order below and takes the first one found; the
+same order is the recommended order for authors.
+
+<dl>
+<dt><dfn export>carrier 1</dfn>: `<picture>` with `<source type="image/jai">`
+<dd>
+```html
+<picture>
+  <source type="image/jai" srcset="castle.jai">
+  <img src="castle.png" alt="A magical castle at dusk">
+</picture>
+```
+This is HTML's own format negotiation: a browser that does not support
+`image/jai` skips the `<source>` without fetching it and shows the raster
+[[!HTML]]. `src` and `alt` stay untouched, the `.jai` is fetched only when a
+viewer wants to render, and a browser that one day decodes `image/jai`
+natively needs no markup change. The `srcset` may name a `.jai` resource or
+hold a `data:image/jai` URL.
+
+<dt><dfn export>carrier 2</dfn>: the `data-jai` attribute
+<dd>
+```html
+<img src="castle.png" alt="A magical castle at dusk"
+     data-jai="A magical castle at dusk;style=anime">
+```
+The attribute holds the text form; the `jai:` prefix is optional. This is the
+inline form for markup that cannot be restructured.
+
+<div class=note>
+HTML intends `data-*` attributes for a page's own scripts and recommends type
+negotiation for extensions shared across tools, which is why carrier 1 is
+preferred. Carrier 2 is kept because it survives most sanitisers and needs
+no extra element.
+</div>
+
+<dt><dfn export>carrier 3</dfn>: `src` is a `data:image/jai` URL
+<dd>
+```html
+<img src="data:image/jai,A%20magical%20castle%20at%20dusk;style=anime"
+     alt="A magical castle at dusk" width="800" height="600">
+```
+The pure form: the image *is* the description and there are no fallback
+pixels. In every current browser this is an unavailable image whose `alt`
+text is what the reader sees; see [[#html-carrier-3]].
+
+<dt><dfn export>carrier 4</dfn>: `alt` beginning with `jai:` (deprecated)
+<dd>
+```html
+<img src="castle.png" alt="jai:A magical castle at dusk;style=anime">
+```
+Deprecated. The accessible name of the image becomes the syntax, which
+assistive technology announces, and every parameter is read aloud. Documents
+SHOULD NOT use this carrier where any other is available; validators report
+`alt-carrier`. It is recognised because it is the only carrier that Markdown
+and strict sanitisers let through, and in those contexts a document should be
+the prefix and a short description with few or no parameters. A document
+MUST NOT place a `data:` URL (`preview`, `source` or any other value) in an
+`alt` carrier (`alt-carrier-payload`). A viewer MUST NOT render automatically
+from this carrier; it MAY offer rendering on explicit per-image request.
+</dl>
+
+An `alt` attribute that does not begin, after leading [=JAI whitespace=], with
+`jai:` is never a JAI document. A `jai:` string in any URL slot (`src`,
+`href`, `srcset`, CSS `url()`) is not a carrier: `jai:` is a text prefix and
+this specification defines no `jai:` URL scheme (`jai-scheme-url`).
+
+### Discovery ### {#html-discovery}
+
+A viewer runs <dfn export>discovery</dfn> over the `<img>` elements of a document in
+tree order, descending into open shadow roots and skipping closed ones, and
+re-runs it on the mutations HTML considers relevant for source selection
+(changes to `src`, `srcset`, `sizes`, `media`, `type`, and to the children of
+a `<picture>`), as well as on `data-jai` and `alt` changes. Discovery MUST NOT
+depend on the image having been fetched or having failed: lazily loaded
+images fire no events until they approach the viewport.
+
+For an `<img>` element:
+
+1. If the element's parent is a `<picture>`: for each `<source>` that
+    precedes the `<img>` among the parent's children, in tree order, whose
+    `type` attribute has the essence `image/jai`, whose `media` attribute is
+    absent or matches, and whose `srcset` parses to at least one candidate:
+    the document is the resource at the first candidate's URL, resolved
+    against the element's base URL, descriptors ignored. Take the first such
+    `<source>`. `width` and `height` on it are layout hints.
+2. Otherwise, if the element has a `data-jai` attribute: the document is its
+    value parsed with the [=text parsing algorithm=].
+3. Otherwise, if the element's `src` attribute, parsed against the base URL,
+    is a `data:` URL whose media type essence is `image/jai`: the document is
+    its body ([[#data-urls]]).
+4. Otherwise, if the element's `alt` attribute begins, after JAI whitespace,
+    with `jai:` ASCII case-insensitively: the document is the attribute value
+    parsed with the text parsing algorithm (carrier 4).
+5. Otherwise the element carries no document.
+
+If the element's `currentSrc` is the URL selected in step 1 and the element
+is complete with a natural width greater than zero, the user agent decodes
+`image/jai` natively and the viewer stands down.
+
+A `<source>` without a `type` attribute is selected by the browser and
+yields a broken image; validators report `source-missing-type`. A `<source>`
+after the `<img>` is ignored by HTML (`source-after-img`). A JAI URL MUST NOT
+appear in the `<img>`'s own `srcset`. Authors place the `image/jai` source
+before raster sources when JAI-capable user agents should prefer it; an
+extension's discovery does not depend on the order. A `<source
+type="image/jai">` for a document with `mode=keep` is unusual, since a native
+decoder would then never show the raster (`keep-in-source`).
+
+<div class=note>
+A user agent that decodes `image/jai` natively would select the JAI source
+and never load the raster original; `mode` then applies only with an
+explicit `source`. HTML never re-selects a source after a decode fails, so
+native support will need a rule that a declined or failed render re-selects
+the next candidate; the editors intend to raise this with the HTML
+Standard's maintainers when a native implementation exists.
+</div>
+
+### Requirements for carrier 3 ### {#html-carrier-3}
+
+An `<img>` whose `src` is a `data:image/jai` URL:
+
+- MUST have a non-empty `alt` that is prose (the description or a human
+    summary); in every current browser the `alt` is what the reader gets;
+- SHOULD have `width` and `height` attributes or a CSS `aspect-ratio`, since
+    it has no intrinsic size until a render arrives;
+- MUST NOT have a `srcset`;
+- SHOULD NOT be the `<img>` of a `<picture>` that also carries a JAI
+    `<source>`.
+
+Authors are warned that pages without a JAI viewer show an unavailable
+image; that `onerror` handlers and lazy-loading libraries rewrite a broken
+image's `src` (viewers capture the carrier at discovery); that a Content
+Security Policy must list `data:` in `img-src`; and that carrier 1 is
+preferred whenever fallback pixels exist. The inline pure form with a
+fallback is carrier 1 with a `data:` URL in `srcset`:
+
+```html
+<picture>
+  <source type="image/jai" srcset="data:image/jai,A%20magical%20castle;style=anime">
+  <img src="castle.png" alt="A magical castle">
+</picture>
+```
+
+### Serving `.jai` resources ### {#html-serving}
+
+*This section is informative.* See [[#media-type]] for the server
+requirements. A script on another origin can read a `.jai` resource only when
+it is served with CORS headers; browser extensions with host permissions
+fetch it from their privileged context but MUST still apply [[#security-inputs]]
+to any *image* input. Appendix [[#server-config]] gives server mappings.
+
+## Transport decoding ## {#html-transport}
+
+Exactly one transport decoding is applied per carrier, before the
+[=decoding algorithm=] or the [=text parsing algorithm=] runs:
+
+- `data:` URL (carrier 1 with a `data:` URL in `srcset`, carrier 3): parse
+    the attribute value against the document's base URL and run the data: URL
+    processor of the Fetch Standard [[!FETCH]]. The fragment is excluded; the
+    percent-decoding is the URL Standard's byte-level percent-decode [[!URL]],
+    which leaves a `%` not followed by two hexadecimal digits in place and
+    never fails. Decode the resulting bytes with [[#decoding]].
+- http(s) URL (carrier 1 with a resource URL): the response body, decoded
+    with [[#decoding]] regardless of the served `Content-Type`.
+- `data-jai` and `alt` attributes (carriers 2 and 4): no transport decoding;
+    the attribute value, as the HTML parser produced it, is the input.
+- Query forms: [[#url-query]].
+
+No second percent-decoding is ever applied. Implementations MUST NOT use
+decoders that throw on malformed input (`decodeURIComponent`) in a transport
+step. Transport decoding never changes JAI syntax: `%3B` and `%3D` become `;`
+and `=` and parse as delimiters.
+
+<div class=note>
+Reading the `src` attribute and reading the element's `src` property give
+the same `data:` body by construction, because the data: URL processor
+starts from the parsed URL either way.
+</div>
+
+## Query forms ## {#url-query}
+
+Two conventions carry a document in a URL's query, for playgrounds, gateways
+and links in text channels.
+
+: <dfn export>whole-query form</dfn>
+:: `https://example.org/play?prompt=A%20magical%20castle;style=anime`
+
+    The entire query component, after `?` and before any `#`, percent-decoded
+    once as in [[#html-transport]], is a text-form document. `+` is a literal
+    plus sign and `&` is ordinary text; the URL carries no other parameters.
+    Generators MUST percent-encode space as `%20` (never `+`), `%`, `#` and
+    ASCII whitespace, and MAY leave `;`, `=`, `+`, `&`, `:`, `/` and non-ASCII
+    unencoded. Form serialisers and parsers (`URLSearchParams`, `<form
+    method=get>`) MUST NOT be used to build or read this form.
+: <dfn export>parameter form</dfn>
+:: `https://example.org/render?jai=A%20magical%20castle%3Bstyle%3Danime&w=800`
+
+    A query parameter named `jai`, in `application/x-www-form-urlencoded`
+    [[!URL]], whose value is a text-form document. It is read by any form
+    parser, so `+` is a space and `&` separates parameters; generators encode
+    `;`, `=`, `&`, `+`, `#`, `%` and whitespace in the value. This form
+    coexists with other parameters and is the convention for a *gateway*: a
+    server that renders a document to pixels so that `<img src="https://gateway/…?jai=…">`
+    displays everywhere today. Hosting a gateway is outside this
+    specification; a gateway that stores or publishes prompts or watermarks
+    output must say so to its users. A JAI-aware viewer MAY, with the user's
+    consent, decode the parameter locally instead of fetching the gateway.
+
+## Other host formats ## {#html-other}
+
+*This section is informative.*
+
+- **Markdown.** CommonMark image syntax exposes only `src` and `alt`, so the
+    only Markdown carrier is carrier 4 (`![jai:A magical castle](castle.png)`),
+    or a gateway URL in the parameter form. Where a Markdown host allows raw
+    HTML, carrier 1 is preferred. Bare spaces break Markdown destinations; use
+    percent-encoding or angle brackets.
+- **CSS.** `image-set(url("castle.jai") type("image/jai"), url("castle.png")
+    type("image/png"))` is the CSS twin of carrier 1; this edition does not
+    require viewers to act on CSS images or on SVG `<image>`.
+- **`<object type="image/jai" data="castle.jai">`** renders its fallback
+    content in current browsers but may download the resource and is governed
+    by `object-src`; it is not a carrier.
+- **Links.** A link to a `.jai` file behaves like a link to any file the
+    browser cannot display. There is no navigable JAI link form in this
+    edition.
+- **Service workers.** A site can serve `<img src="castle.jai">` to its own
+    visitors today by rendering in a service worker; this works over http(s)
+    only and not on a first visit.
+- **Clipboard.** The interoperable clipboard representation is `text/plain`
+    containing the canonical text form with its `jai:` prefix.
+
+### Carriers by context ### {#html-context-matrix}
+
+*This section is informative.* Sanitisers differ, and the carrier an author
+can use depends on the pipeline:
+
+| Context | Usable carriers |
+|---|---|
+| HTML the author controls | all; prefer carrier 1 |
+| User content through DOMPurify defaults | carriers 2 and 3, and carrier 1 with an http(s) or relative `.jai` URL (`data:` URLs in `srcset` are removed) |
+| User content through GitHub-style allow-list sanitisers | carrier 1 as raw HTML (`<picture>`, `<source>`, `srcset`, `type` survive; `data-*` and `data:` `src` do not), else carrier 4 |
+| CommonMark image syntax | carrier 4 only, or a gateway URL |
+| Chat, documentation, email text | the text form with its prefix |
+
+## Viewer requirements ## {#viewer-requirements}
+
+A [=viewer=] decides whether, when and how documents are rendered. The user
+always wins: user settings (never render, ask, render on request, render
+automatically for a site) override `mode` and every other author preference,
+and the consent, budget and disclosure requirements of [[#security-consent]]
+apply to every render.
+
+### Replacement ### {#viewer-replacement}
+
+A viewer that replaces an image with a render:
+
+1. MUST make the replacement effective under HTML's image source selection
+    and MUST verify it (the `load` event and `currentSrc`). Setting `src`
+    alone is a no-op when the element has a `srcset` or a preceding matching
+    `<source>`. RECOMMENDED: inside a `<picture>`, insert a viewer-owned
+    `<source>` whose `srcset` is the rendered image as the first child and
+    remove it to restore; otherwise set the element's `srcset`, recording the
+    previous value.
+2. MUST keep the layout box: the element's `width` and `height` or
+    `aspect-ratio`, and, when `aspect` is absent, the original's ratio.
+3. MUST NOT alter `id`, `class`, event listeners, or link ancestors, and
+    MUST keep the element in place where possible; a replacement element
+    carries `role="img"` and the same accessible name and description.
+4. MUST record every state it changes and restore all of it on request and
+    on failure, and MUST let the user compare the original and the render.
+5. MUST NOT replace the same element more than once per [=identity=] per page
+    load, and MUST NOT re-render on resize or scroll. If the page changes
+    `src`, `srcset` or the `<picture>` children of a replaced element, the
+    viewer treats the element as new and releases its saved state.
+6. SHOULD NOT, under an automatic setting, start rendering before the user
+    agent would fetch the image (for `loading=lazy`, not before it is near the
+    viewport), and MUST NOT render elements that are not displayed.
+7. MUST obtain the rendered bytes itself and insert them from local data; it
+    MUST NOT point a page element at a provider URL (which would leak the
+    page through `Referer` and reveal the provider).
+8. MUST confirm that a replacement loaded (`load`, natural width greater than
+    zero) and MUST NOT retry the same URL. Replacement loads are governed by
+    the page's Content Security Policy [[!CSP3]]: `'self'` never matches
+    `blob:`, `*` never matches `data:`. On failure the viewer either restores
+    the original or presents the render without a page-initiated fetch (for
+    example an `ImageBitmap` painted into a canvas sized to the layout box
+    with `role="img"` and the original accessible name) or in viewer-owned
+    UI. Viewers SHOULD prefer a `data:` URL of the rendered bytes over a
+    `blob:` URL, which more policies permit.
+9. Viewer UI injected into a page is subject to the page's `style-src` and
+    `script-src`; a shadow root with constructed stylesheets avoids both.
+
+### Accessibility ### {#viewer-accessibility}
+
+1. A viewer keeps a human-written `alt` unchanged, including `alt=""`. If the
+    `alt` carried the document (carrier 4) or is absent, the accessible name
+    becomes the description: the first `prompt` value with control characters
+    removed, truncated at a grapheme cluster boundary at about 250 code
+    points, with the full text available in the viewer's own UI; when the
+    document has no `prompt`, a localised generic name. Keys, URLs and `data:`
+    payloads never appear in an accessible name.
+2. A viewer exposes to assistive technology what it shows sighted users about
+    the image's state: that it was rendered by an AI model from a
+    description, that it may differ from the publisher's image, and that the
+    original is available. `aria-description` (or `aria-describedby`
+    referring to an element the viewer owns) carries this; `title` does not.
+    `aria-busy` is set while a render is pending.
+3. Per-image controls are keyboard-operable and named, never hover-only.
+4. Under `prefers-reduced-motion` the swap happens without transitions.
+    Individual replacements are not announced to assistive technology by
+    default.
+5. For `animate`: under `prefers-reduced-motion` a viewer shows a still
+    frame until the user starts the animation; it shows the first frame until
+    the user starts playback unless the user has opted into autoplay for the
+    site; it provides a keyboard-operable control to pause, stop or hide
+    animation longer than five seconds [[!WCAG22]]; renderers SHOULD instruct
+    the model to avoid flashing; viewers MAY refuse to play animation they
+    detect as flashing.
+6. The viewer's own UI (consent, provider configuration, per-image controls,
+    diagnostics) is keyboard-operable and exposes names, roles and states.
+7. A JAI-aware user agent MAY, without rendering, expose the description as
+    the original image's accessible description; it MUST NOT replace a
+    human-written `alt` with it.
+
+Generated imagery carries no authority: logos, text and interface elements
+inside a render are model output. Viewers mark rendered images as such in
+viewer-owned UI and always offer the original.
+
+The page's own accessibility conformance is unaffected by what a user's agent
+does at the user's request; a conforming viewer is a user agent in the sense
+of the User Agent Accessibility Guidelines.
+
+# Extensibility # {#extensibility}
+
+- Keys without a `.` are reserved for this specification and are only
+    assigned by a revision of it. Validators report unassigned undotted keys
+    (`unknown-key`).
+- Anyone may define keys of the form `vendor.name`, where `vendor` is a
+    segment they control (`comfy.sampler`, `acme.lighting`). Serialisers
+    preserve them; renderers that do not understand them ignore them; renderers
+    that do understand them honour them only through the mapping rules of
+    [[#security-forwarding]].
+- The segment `dc` is reserved for Dublin Core terms: `dc.title`,
+    `dc.creator`, `dc.description`, `dc.created`, `dc.language` (a BCP 47 tag
+    for the language of the document's text), `dc.rights`, `dc.license`. A
+    viewer that writes document text into a page MAY set `lang` from
+    `dc.language`.
+- Members of the JSON form whose value is an object, or an array containing
+    non-strings, are reserved for future revisions ([[#json-shape]]). Future
+    revisions will add keys and member shapes and will never remove a key or
+    change the meaning of an existing one; a key may be deprecated with a
+    diagnostic. Sequences, variants and multi-image documents, if ever defined,
+    will use such members or a distinct media type, never additional gzip
+    members.
+- There is no registry: this specification is the registry of undotted
+    keys, and each vendor owns its segment. Appendix [[#families]] and the
+    Dublin Core list above are informative.
+
+# Security and privacy considerations # {#security}
+
+Decoding a JAI document has side effects that no other image format has: it
+transmits the document, and possibly an input image, to a renderer; the
+render is performed under the user's provider account and is attributable to
+the user; and it usually costs money. Every requirement in this section
+follows from that.
+
+## Untrusted input and bounds ## {#security-bounds}
+
+All JAI input is untrusted. Parsing, reading and decoding are total
+([[#conformance-determinism]]): no input causes an exception, a crash, a
+hang, or unbounded resource use.
+
+- Decoders MUST bound the decompressed size of a gzip member, enforced during
+    inflation (RECOMMENDED 16 MiB), and SHOULD bound the size of any text or
+    JSON input (RECOMMENDED 1 MiB). Exceeding a bound yields the empty document
+    with `malformed-container` or `undecodable`.
+- Viewers SHOULD decode a document only when the element is displayed and a
+    render may follow, and SHOULD cap the length of values they transmit to a
+    renderer, reporting `value-truncated`.
+- Viewers SHOULD bound the dimensions of any image they decode as an input
+    or preview (RECOMMENDED 16 megapixels) and MUST re-encode input images
+    before transmission, which also strips their metadata.
+- A viewer never interprets a value inside a document as another document,
+    never runs discovery on elements it inserted or modified itself, and
+    displays a `preview` only through an image decoder, never as markup.
+
+## Inputs the viewer may use ## {#security-inputs}
+
+A viewer MUST NOT use as an input to rendering any image data that the
+embedding document could not itself read. In a browser that is exactly the
+data that would not taint a canvas: same-origin images, `data:` images and
+`blob:` images of the page's origin, and cross-origin images loaded with CORS
+that succeeded for the document's origin. Input pixels are obtained with the
+document's own privileges (a content script's canvas, or a fetch applying
+the document's CORS and credential rules), never from a privileged context
+that carries the user's cookies. When the implicit original is not readable,
+`transform` behaves as `generate` with `original-not-readable` unless a
+readable `source` is present. Publishers who want `transform` on cross-origin
+originals serve them with CORS headers and `crossorigin="anonymous"`.
+
+A `source` URL is fetched only with the carrier document's privileges and
+only after the consent the render requires. Renders that transmit an input
+image SHOULD require a per-image confirmation that shows the image and names
+its origin.
+
+## Selectors, never locators ## {#security-selectors}
+
+`model` is a selector: a viewer matches its values only against renderers
+and models the user has configured and enabled. A viewer MUST NOT dispatch to
+a model, package, endpoint or workflow because a document names it, even
+inside a configured provider's namespace, and MUST NOT download, install,
+load or execute any artefact in response to a `model` value or to any other
+key, standard or vendor, that names weights, LoRAs, workflows, graphs or
+packages. Unmatched values use the user's default renderer with
+`no-matching-model` and are shown to the user as text, never as a link.
+Viewers SHOULD let the user mark a renderer as available only on explicit
+request.
+
+## Parameter forwarding ## {#security-forwarding}
+
+Nothing in a document, standard key or vendor key, may cause a viewer or
+renderer to fetch a URL, load weights, workflows or code, select or alter the
+endpoint, credentials, headers, webhooks or callbacks, change safety or
+moderation settings, or exceed the user's configured cost policy (candidate
+count, steps, resolution, duration).
+
+A renderer forwards document parameters to a provider only through a mapping
+it controls: standard keys through its own semantics, and vendor keys only
+into the provider's model-input namespace, after validating each value
+against the provider's published input schema and the user's limits, and only
+when the key is not on the renderer's per-provider deny-list of inputs that
+name artefacts, carry credentials, or affect safety, output count or billing.
+A key the renderer will not forward is ignored with `parameter-not-allowed`.
+"Preserved when serialising" ([[#extensibility]]) binds serialisers, not
+renderers.
+
+<div class=note>
+For a hosted Flux-family model the deny-list includes at least the inputs
+that disable the safety checker, set the number of outputs, name LoRA or
+other weight files, or carry third-party API tokens.
+</div>
+
+## Consent, budgets and cancellation ## {#security-consent}
+
+- A render is requested by the user's agent under the user's provider
+    account. Viewers MUST make this visible.
+- A viewer MUST NOT render automatically on a top-level site the user has not
+    enabled; the default for every site is "ask" or "on request". Third-party
+    frames are enabled separately. "Always render" is an explicit per-site
+    setting with a spending or concurrency bound.
+- Automatic rendering MUST be bounded per page and per time window and run
+    with bounded concurrency; limits are visible to the user and reaching one
+    stops rendering. Elements not displayed to the user MUST NOT be rendered.
+- Consent and per-image actions are taken in viewer-owned UI from trusted
+    user events and show the site, the full `prompt`, `avoid` and `style` text,
+    any input image and its origin, and the configured renderer that matched.
+- The user MUST be able to cancel a render; a viewer SHOULD cancel the
+    provider job and set provider-side time limits where the API offers them,
+    and cancels on navigation.
+- A viewer MUST NOT render automatically from carrier 4 or from a document
+    with `unsupported-version`.
+- A viewer SHOULD keep a local, clearable, unsynchronised record of renders:
+    it is a browsing history.
+- A viewer SHOULD NOT render automatically in private browsing and MUST NOT
+    persist records from it.
+
+## What leaves the browser ## {#security-disclosure}
+
+A viewer sends a provider only the parameters its renderer maps and the input
+image bytes it decoded and re-encoded locally. It MUST NOT send the page URL,
+title, referrer, cookies, identity or other page content, and SHOULD send
+image bytes rather than URLs. The viewer's disclosure names the provider and
+links its retention terms. Any in-page UI, replacement or `.jai` fetch
+reveals to the page that the user runs a viewer.
+
+Credentials of the reference viewer are stored extension-locally, used only
+from its background context, never exposed to pages or content scripts,
+requested only in viewer UI, sent only to the configured endpoint, and
+redacted from logs; the background context accepts a provider endpoint,
+allow-listed parameters and image bytes, never arbitrary URLs.
+
+## Caches ## {#security-cache}
+
+A render cache keyed by [=identity=] is a cross-site history oracle. A cached
+render is subject to the same per-site consent and the same user action as an
+uncached one, and viewers SHOULD prevent documents from distinguishing
+cross-site cache hits, by keying the cache on (identity, renderer
+configuration, top-level site) or by applying comparable delay.
+
+## Viewer UI hygiene ## {#security-ui}
+
+Viewer UI renders every document value as text, never as markup; isolates
+bidirectional text (`unicode-bidi: plaintext` or `<bdi>`); never silently
+truncates (`prompt`, `avoid`, `style` and `model` are fully available);
+visualises or warns on control and invisible formatting characters; shows the
+top-level site; and displays the *configured* renderer that matched, never
+the document's `model` string, as the thing that will run. The same rules
+apply to playgrounds and validators, which are cross-site scripting surfaces
+for `preview` values and generated HTML snippets.
+
+## Guidance for publishers ## {#security-publishers}
+
+Sites that accept user markup and do not intend to publish JAI SHOULD strip
+`data-jai`, `alt` values beginning with `jai:` in any case, `data:image/jai`
+URLs in `src` and `srcset`, and `<source type="image/jai">`. DOMPurify's
+defaults keep all of them; strict allow-list sanitisers remove all but `alt`.
+A `.jai` referenced by URL is fetched per viewer at render time and may change
+after review; publishers who need stability inline the document or record its
+identity. Injection through templated prose ([[#text-escaping]]) can truncate
+or override a document but, because of the rest of this section, can neither
+select a renderer nor spend beyond the user's limits.
+
+## Provenance ## {#security-provenance}
+
+Renderers that write files SHOULD set the IPTC `digitalSourceType` to
+`trainedAlgorithmicMedia` (`compositeWithTrainedAlgorithmicMedia` for
+`transform`) [[IPTC-PHOTOMETADATA]] and MUST NOT strip provider-applied
+provenance such as C2PA manifests [[C2PA]] or watermarks when re-encoding.
+Viewers mark rendered images as generated ([[#viewer-accessibility]]).
+
+# Diagnostics # {#diagnostics}
+
+A <dfn export>diagnostic</dfn> is a code from the table below, optionally with the
+key it concerns, and with any human-readable message the implementation
+chooses. Codes are stable identifiers; messages are not.
+
+- *Parser* codes are emitted by parsers, JSON readers and decoders. They are
+    normative: a conforming implementation emits exactly these codes for the
+    conditions described, and the conformance fixtures assert them.
+- *Validator* codes are advisory. A validator SHOULD emit them for the
+    conditions described and MAY define additional codes.
+- *Renderer* codes are emitted by renderers and interpreters; a renderer MUST
+    emit them when the condition occurs ([[#rendering-diagnostics]]).
+
+Fixtures write a diagnostic as `code` or `code:key`.
+
+<table class=codes>
+<thead><tr><th>Code<th>Class<th>Condition
+<tbody>
+<tr><td>`empty-segment`<td>parser<td>An interior empty or whitespace-only segment was ignored.
+<tr><td>`empty-value`<td>parser<td>A value was empty after normalisation and was dropped.
+<tr><td>`reserved-key`<td>parser<td>An assignment to the reserved key `jai` was dropped.
+<tr><td>`invalid-key`<td>parser<td>A JSON member name is not a valid key; the member was dropped.
+<tr><td>`missing-marker`<td>parser<td>JSON object without a `jai` member, read in JAI context.
+<tr><td>`unsupported-version`<td>parser<td>The `jai` member is an integer other than 1.
+<tr><td>`invalid-marker`<td>parser<td>The `jai` member is not an integer.
+<tr><td>`number-value`<td>parser<td>A JSON number or boolean was converted to a string.
+<tr><td>`duplicate-member`<td>parser<td>A JSON member name was repeated exactly, or `jai` appeared as a parameter name.
+<tr><td>`duplicate-key`<td>parser<td>Two JSON member names collided after ASCII lowercasing; values were concatenated.
+<tr><td>`unsupported-member`<td>parser<td>A JSON object or nested array was dropped (reserved for future revisions).
+<tr><td>`invalid-json`<td>parser<td>The JSON form could not be parsed; the document is empty.
+<tr><td>`malformed-container`<td>parser<td>The gzip member was malformed, followed by bytes, over the bound, or did not contain JSON; the document is empty.
+<tr><td>`undecodable`<td>parser<td>The bytes are not well-formed UTF-8 or exceed the text bound; the document is empty.
+<tr><td>`first-segment-assignment`<td>validator<td>The first segment was an assignment to an unknown key and the document has no prompt.
+<tr><td>`unknown-key`<td>validator<td>An undotted key that this specification does not define.
+<tr><td>`continuation-into-single-valued-key`<td>validator<td>Prose continued the value of `aspect`, `mode`, `strength`, `seed` or `animate`.
+<tr><td>`no-prompt`<td>validator<td>No prompt, `mode` absent or `generate`, and no `source`.
+<tr><td>`bare-key`<td>validator<td>A prose segment is exactly a standard key; `key=true` was probably intended.
+<tr><td>`newline-assignment`<td>validator<td>A value contains a line break followed by `key=`.
+<tr><td>`prefix-in-prompt`<td>validator<td>A prompt value still begins with `jai:`.
+<tr><td>`stray-wrapper`<td>validator<td>The whole document is wrapped in quotes, brackets or a Markdown fence.
+<tr><td>`split-data-uri`<td>validator<td>An unknown key such as `charset` or `name` follows a `source` or `preview` value: an unescaped `;` inside a data URL.
+<tr><td>`url-split`<td>validator<td>A URL-like value was followed by an unknown-key assignment.
+<tr><td>`confusable-delimiter`<td>validator<td>A full-width or Arabic semicolon is followed by what looks like `key=`.
+<tr><td>`confusable-equals`<td>validator<td>A full-width equals sign follows a key.
+<tr><td>`foreign-syntax`<td>validator<td>The text looks like another prompt dialect (`--ar 16:9`, `Negative prompt:`, `<lora:…>`).
+<tr><td>`colon-assignment`<td>validator<td>`key: value` was written where `key=value` was probably intended.
+<tr><td>`quoted-value`<td>validator<td>A value was wrapped in quotation marks.
+<tr><td>`percent-encoded-text`<td>validator<td>A non-URL value contains `%XX` sequences and no `%25`.
+<tr><td>`control-character`<td>validator<td>A value contains a control character other than TAB and LF.
+<tr><td>`invisible-char`<td>validator<td>A value contains U+200B to U+200D, U+2060 or a non-initial U+FEFF.
+<tr><td>`bidi-control`<td>validator<td>A value contains U+202A to U+202E or U+2066 to U+2069.
+<tr><td>`nonstandard-value`<td>validator<td>A valid value in a non-canonical spelling (`16x9`); the canonical spelling is offered.
+<tr><td>`invalid-value`<td>validator, renderer<td>A standard key's value does not match its grammar and was ignored.
+<tr><td>`negated-avoid`<td>validator<td>An `avoid` value begins with a negation.
+<tr><td>`strength-without-transform`<td>validator<td>`strength` without `mode=transform`.
+<tr><td>`repeated-single`<td>validator, renderer<td>A single-valued key had several values; the last was used.
+<tr><td>`model-looks-like-locator`<td>validator<td>A `model` value looks like a URL or a path.
+<tr><td>`large-payload`<td>validator<td>A value exceeds 8 KiB or the document exceeds 64 KiB.
+<tr><td>`non-canonical-encoding`<td>validator<td>A `.jai` file or `image/jai` resource is not gzip.
+<tr><td>`unencoded-url-text`<td>validator<td>A URL-slot value contains whitespace, `#` or a bare `%`.
+<tr><td>`srcset-unparseable`<td>validator<td>A `srcset` yielded no candidate.
+<tr><td>`jai-scheme-url`<td>validator<td>A `jai:` string in a URL slot.
+<tr><td>`alt-carrier`<td>validator<td>Carrier 4 is used.
+<tr><td>`alt-carrier-payload`<td>validator<td>A `data:` URL inside an `alt` carrier.
+<tr><td>`missing-size`<td>validator<td>A carrier-3 image without `width`/`height` or `aspect-ratio`.
+<tr><td>`source-missing-type`<td>validator<td>A `<source>` naming a `.jai` or `data:image/jai` URL has no `type`.
+<tr><td>`source-after-img`<td>validator<td>A JAI `<source>` follows the `<img>`.
+<tr><td>`keep-in-source`<td>validator<td>A `<source type="image/jai">` carries a `mode=keep` document.
+<tr><td>`no-matching-model`<td>renderer<td>No `model` value matched; the default was used.
+<tr><td>`substituted-model`<td>renderer<td>A family match selected a model the author did not name exactly.
+<tr><td>`version-ignored`<td>renderer<td>A version suffix of a `model` value was ignored.
+<tr><td>`mode-degraded`<td>renderer<td>`transform` was rendered as `generate` because no model accepts an image.
+<tr><td>`original-not-readable`<td>renderer<td>`transform` had no readable input image.
+<tr><td>`unsupported-parameter`<td>renderer<td>A standard key could not be honoured by the model and was omitted.
+<tr><td>`folded-into-prompt`<td>renderer<td>`avoid` values were folded into the prompt text.
+<tr><td>`adjusted-value`<td>renderer<td>A value was clamped, snapped, reduced or shortened.
+<tr><td>`ignored-value`<td>renderer<td>A value had no effect in this context (`aspect` with an original, `source` outside `transform`).
+<tr><td>`seed-nondeterministic`<td>renderer<td>The seed was passed but the mode is not deterministic.
+<tr><td>`parameter-not-allowed`<td>renderer<td>A vendor key was refused by the forwarding rules.
+<tr><td>`value-truncated`<td>renderer<td>A value was shortened before transmission.
+<tr><td>`unsupported-preview`<td>renderer<td>A `preview` value is not an allowed raster `data:` URL.
+<tr><td>`invalid-image`<td>renderer<td>A `source` value is not an allowed raster image.
+</table>
+
+## Conformance fixtures ## {#fixtures}
+
+Fixtures live under `tests/<class>/*.json` in the specification repository.
+Each file is a JSON object with `class`, `edition` and `cases`; each case has
+an `id` (unique across the suite), a `since` edition, a `rationale`, and the
+fields its class defines:
+
+: `parse`
+:: `input` (a text-form string) → `document` (an object mapping keys to
+    arrays of strings) and `diagnostics` (the exact multiset of parser codes).
+    Optional `advisories`: validator codes an implementation with a validator
+    is expected to emit (extra codes are allowed).
+: `serialize`
+:: `document` → `text` (canonical text), optional `bare`, `json` (canonical
+    JSON) and `identity`.
+: `roundtrip`
+:: `document` → parsing its canonical text yields `document`, and
+    serialising that yields the same text; likewise for canonical JSON.
+: `json`
+:: `input` (a JSON text), optional `context` (`true` for JAI context) →
+    `document`, `diagnostics`.
+: `decode`
+:: `bytes` (base64) → `document`, `diagnostics`, optional `advisories`.
+: `url`
+:: `url` and `kind` (`data`, `query` or `param`) → `document`,
+    `diagnostics`, or `discovered: false`.
+: `html`
+:: `html` (a fragment) → `discovered`: for each `<img>` in tree order that
+    carries a document, its `carrier` (1 to 4), `document` and
+    `diagnostics`; optional `advisories`.
+: `interpret`
+:: `document`, optional `catalog` (models with `id`, `aliases`, `family`,
+    `image_input`) → `interpreted` (the interpreted parameters) and
+    `diagnostics` (interpreter and matching codes).
+
+Fixtures are append-only from the first tagged edition: a changed expectation
+is a new case id with an erratum, never a silent edit.
+
+# Writing JAI by hand # {#authoring}
+
+*This section is informative.*
+
+1. Write the description first, as you would describe the picture to someone
+    on the phone: what is in it, how it is arranged, the light, the colours,
+    the medium. Ordinary punctuation, including semicolons, is fine.
+2. Add settings after a semicolon, each as `name=value`: `;style=anime`,
+    `;aspect=16:9`, `;avoid=text`. Repeat `style` and `avoid` for several
+    items rather than listing them in one value.
+3. Put `jai:` in front when the place you are writing in does not already say
+    it is JAI (an `alt` attribute, a chat message, a document).
+4. If your description itself starts with a word followed by `=`, start with
+    `prompt=` instead. If you need a literal `;` right before something that
+    looks like `name=`, write `\;`.
+5. For an existing photo you want restyled, add `;mode=transform` and
+    `;strength=0.6`.
+6. Name a model only if you care: `;model=flux`. It is a preference, not a
+    command; the reader's own setup decides.
+7. Check it in the playground: it shows what a reader's software will see and
+    offers the canonical spelling to copy.
+
+# Examples # {#examples}
+
+*This section is informative.*
+
+<div class=example id=ex-minimal>
+A minimal description, equally valid with or without the prefix:
+```
+A red bicycle leaning against a whitewashed wall, afternoon sun
+```
+</div>
+
+<div class=example id=ex-styles>
+One description, three styles:
+```
+jai:A lighthouse on a cliff in a storm;style=watercolor
+jai:A lighthouse on a cliff in a storm;style=anime
+jai:A lighthouse on a cliff in a storm;style=35mm film photo;style=grainy
+```
+</div>
+
+<div class=example id=ex-models>
+Model preferences, in order, advisory:
+```
+jai:A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3
+```
+</div>
+
+<div class=example id=ex-transform>
+Image-conditioned rendering, with the page's own image as the input:
+```html
+<picture>
+  <source type="image/jai" srcset="data:image/jai,Same%20scene%20as%20a%20pencil%20sketch;mode=transform;strength=0.7">
+  <img src="harbour.jpg" alt="Fishing boats in a harbour at dawn" crossorigin="anonymous" width="1200" height="800">
+</picture>
+```
+</div>
+
+<div class=example id=ex-keep>
+A publisher's photograph with a description for agents and future readers,
+not to be replaced automatically:
+```html
+<img src="team.jpg" alt="The four founders in front of the office"
+     data-jai="Four people in casual clothes standing in front of a brick office building, overcast daylight;mode=keep">
+```
+</div>
+
+<div class=example id=ex-file>
+A `.jai` file's content, decompressed:
+```json
+{"jai":1,"prompt":["A magical castle on a hill at dusk, lanterns in the windows","Mist in the valley below"],"aspect":"16:9","avoid":["people","text"],"model":"flux","style":"storybook illustration"}
+```
+</div>
+
+<div class=example id=ex-vendor>
+A vendor extension and a Dublin Core title, preserved by every serialiser:
+```
+jai:A brass astrolabe on velvet;comfy.sampler=euler;dc.title=Astrolabe study
+```
+</div>
+
+<h2 class=no-num id=iana>Appendix A. Media type registration template</h2>
+
+*This appendix is informative until registration is pursued.* It follows the
+form of RFC 6838 §5.6 [[RFC6838]].
+
+: Type name
+:: image
+: Subtype name
+:: jai
+: Required parameters
+:: none
+: Optional parameters
+:: none (`charset` has no meaning; content is always UTF-8)
+: Encoding considerations
+:: binary. The file form is a gzip member; the text and JSON forms are UTF-8.
+: Security considerations
+:: See [[#security]]. Decoding transmits content to a renderer and is
+    performed under the viewer's account; decoders bound decompression;
+    model references are selectors and are never fetched; documents are
+    untrusted input and parsing is total.
+: Interoperability considerations
+:: Three serialisations are distinguished by their leading bytes
+    ([[#decoding]]). Renderers produce different pixels for the same
+    document by design.
+: Published specification
+:: This document.
+: Applications that use this media type
+:: Browsers and browser extensions, image generation tools, authoring tools,
+    AI agents.
+: Fragment identifier considerations
+:: none
+: Additional information
+:: Deprecated alias: none. Magic numbers: `1F 8B` (gzip), then `{"jai":1,`
+    after decompression; or `{` for the uncompressed JSON form. File
+    extension: `.jai`. Macintosh file type code: none.
+: Person and email address to contact for further information
+:: The editors, via the specification repository.
+: Intended usage
+:: COMMON
+: Restrictions on usage
+:: none
+: Author
+:: The editors.
+: Change controller
+:: The specification repository.
+
+<h2 class=no-num id=families>Appendix B. Model family names</h2>
+
+*This appendix is informative.* Family names and spellings a renderer may
+recognise in `model` values. The list implies nothing about availability.
+
+| Family | Spellings |
+|---|---|
+| flux | `flux`, `flux-schnell`, `flux-dev`, `flux-pro`, `kontext` |
+| sdxl | `sdxl`, `stable diffusion xl`, `stable-diffusion-xl` |
+| sd3 | `sd3`, `stable diffusion 3` |
+| ideogram | `ideogram` |
+| recraft | `recraft` |
+| dall-e | `dall-e`, `dalle` |
+| gpt-image | `gpt image`, `gpt-image` |
+| imagen | `imagen` |
+| midjourney | `midjourney`, `mj` |
+
+<h2 class=no-num id=relationships>Appendix C. Relationship to existing formats</h2>
+
+*This appendix is informative.*
+
+**Prompt metadata in rasters.** Tools such as AUTOMATIC1111 and ComfyUI write
+their prompt and settings into PNG text chunks. An importer maps them as
+follows: the positive prompt → `prompt`; "Negative prompt" → one `avoid`
+value per comma-separated item; "Seed" → `seed`; "Model" or `ckpt_name` →
+`model`; "Denoising strength" → `strength` with `mode=transform`; "Size" →
+`aspect` (lossily). Sampler, steps, CFG scale and other internals go to
+`a1111.*` or `comfy.*` vendor keys or are dropped. Weighting syntax such as
+`(word:1.3)` passes through uninterpreted.
+
+**JAI inside raster files.** A raster that was rendered from, or described
+by, a JAI document may carry the canonical JSON form in a PNG `iTXt` chunk
+with the keyword `jai`, or in XMP as a property `jai` in a namespace named by
+this specification's URL. This lets the editable source travel with the
+pixels.
+
+**Placeholders.** BlurHash and ThumbHash serve the same purpose as `preview`
+with smaller payloads; see [[#key-preview]].
+
+**Provenance.** IPTC digital source types and C2PA manifests describe how an
+image was made; JAI describes what it should show. A renderer that writes
+files sets the former ([[#security-provenance]]).
+
+**Other dialects.** `--ar 16:9` → `aspect=16:9`; `--no text` → `avoid=text`;
+`--seed N` → `seed=N`; `--niji` → `style=anime`; `--style raw` → dropped.
+
+<h2 class=no-num id=server-config>Appendix D. Serving `.jai` files</h2>
+
+*This appendix is informative.*
+
+Apache (`.htaccess`):
+```
+AddType image/jai .jai
+<FilesMatch "\.jai$">
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch>
+```
+
+nginx:
+```
+types { image/jai jai; }
+location ~ \.jai$ { add_header Access-Control-Allow-Origin "*"; }
+```
+
+GitHub Pages serves `.jai` as `application/octet-stream`; decoders inspect
+the bytes regardless ([[#media-type]]).
+
+<h2 class=no-num id=stability>Appendix E. Stability and change policy</h2>
+
+*This appendix is informative.*
+
+- Frozen in this edition: the data model, the text grammar and parsing
+    algorithm, the canonical forms, the JSON shape and the file form.
+- Extensible: the key vocabulary (keys are added by revision and never
+    removed; a key may be deprecated with a diagnostic), the reserved member
+    shapes, the diagnostics registry.
+- Informative and expected to change: model families, the carrier-by-context
+    matrix, server mappings.
+- The `jai` marker stays 1 across editions. Parsers accept every document of
+    any 1.x edition. Fixtures are append-only after the first tagged edition.
+- The Agent Skill states the edition it teaches.
+- Everything in the specification repository is released under CC0-1.0.
+
+<h2 class=no-num id=acknowledgements>Acknowledgements</h2>
+
+The first edition was shaped by an adversarial review of the design across
+grammar, authoring, web platform, security, rendering, file format, agent
+authoring, accessibility and prior-art lenses, whose findings are recorded in
+the repository's design record.

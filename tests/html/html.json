@@ -1,0 +1,369 @@
+{
+ "class": "html",
+ "edition": "1.0-draft",
+ "note": "HTML fragment -> discovered carriers in tree order. url entries are resolved by the viewer, not decoded here.",
+ "cases": [
+  {
+   "id": "html-picture-data",
+   "rationale": "Carrier 1 with a data: URL.",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A%20magical%20castle;style=anime\"><img src=\"castle.png\" alt=\"A castle\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "A magical castle"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-url",
+   "rationale": "Carrier 1 with a resource URL (fetched by the viewer).",
+   "html": "<picture><source type=\"image/jai\" srcset=\"castle.jai\"><img src=\"castle.png\" alt=\"A castle\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "url": "castle.jai"
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-type-essence",
+   "rationale": "type matched by essence, case-insensitively.",
+   "html": "<picture><source type=\"IMAGE/JAI; charset=utf-8\" srcset=\"data:image/jai,x\"><img src=\"a.png\" alt=\"a\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "x"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-descriptor",
+   "rationale": "Descriptors are ignored.",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,x 2x\"><img src=\"a.png\" alt=\"a\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "x"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-first-jai-source",
+   "rationale": "First JAI source in tree order.",
+   "html": "<picture><source type=\"image/webp\" srcset=\"a.webp\"><source type=\"image/jai\" srcset=\"data:image/jai,first\"><source type=\"image/jai\" srcset=\"data:image/jai,second\"><img src=\"a.png\" alt=\"a\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "first"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-source-after-img",
+   "rationale": "A source after the img is ignored.",
+   "html": "<picture><img src=\"a.png\" alt=\"a\"><source type=\"image/jai\" srcset=\"data:image/jai,x\"></picture>",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-no-type",
+   "rationale": "A source without type is not a JAI carrier.",
+   "html": "<picture><source srcset=\"data:image/jai,x\"><img src=\"a.png\" alt=\"a\"></picture>",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-unencoded-space",
+   "rationale": "An unencoded space ends the srcset URL; the rest is a descriptor.",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" alt=\"a\" data-jai=\"fallback\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "A"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai",
+   "rationale": "Carrier 2.",
+   "html": "<img src=\"castle.png\" alt=\"A castle\" data-jai=\"A magical castle;style=anime\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A magical castle"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-entities",
+   "rationale": "HTML entities are decoded by the HTML parser, not by JAI.",
+   "html": "<img src=\"c.png\" alt=\"c\" data-jai=\"Salt &amp; pepper;style=&quot;ink&quot;\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "Salt & pepper"
+      ],
+      "style": [
+       "\"ink\""
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-newline",
+   "rationale": "&#10; is a line break.",
+   "html": "<img src=\"c.png\" alt=\"c\" data-jai=\"A castle&#10;Mist below\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A castle\nMist below"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-percent-not-decoded",
+   "rationale": "Attributes are not percent-decoded.",
+   "html": "<img src=\"c.png\" alt=\"c\" data-jai=\"100%20 cotton\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "100%20 cotton"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "percent-encoded-text"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-data",
+   "rationale": "Carrier 3.",
+   "html": "<img src=\"data:image/jai,A%20magical%20castle;style=anime\" alt=\"A magical castle\" width=\"800\" height=\"600\">",
+   "discovered": [
+    {
+     "carrier": 3,
+     "document": {
+      "prompt": [
+       "A magical castle"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-scheme",
+   "rationale": "jai: in src is not a carrier.",
+   "html": "<img src=\"jai:A castle\" alt=\"A castle\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt",
+   "rationale": "Carrier 4 (deprecated).",
+   "html": "<img src=\"castle.png\" alt=\"jai:A magical castle;style=anime\">",
+   "discovered": [
+    {
+     "carrier": 4,
+     "document": {
+      "prompt": [
+       "A magical castle"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "alt-carrier"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-leading-ws",
+   "rationale": "Leading whitespace before the prefix.",
+   "html": "<img src=\"castle.png\" alt=\"  jai:A castle\">",
+   "discovered": [
+    {
+     "carrier": 4,
+     "document": {
+      "prompt": [
+       "A castle"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-plain",
+   "rationale": "An ordinary alt is never JAI.",
+   "html": "<img src=\"castle.png\" alt=\"A magical castle\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-jai-word",
+   "rationale": "Only the exact prefix counts.",
+   "html": "<img src=\"castle.png\" alt=\"Jaipur at night\">",
+   "discovered": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-order-picture-wins",
+   "rationale": "Carrier 1 before 2 and 4.",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,one\"><img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "one"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-order-data-jai-before-alt",
+   "rationale": "Carrier 2 before 4.",
+   "html": "<img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "two"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-order-src-before-alt",
+   "rationale": "Carrier 3 before 4.",
+   "html": "<img src=\"data:image/jai,three\" alt=\"jai:four\">",
+   "discovered": [
+    {
+     "carrier": 3,
+     "document": {
+      "prompt": [
+       "three"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-multiple",
+   "rationale": "Tree order.",
+   "html": "<p><img src=\"a.png\" alt=\"a\"><img src=\"b.png\" alt=\"b\" data-jai=\"bee\"><img src=\"c.png\" alt=\"jai:sea\"></p>",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "bee"
+      ]
+     },
+     "diagnostics": []
+    },
+    {
+     "carrier": 4,
+     "document": {
+      "prompt": [
+       "sea"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-empty",
+   "rationale": "An empty data-jai is an empty document (carrier present).",
+   "html": "<img src=\"a.png\" alt=\"a\" data-jai=\"\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {},
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  }
+ ]
+}

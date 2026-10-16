@@ -1,0 +1,2 @@
+*.jai linguist-language=Text binary
+tests/**/*.json linguist-generated=false

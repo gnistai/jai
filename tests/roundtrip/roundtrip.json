@@ -1,0 +1,186 @@
+{
+ "class": "roundtrip",
+ "edition": "1.0-draft",
+ "note": "parse(serialize(doc)) == doc, serialize is a fixed point; same for canonical JSON.",
+ "cases": [
+  {
+   "id": "rt-fuzz-class-a",
+   "rationale": "Round-0 fuzzer class A: leading ;.",
+   "document": {
+    "prompt": [
+     ";e"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-fuzz-class-b",
+   "rationale": "Round-0 fuzzer class B: trailing backslash.",
+   "document": {
+    "km": [
+     "\\",
+     "_"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-fuzz-class-b2",
+   "rationale": "Class B in prompt values.",
+   "document": {
+    "prompt": [
+     "\\",
+     ">"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-semicolons",
+   "rationale": "Runs of semicolons.",
+   "document": {
+    "prompt": [
+     ";;"
+    ],
+    "k": [
+     "a;;",
+     ";",
+     ";x;"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-backslashes",
+   "rationale": "Runs of backslashes before significant characters.",
+   "document": {
+    "prompt": [
+     "\\\\\\"
+    ],
+    "k": [
+     "\\;\\=\\\\"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-assignment-like",
+   "rationale": "Values that look like assignments.",
+   "document": {
+    "prompt": [
+     "x=1",
+     "style=anime"
+    ],
+    "k": [
+     "a; style=anime",
+     "b;\tmode =keep"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-prefix-like",
+   "rationale": "jai:-initial values.",
+   "document": {
+    "prompt": [
+     "jai:x",
+     "JAI:y"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-brace",
+   "rationale": "A prompt that looks like JSON.",
+   "document": {
+    "prompt": [
+     "{\"jai\":1}"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-data-uris",
+   "rationale": "Data URIs with parameters.",
+   "document": {
+    "source": [
+     "data:image/svg+xml;charset=utf-8;base64,PHN2Zz4="
+    ],
+    "preview": [
+     "data:image/png;name=a.png;base64,iVBOR="
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-unicode-ws-inside",
+   "rationale": "Unicode whitespace inside values near delimiters.",
+   "document": {
+    "prompt": [
+     "a ;　b=c d"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-bom-inside",
+   "rationale": "U+FEFF at value edges.",
+   "document": {
+    "prompt": [
+     "﻿x"
+    ],
+    "k": [
+     "y﻿"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-newlines",
+   "rationale": "Line breaks next to delimiters.",
+   "document": {
+    "prompt": [
+     "a\n;\nb=1"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "rt-many-keys",
+   "rationale": "Every standard key.",
+   "document": {
+    "prompt": [
+     "p"
+    ],
+    "aspect": [
+     "16:9"
+    ],
+    "avoid": [
+     "text",
+     "people"
+    ],
+    "mode": [
+     "transform"
+    ],
+    "model": [
+     "flux",
+     "sdxl"
+    ],
+    "seed": [
+     "42"
+    ],
+    "strength": [
+     "0.6"
+    ],
+    "style": [
+     "anime",
+     "watercolor"
+    ],
+    "animate": [
+     "true"
+    ]
+   },
+   "since": "1.0-draft"
+  }
+ ]
+}

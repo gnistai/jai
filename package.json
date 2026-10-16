@@ -1,0 +1,17 @@
+{
+  "name": "jai-spec",
+  "private": true,
+  "version": "0.1.0",
+  "description": "JAI (Just AI Images): specification, conformance tests, agent skill and website",
+  "license": "CC0-1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run.mjs",
+    "build:spec": "bikeshed spec spec/index.bs docs/spec/index.html",
+    "check:skill": "node scripts/check-skill-sync.mjs",
+    "sync:skill": "node scripts/check-skill-sync.mjs --write"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

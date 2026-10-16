@@ -1,0 +1,1333 @@
+{
+ "class": "parse",
+ "edition": "1.0-draft",
+ "note": "input -> document + exact parser diagnostics; advisories are validator codes that must be present when a validator runs.",
+ "cases": [
+  {
+   "id": "parse-bare",
+   "rationale": "The simplest document is a sentence.",
+   "input": "A magical castle",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix",
+   "rationale": "Optional prefix.",
+   "input": "jai:A magical castle",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix-upper",
+   "rationale": "Prefix is ASCII case-insensitive.",
+   "input": "JAI:A magical castle",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prompt-eq",
+   "rationale": "Explicit prompt=.",
+   "input": "prompt=A magical castle",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix-prompt-eq",
+   "rationale": "Prefix and prompt=.",
+   "input": "jai:prompt=A magical castle",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-params",
+   "rationale": "Brief example.",
+   "input": "jai:A magical castle;model=flux;style=anime",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ],
+    "model": [
+     "flux"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-params-first",
+   "rationale": "prompt= may follow parameters.",
+   "input": "model=flux;prompt=A magical castle",
+   "document": {
+    "model": [
+     "flux"
+    ],
+    "prompt": [
+     "A magical castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-repeated",
+   "rationale": "Repeated keys keep order.",
+   "input": "jai:A castle;model=flux;model=sdxl",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "model": [
+     "flux",
+     "sdxl"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-repeated-prompt",
+   "rationale": "Several prompt values.",
+   "input": "prompt=A castle;prompt=with a moat",
+   "document": {
+    "prompt": [
+     "A castle",
+     "with a moat"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-unknown-key",
+   "rationale": "Vendor keys are kept.",
+   "input": "A castle;acme.light=rim",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "acme.light": [
+     "rim"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-unknown-undotted",
+   "rationale": "Unknown undotted keys parse; validators warn.",
+   "input": "A castle;mood=eerie",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "mood": [
+     "eerie"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "unknown-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prose-semicolon",
+   "rationale": "Brief: semicolons in prose.",
+   "input": "jai:A wizard stands in a doorway; behind him, a dragon sleeps;model=flux",
+   "document": {
+    "prompt": [
+     "A wizard stands in a doorway; behind him, a dragon sleeps"
+    ],
+    "model": [
+     "flux"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prose-semicolon-spaces",
+   "rationale": "Interior spacing around restored semicolons is preserved (trim once).",
+   "input": "A wizard ; behind ; a dragon",
+   "document": {
+    "prompt": [
+     "A wizard ; behind ; a dragon"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-continuation-into-key",
+   "rationale": "Prose after an assignment continues it.",
+   "input": "A castle;style=anime;with a moat",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     "anime;with a moat"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-no-prompt-after-param",
+   "rationale": "Sharp edge: no prompt.",
+   "input": "style=anime;A castle",
+   "document": {
+    "style": [
+     "anime;A castle"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "no-prompt"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty-continued",
+   "rationale": "An empty assignment followed by prose is continued, not dropped.",
+   "input": "k=;a",
+   "document": {
+    "k": [
+     ";a"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty-continued-style",
+   "rationale": "Same, inside a document.",
+   "input": "jai:A castle;style=;anime",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     ";anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-extra-equals",
+   "rationale": "Only the first = separates key and value.",
+   "input": "A castle;acme.formula=E=mc2",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "acme.formula": [
+     "E=mc2"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-first-segment-assignment",
+   "rationale": "Sharp edge 1.",
+   "input": "E=mc2 explained",
+   "document": {
+    "e": [
+     "mc2 explained"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "first-segment-assignment",
+    "unknown-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-escaped-equals",
+   "rationale": "An escaped = defeats assignment.",
+   "input": "E\\=mc2 explained",
+   "document": {
+    "prompt": [
+     "E=mc2 explained"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prompt-eq-equals",
+   "rationale": "prompt= protects a leading word=.",
+   "input": "prompt=E=mc2 explained",
+   "document": {
+    "prompt": [
+     "E=mc2 explained"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-escaped-eq-raw-test",
+   "rationale": "The assignment test looks at the raw text with escapes in place.",
+   "input": "a\\=b",
+   "document": {
+    "prompt": [
+     "a=b"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-ows-around-eq",
+   "rationale": "Sharp edge 3: whitespace around = is allowed.",
+   "input": "A chalkboard; e = mc2 written on it",
+   "document": {
+    "prompt": [
+     "A chalkboard"
+    ],
+    "e": [
+     "mc2 written on it"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "unknown-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-escaped-semicolon-prose",
+   "rationale": "An escaped ; before something that looks like key=.",
+   "input": "Draw a graph\\; y=2x",
+   "document": {
+    "prompt": [
+     "Draw a graph; y=2x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-url-prompt",
+   "rationale": ": and / are not key characters.",
+   "input": "http://example.org/?a=b",
+   "document": {
+    "prompt": [
+     "http://example.org/?a=b"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-space-key-is-prose",
+   "rationale": "A key cannot contain a space.",
+   "input": "A castle; my key=value",
+   "document": {
+    "prompt": [
+     "A castle; my key=value"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty-key-is-prose",
+   "rationale": "Empty key: prose.",
+   "input": "=value",
+   "document": {
+    "prompt": [
+     "=value"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-lone-equals",
+   "rationale": "A lone = is prose.",
+   "input": "=",
+   "document": {
+    "prompt": [
+     "="
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-equals-semicolon-equals",
+   "rationale": "Prose continuation.",
+   "input": "=;=",
+   "document": {
+    "prompt": [
+     "=;="
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-leading-dot",
+   "rationale": "Key segments cannot start with a dot.",
+   "input": ".a=1",
+   "document": {
+    "prompt": [
+     ".a=1"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-digit",
+   "rationale": "Keys may start with a digit.",
+   "input": "A castle;1x=y",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "1x": [
+     "y"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "unknown-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-double-dot",
+   "rationale": "a..b is not a key (empty segment), so the segment is prose.",
+   "input": "A castle;a..b=1",
+   "document": {
+    "prompt": [
+     "A castle;a..b=1"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-trailing-dot",
+   "rationale": "A trailing dot is not a key.",
+   "input": "A castle;acme.=1",
+   "document": {
+    "prompt": [
+     "A castle;acme.=1"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-underscore-hyphen",
+   "rationale": "_ and - inside segments.",
+   "input": "x;acme.a_b-c=1",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "acme.a_b-c": [
+     "1"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-unicode-is-prose",
+   "rationale": "Keys are ASCII only.",
+   "input": "x;É=1",
+   "document": {
+    "prompt": [
+     "x;É=1"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-kelvin-is-prose",
+   "rationale": "U+212A KELVIN SIGN is not K: no Unicode case folding.",
+   "input": "x;Key=1",
+   "document": {
+    "prompt": [
+     "x;Key=1"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-ws-around",
+   "rationale": "Whitespace is forgiving.",
+   "input": "  A castle ; style = anime ;",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-ws-only",
+   "rationale": "Whitespace only: empty document.",
+   "input": "   \t\n ",
+   "document": {},
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty",
+   "rationale": "Empty input.",
+   "input": "",
+   "document": {},
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix-only",
+   "rationale": "Prefix only.",
+   "input": "jai:",
+   "document": {},
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-leading-ws-prefix",
+   "rationale": "Leading whitespace is skipped before the prefix test.",
+   "input": "\n  jai:A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix-ws",
+   "rationale": "Whitespace after the prefix is trimmed.",
+   "input": "jai:   A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix-once",
+   "rationale": "The prefix is removed once.",
+   "input": "jai: jai:A castle",
+   "document": {
+    "prompt": [
+     "jai:A castle"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "prefix-in-prompt"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix-not-dotted-i",
+   "rationale": "U+0130 is not I: ASCII case-insensitivity only.",
+   "input": "JAİ:A castle",
+   "document": {
+    "prompt": [
+     "JAİ:A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prefix-space-before-colon",
+   "rationale": "Not the prefix.",
+   "input": "JAI :A castle",
+   "document": {
+    "prompt": [
+     "JAI :A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-nbsp-before-key",
+   "rationale": "NBSP is JAI whitespace (rich-text paste).",
+   "input": "A castle; style=anime",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-ideographic-space-before-key",
+   "rationale": "U+3000 is JAI whitespace (CJK IME).",
+   "input": "魔法の城;　style=anime",
+   "document": {
+    "prompt": [
+     "魔法の城"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-nbsp-before-eq",
+   "rationale": "Whitespace between key and = may be any JAI whitespace.",
+   "input": "x;style =anime",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-nel",
+   "rationale": "U+0085 is trimmed.",
+   "input": "A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-ls",
+   "rationale": "U+2028 is trimmed.",
+   "input": "A castle ",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-ff",
+   "rationale": "FF is trimmed.",
+   "input": "A castle\f",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-us-kept",
+   "rationale": "U+001F is not whitespace (JS trim and Python strip disagree here).",
+   "input": "A castle\u001f",
+   "document": {
+    "prompt": [
+     "A castle\u001f"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "control-character"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-zwnbsp-kept",
+   "rationale": "U+FEFF is not whitespace except at the very start.",
+   "input": "A castle﻿",
+   "document": {
+    "prompt": [
+     "A castle﻿"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "invisible-char"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-leading-bom",
+   "rationale": "Leading U+FEFF is removed.",
+   "input": "﻿jai:A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-leading-boms",
+   "rationale": "Every leading U+FEFF, then whitespace, then the prefix.",
+   "input": "﻿﻿\n jai:A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-ws-segment",
+   "rationale": "A whitespace-only segment disappears with one delimiter.",
+   "input": "A; ;b",
+   "document": {
+    "prompt": [
+     "A;b"
+    ]
+   },
+   "diagnostics": [
+    "empty-segment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-crlf",
+   "rationale": "CRLF and CR become LF.",
+   "input": "line one\r\nline two\rline three;style=x",
+   "document": {
+    "prompt": [
+     "line one\nline two\nline three"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-multiline",
+   "rationale": "Line breaks inside a value are kept.",
+   "input": "A castle\n\nMist below;style=x",
+   "document": {
+    "prompt": [
+     "A castle\n\nMist below"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-newline-not-delimiter",
+   "rationale": "A new line does not start a parameter.",
+   "input": "A castle\nstyle=anime",
+   "document": {
+    "prompt": [
+     "A castle\nstyle=anime"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "newline-assignment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-case",
+   "rationale": "Keys are ASCII case-insensitive.",
+   "input": "A castle;Style=anime;MODEL=flux",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     "anime"
+    ],
+    "model": [
+     "flux"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-key-case-merge",
+   "rationale": "Case variants are one key.",
+   "input": "A castle;style=a;Style=b",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     "a",
+     "b"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-value-case-kept",
+   "rationale": "Values are never case-converted.",
+   "input": "A castle;style=Anime",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     "Anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-prompt-key-case",
+   "rationale": "PROMPT= is prompt=.",
+   "input": "PROMPT=A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-preview-upper",
+   "rationale": "Locale-independent lowercasing (Turkish I).",
+   "input": "x;PREVIEW=y",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "preview": [
+     "y"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty-value",
+   "rationale": "Empty values are dropped.",
+   "input": "A castle;style=",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "empty-value:style"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty-value-ws",
+   "rationale": "Whitespace-only values are dropped.",
+   "input": "A castle;style=   ",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "empty-value:style"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-semicolon",
+   "rationale": "A trailing delimiter is allowed and not diagnosed.",
+   "input": "A castle;",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-semicolons",
+   "rationale": "The interior empty segment is diagnosed; the final one is not.",
+   "input": "A castle;;",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "empty-segment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-double-semicolon",
+   "rationale": "Doubled delimiter.",
+   "input": "A castle;;style=anime",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [
+    "empty-segment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-only-semicolons",
+   "rationale": "Every interior empty segment is diagnosed.",
+   "input": ";;",
+   "document": {},
+   "diagnostics": [
+    "empty-segment",
+    "empty-segment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-leading-semicolon",
+   "rationale": "An empty first segment is ignored.",
+   "input": ";A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "empty-segment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-semicolon-ws-prefix",
+   "rationale": "Whitespace segment after the prefix.",
+   "input": "jai:  ;A castle",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "empty-segment"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-reserved-jai",
+   "rationale": "The key jai is reserved.",
+   "input": "jai:jai=1;prompt=x",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "reserved-key:jai"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-reserved-jai-continuation",
+   "rationale": "Prose continuing a dropped assignment is dropped with it.",
+   "input": "jai:A castle;jai=2;more",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "reserved-key:jai"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-reserved-jai-case",
+   "rationale": "Reserved after ASCII lowercasing.",
+   "input": "A castle;JAI=2",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "reserved-key:jai"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-jai-dot-ok",
+   "rationale": "Only the exact key jai is reserved.",
+   "input": "A castle;jai.x=1",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "jai.x": [
+     "1"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-backslash-literal",
+   "rationale": "Other backslashes are literal.",
+   "input": "C:\\Users\\me",
+   "document": {
+    "prompt": [
+     "C:\\Users\\me"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-backslash",
+   "rationale": "A trailing backslash is literal.",
+   "input": "a\\",
+   "document": {
+    "prompt": [
+     "a\\"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-double-backslash",
+   "rationale": "Two backslashes are one.",
+   "input": "a\\\\b",
+   "document": {
+    "prompt": [
+     "a\\b"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-backslash-pair-then-delim",
+   "rationale": "An escaped backslash then an unescaped ;.",
+   "input": "a\\\\;style=x",
+   "document": {
+    "prompt": [
+     "a\\"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-three-backslashes",
+   "rationale": "An escaped backslash then an escaped ;.",
+   "input": "a\\\\\\;b",
+   "document": {
+    "prompt": [
+     "a\\;b"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-escaped-semicolon",
+   "rationale": "An escaped ; is literal.",
+   "input": "a\\;style=x",
+   "document": {
+    "prompt": [
+     "a;style=x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-escaped-backslash-n",
+   "rationale": "A doubled backslash collapses even in a path.",
+   "input": "\\\\nas\\models",
+   "document": {
+    "prompt": [
+     "\\nas\\models"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-escape-prose-template",
+   "rationale": "escape-prose recipe.",
+   "input": "prompt=Red mug\\; model\\=XZ-200\\; colour\\=red;style=product photo",
+   "document": {
+    "prompt": [
+     "Red mug; model=XZ-200; colour=red"
+    ],
+    "style": [
+     "product photo"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-data-uri",
+   "rationale": "base64,... is not an assignment.",
+   "input": "source=data:image/webp;base64,UklGRkI=;style=anime",
+   "document": {
+    "source": [
+     "data:image/webp;base64,UklGRkI="
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-data-uri-charset-split",
+   "rationale": "Media type parameters split a data URI unless escaped.",
+   "input": "x;source=data:image/svg+xml;charset=utf-8;base64,PHN2Zz4=",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "source": [
+     "data:image/svg+xml"
+    ],
+    "charset": [
+     "utf-8;base64,PHN2Zz4="
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "split-data-uri"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-data-uri-charset-escaped",
+   "rationale": "Escaped, it survives.",
+   "input": "x;source=data:image/svg+xml\\;charset=utf-8;base64,PHN2Zz4=",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "source": [
+     "data:image/svg+xml;charset=utf-8;base64,PHN2Zz4="
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-unicode",
+   "rationale": "RTL prompt.",
+   "input": "jai:قلعة سحرية;style=anime",
+   "document": {
+    "prompt": [
+     "قلعة سحرية"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-emoji",
+   "rationale": "Astral code points.",
+   "input": "🏰 at dusk;style=pixel art",
+   "document": {
+    "prompt": [
+     "🏰 at dusk"
+    ],
+    "style": [
+     "pixel art"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-nul",
+   "rationale": "U+0000 becomes U+FFFD.",
+   "input": "A\u0000castle",
+   "document": {
+    "prompt": [
+     "A�castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-fullwidth-semicolon-prose",
+   "rationale": "Full-width delimiters are prose.",
+   "input": "魔法の城；style＝anime",
+   "document": {
+    "prompt": [
+     "魔法の城；style＝anime"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "confusable-delimiter"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-nfd-distinct",
+   "rationale": "No Unicode normalisation.",
+   "input": "Café",
+   "document": {
+    "prompt": [
+     "Café"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-greek-question-mark",
+   "rationale": "U+037E is not a delimiter.",
+   "input": "Why; not",
+   "document": {
+    "prompt": [
+     "Why; not"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-constructor",
+   "rationale": "Implementations use real maps.",
+   "input": "x;constructor=a;constructor=b",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "constructor": [
+     "a",
+     "b"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "unknown-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-transform-no-prompt",
+   "rationale": "A document without a prompt is valid; no no-prompt advisory in transform.",
+   "input": "mode=transform;style=anime",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-long-key",
+   "rationale": "No key length limit.",
+   "input": "x;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=v",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": [
+     "v"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "unknown-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-brace-text",
+   "rationale": "Braces are ordinary text in the text form.",
+   "input": "{masterpiece}, a castle",
+   "document": {
+    "prompt": [
+     "{masterpiece}, a castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  }
+ ]
+}

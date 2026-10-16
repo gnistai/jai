@@ -1,0 +1,1692 @@
+{
+ "class": "interpret",
+ "edition": "1.0-draft",
+ "note": "document -> interpreted parameters (only listed fields compared; aspect as a ratio number or keyword; null means absent) + exact interpreter diagnostics.",
+ "cases": [
+  {
+   "id": "int-description",
+   "rationale": "Prompt values joined with LF.",
+   "document": {
+    "prompt": [
+     "A castle",
+     "Mist below"
+    ]
+   },
+   "interpreted": {
+    "description": "A castle\nMist below"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-no-prompt",
+   "rationale": "Empty description.",
+   "document": {
+    "style": [
+     "anime"
+    ]
+   },
+   "interpreted": {
+    "description": ""
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-00",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "16:9"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-01",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "16x9"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-02",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "16X9"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-03",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "16×9"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-04",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "16/9"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-05",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "1920x1080"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-06",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "16 : 9"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-07",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "2.39:1"
+    ]
+   },
+   "interpreted": {
+    "aspect": 2.39
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-08",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "1.5"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.5
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-09",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "square"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.0
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-10",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "Square"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.0
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-11",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "\"16:9\""
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-12",
+   "rationale": "Accepted aspect spellings.",
+   "document": {
+    "aspect": [
+     "16:9."
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-landscape",
+   "rationale": "Keyword without a number.",
+   "document": {
+    "aspect": [
+     "landscape"
+    ]
+   },
+   "interpreted": {
+    "aspect": "landscape"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-portrait",
+   "rationale": "Keyword without a number.",
+   "document": {
+    "aspect": [
+     "Portrait"
+    ]
+   },
+   "interpreted": {
+    "aspect": "portrait"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-00",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "wide"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-01",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "16,9"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-02",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "0:1"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-03",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "1:0"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-04",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "200:1"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-05",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "１６：９"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-06",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "16:9:1"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-07",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "-1:1"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-invalid-08",
+   "rationale": "Invalid aspect spellings.",
+   "document": {
+    "aspect": [
+     "16;9"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-last-wins",
+   "rationale": "Last value wins.",
+   "document": {
+    "aspect": [
+     "1:1",
+     "16:9"
+    ]
+   },
+   "interpreted": {
+    "aspect": 1.7777777777777777
+   },
+   "diagnostics": [
+    "repeated-single:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-aspect-continued",
+   "rationale": "The winning value is what the author wrote.",
+   "document": {
+    "aspect": [
+     "1:1",
+     "16:9;foo"
+    ]
+   },
+   "interpreted": {
+    "aspect": null
+   },
+   "diagnostics": [
+    "repeated-single:aspect",
+    "invalid-value:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-00",
+   "rationale": "strength spellings.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "0.6"
+    ]
+   },
+   "interpreted": {
+    "strength": 0.6
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-01",
+   "rationale": "strength spellings.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "60%"
+    ]
+   },
+   "interpreted": {
+    "strength": 0.6
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-02",
+   "rationale": "strength spellings.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "60 %"
+    ]
+   },
+   "interpreted": {
+    "strength": 0.6
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-03",
+   "rationale": "strength spellings.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     ".5"
+    ]
+   },
+   "interpreted": {
+    "strength": 0.5
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-04",
+   "rationale": "strength spellings.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "1"
+    ]
+   },
+   "interpreted": {
+    "strength": 1.0
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-05",
+   "rationale": "strength spellings.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "0"
+    ]
+   },
+   "interpreted": {
+    "strength": 0.0
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-clamp",
+   "rationale": "Clamped.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "1.5"
+    ]
+   },
+   "interpreted": {
+    "strength": 1.0
+   },
+   "diagnostics": [
+    "adjusted-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-clamp-pct",
+   "rationale": "Clamped.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "150%"
+    ]
+   },
+   "interpreted": {
+    "strength": 1.0
+   },
+   "diagnostics": [
+    "adjusted-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-invalid-00",
+   "rationale": "Invalid strength (no decimal comma, no sign).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "0,6"
+    ]
+   },
+   "interpreted": {
+    "strength": null
+   },
+   "diagnostics": [
+    "invalid-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-invalid-01",
+   "rationale": "Invalid strength (no decimal comma, no sign).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "-0.5"
+    ]
+   },
+   "interpreted": {
+    "strength": null
+   },
+   "diagnostics": [
+    "invalid-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-invalid-02",
+   "rationale": "Invalid strength (no decimal comma, no sign).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "high"
+    ]
+   },
+   "interpreted": {
+    "strength": null
+   },
+   "diagnostics": [
+    "invalid-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-strength-invalid-03",
+   "rationale": "Invalid strength (no decimal comma, no sign).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "strength": [
+     "six"
+    ]
+   },
+   "interpreted": {
+    "strength": null
+   },
+   "diagnostics": [
+    "invalid-value:strength"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-mode-00",
+   "rationale": "mode keywords.",
+   "document": {
+    "mode": [
+     "generate"
+    ]
+   },
+   "interpreted": {
+    "mode": "generate"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-mode-01",
+   "rationale": "mode keywords.",
+   "document": {
+    "mode": [
+     "Transform"
+    ]
+   },
+   "interpreted": {
+    "mode": "transform"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-mode-02",
+   "rationale": "mode keywords.",
+   "document": {
+    "mode": [
+     "KEEP"
+    ]
+   },
+   "interpreted": {
+    "mode": "keep"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-mode-03",
+   "rationale": "mode keywords.",
+   "document": {
+    "mode": [
+     "keep."
+    ]
+   },
+   "interpreted": {
+    "mode": "keep"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-mode-invalid",
+   "rationale": "Invalid mode: generate.",
+   "document": {
+    "mode": [
+     "original"
+    ]
+   },
+   "interpreted": {
+    "mode": "generate"
+   },
+   "diagnostics": [
+    "invalid-value:mode"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-mode-default",
+   "rationale": "Default.",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "interpreted": {
+    "mode": "generate"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-00",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "true"
+    ]
+   },
+   "interpreted": {
+    "animate": true
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-01",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "yes"
+    ]
+   },
+   "interpreted": {
+    "animate": true
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-02",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "1"
+    ]
+   },
+   "interpreted": {
+    "animate": true
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-03",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "ON"
+    ]
+   },
+   "interpreted": {
+    "animate": true
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-04",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "false"
+    ]
+   },
+   "interpreted": {
+    "animate": false
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-05",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "no"
+    ]
+   },
+   "interpreted": {
+    "animate": false
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-06",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "0"
+    ]
+   },
+   "interpreted": {
+    "animate": false
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-07",
+   "rationale": "animate spellings.",
+   "document": {
+    "animate": [
+     "off"
+    ]
+   },
+   "interpreted": {
+    "animate": false
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-animate-invalid",
+   "rationale": "Invalid.",
+   "document": {
+    "animate": [
+     "maybe"
+    ]
+   },
+   "interpreted": {
+    "animate": false
+   },
+   "diagnostics": [
+    "invalid-value:animate"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed",
+   "rationale": "seed.",
+   "document": {
+    "seed": [
+     "42"
+    ]
+   },
+   "interpreted": {
+    "seed": "42"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed-20",
+   "rationale": "Twenty digits.",
+   "document": {
+    "seed": [
+     "12345678901234567890"
+    ]
+   },
+   "interpreted": {
+    "seed": "12345678901234567890"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed-invalid-00",
+   "rationale": "Invalid seed.",
+   "document": {
+    "seed": [
+     "random"
+    ]
+   },
+   "interpreted": {
+    "seed": null
+   },
+   "diagnostics": [
+    "invalid-value:seed"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed-invalid-01",
+   "rationale": "Invalid seed.",
+   "document": {
+    "seed": [
+     "1e400"
+    ]
+   },
+   "interpreted": {
+    "seed": null
+   },
+   "diagnostics": [
+    "invalid-value:seed"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed-invalid-02",
+   "rationale": "Invalid seed.",
+   "document": {
+    "seed": [
+     "-1"
+    ]
+   },
+   "interpreted": {
+    "seed": null
+   },
+   "diagnostics": [
+    "invalid-value:seed"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed-invalid-03",
+   "rationale": "Invalid seed.",
+   "document": {
+    "seed": [
+     "123456789012345678901"
+    ]
+   },
+   "interpreted": {
+    "seed": null
+   },
+   "diagnostics": [
+    "invalid-value:seed"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed-invalid-04",
+   "rationale": "Invalid seed.",
+   "document": {
+    "seed": [
+     "４２"
+    ]
+   },
+   "interpreted": {
+    "seed": null
+   },
+   "diagnostics": [
+    "invalid-value:seed"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-source-generate",
+   "rationale": "source outside transform has no effect.",
+   "document": {
+    "source": [
+     "https://example.org/a.jpg"
+    ]
+   },
+   "interpreted": {
+    "source": "https://example.org/a.jpg"
+   },
+   "diagnostics": [
+    "ignored-value:source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-source-jai",
+   "rationale": "A document never contains another document as input.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "source": [
+     "data:image/jai,A castle"
+    ]
+   },
+   "interpreted": {
+    "source": null
+   },
+   "diagnostics": [
+    "invalid-image:source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-source-svg",
+   "rationale": "Raster types only.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "source": [
+     "data:image/svg+xml,<svg/>"
+    ]
+   },
+   "interpreted": {
+    "source": null
+   },
+   "diagnostics": [
+    "invalid-image:source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-preview-ok",
+   "rationale": "Raster data: URL.",
+   "document": {
+    "preview": [
+     "data:image/webp;base64,UklGRkI="
+    ]
+   },
+   "interpreted": {
+    "preview": "data:image/webp;base64,UklGRkI="
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-preview-url",
+   "rationale": "Never fetched from a network.",
+   "document": {
+    "preview": [
+     "https://example.org/p.png"
+    ]
+   },
+   "interpreted": {
+    "preview": null
+   },
+   "diagnostics": [
+    "unsupported-preview:preview"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-preview-svg",
+   "rationale": "No markup previews.",
+   "document": {
+    "preview": [
+     "data:image/svg+xml,<svg/>"
+    ]
+   },
+   "interpreted": {
+    "preview": null
+   },
+   "diagnostics": [
+    "unsupported-preview:preview"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-quoted-model-unaffected",
+   "rationale": "Text keys are not interpreted further.",
+   "document": {
+    "model": [
+     "\"flux\""
+    ]
+   },
+   "interpreted": {},
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-exact",
+   "rationale": "Exact id.",
+   "document": {
+    "model": [
+     "stability-ai/sdxl"
+    ]
+   },
+   "interpreted": {
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-alias",
+   "rationale": "Alias, ASCII case-insensitive.",
+   "document": {
+    "model": [
+     "FLUX-SCHNELL"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-family",
+   "rationale": "Family by words of the last segment.",
+   "document": {
+    "model": [
+     "black-forest-labs/FLUX.1-dev"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-family-words",
+   "rationale": "Multi-word family spelling.",
+   "document": {
+    "model": [
+     "stable-diffusion-xl-base-1.0"
+    ]
+   },
+   "interpreted": {
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-order",
+   "rationale": "Document order: the first value that matches anything wins.",
+   "document": {
+    "model": [
+     "flux",
+     "sdxl"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-skip-unknown",
+   "rationale": "Unmatched values are skipped.",
+   "document": {
+    "model": [
+     "midjourney",
+     "sdxl"
+    ]
+   },
+   "interpreted": {
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-none",
+   "rationale": "Default with a diagnostic.",
+   "document": {
+    "model": [
+     "midjourney"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "no-matching-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-absent",
+   "rationale": "No model values: default.",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "no-matching-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-version",
+   "rationale": "Version suffix ignored when not pinning.",
+   "document": {
+    "model": [
+     "stability-ai/sdxl:7762fd07"
+    ]
+   },
+   "interpreted": {
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [
+    "version-ignored:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-url",
+   "rationale": "A URL is a string matched by words, never fetched; an alias must match the whole value.",
+   "document": {
+    "model": [
+     "https://example.org/flux-schnell"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-transform-image",
+   "rationale": "transform with an input considers only image-capable models.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "model": [
+     "flux"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-kontext-pro"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "has_original": true,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-transform-no-original",
+   "rationale": "Without an input image the restriction does not apply.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "model": [
+     "flux"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  }
+ ]
+}

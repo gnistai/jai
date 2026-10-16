@@ -1,0 +1,16 @@
+# secrets
+.env
+.env.*
+
+# node
+node_modules/
+npm-debug.log*
+
+# editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# bikeshed scratch output (the committed build lives in docs/spec/)
+spec/*.html
+spec/.bikeshed*

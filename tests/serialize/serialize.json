@@ -1,0 +1,513 @@
+{
+ "class": "serialize",
+ "edition": "1.0-draft",
+ "note": "document -> canonical text, bare text, canonical JSON, identity.",
+ "cases": [
+  {
+   "id": "ser-simple",
+   "rationale": "Minimal.",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ]
+   },
+   "text": "jai:A magical castle",
+   "json": "{\"jai\":1,\"prompt\":\"A magical castle\"}",
+   "identity": "444e47cb00f5fbf14f8e3d6c90e23e28d7e6012bf6ac714f0a5e7171869e364b",
+   "bare": "A magical castle",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-order",
+   "rationale": "Prompt first, keys by code point, repeats adjacent.",
+   "document": {
+    "style": [
+     "anime"
+    ],
+    "prompt": [
+     "A castle"
+    ],
+    "model": [
+     "flux",
+     "sdxl"
+    ]
+   },
+   "text": "jai:A castle;model=flux;model=sdxl;style=anime",
+   "json": "{\"jai\":1,\"prompt\":\"A castle\",\"model\":[\"flux\",\"sdxl\"],\"style\":\"anime\"}",
+   "identity": "eb7181bb0c7dd2e1a2e23993b92bb7e46c2781f98a1ef8eb87677b15917635e9",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-multi-prompt",
+   "rationale": "Later prompt values use prompt=.",
+   "document": {
+    "prompt": [
+     "A castle",
+     "with a moat"
+    ],
+    "model": [
+     "flux"
+    ]
+   },
+   "text": "jai:A castle;prompt=with a moat;model=flux",
+   "json": "{\"jai\":1,\"prompt\":[\"A castle\",\"with a moat\"],\"model\":\"flux\"}",
+   "identity": "62b8f3987004754e4ac2e933b3222d2c328d6aa8fe7a91cb60f56cf828ba1310",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-prose-semicolon",
+   "rationale": "Ordinary prose semicolons are not escaped.",
+   "document": {
+    "prompt": [
+     "A wizard stands; behind him, a dragon"
+    ],
+    "model": [
+     "flux"
+    ]
+   },
+   "text": "jai:A wizard stands; behind him, a dragon;model=flux",
+   "json": "{\"jai\":1,\"prompt\":\"A wizard stands; behind him, a dragon\",\"model\":\"flux\"}",
+   "identity": "dc3657d2e97402c4cdaba90281eff686314e04b35ba06df511d9d374920f95f7",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-leading-word-eq",
+   "rationale": "A leading word= forces prompt=.",
+   "document": {
+    "prompt": [
+     "E=mc2 explained"
+    ]
+   },
+   "text": "jai:prompt=E=mc2 explained",
+   "json": "{\"jai\":1,\"prompt\":\"E=mc2 explained\"}",
+   "identity": "4ac54a18ba981c5940c985f4eb9f53882e66d6a6611b24a36a85ffc67c6699e8",
+   "bare": "prompt=E=mc2 explained",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-leading-semicolon",
+   "rationale": "A leading ; is escaped.",
+   "document": {
+    "prompt": [
+     ";-) a smiley"
+    ]
+   },
+   "text": "jai:\\;-) a smiley",
+   "json": "{\"jai\":1,\"prompt\":\";-) a smiley\"}",
+   "identity": "dac83a169af9250f090819b6a6f00567f38ac28d5fa1c43244cbd99fc3854509",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-trailing-backslash",
+   "rationale": "A trailing backslash is escaped.",
+   "document": {
+    "prompt": [
+     "ends with backslash\\"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "text": "jai:ends with backslash\\\\;style=x",
+   "json": "{\"jai\":1,\"prompt\":\"ends with backslash\\\\\",\"style\":\"x\"}",
+   "identity": "03350ba92b1333ef612c888ff3cbf29e135a7d380926e5e34ec95247941b621b",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-trailing-backslash-last",
+   "rationale": "Also at the end of the document (later concatenation).",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "style": [
+     "C:\\dir\\"
+    ]
+   },
+   "text": "jai:x;style=C:\\dir\\\\",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"C:\\\\dir\\\\\"}",
+   "identity": "253523aa0122dcf90910ace568033736a84583a27ee1b4b4d6e3354a8bba4ecf",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-double-semicolon",
+   "rationale": "; followed by ; is escaped.",
+   "document": {
+    "prompt": [
+     "a;;b"
+    ]
+   },
+   "text": "jai:a\\;;b",
+   "json": "{\"jai\":1,\"prompt\":\"a;;b\"}",
+   "identity": "76fe5004806fefbb4fd47170c80fdb4070ba849a9e373b9362430b7a86943d8e",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-semicolon-ws-semicolon",
+   "rationale": "; followed by whitespace then ;.",
+   "document": {
+    "prompt": [
+     "a; ;b"
+    ]
+   },
+   "text": "jai:a\\; ;b",
+   "json": "{\"jai\":1,\"prompt\":\"a; ;b\"}",
+   "identity": "1903195e5ac89dd39c6e67a0399b8fe0d58d495a78c68081b255fbe91676fbba",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-semicolon-end",
+   "rationale": "; at end of value.",
+   "document": {
+    "prompt": [
+     "a;"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "text": "jai:a\\;;style=x",
+   "json": "{\"jai\":1,\"prompt\":\"a;\",\"style\":\"x\"}",
+   "identity": "17a4eea8f35083669eeff08137cea991076e8e73bfd42f5c5745b9c9d3c54baf",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-semicolon-key-eq",
+   "rationale": "; followed by key=.",
+   "document": {
+    "prompt": [
+     "A list; item=1"
+    ]
+   },
+   "text": "jai:A list\\; item=1",
+   "json": "{\"jai\":1,\"prompt\":\"A list; item=1\"}",
+   "identity": "1a2ef29cedd395687a08e928e0b6ebda5bb17a5fbdd105c5e27baf6deaf960be",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-semicolon-key-ws-eq",
+   "rationale": "; followed by key OWS = (case-insensitive key).",
+   "document": {
+    "prompt": [
+     "A list; Item = 1"
+    ]
+   },
+   "text": "jai:A list\\; Item = 1",
+   "json": "{\"jai\":1,\"prompt\":\"A list; Item = 1\"}",
+   "identity": "671dfe6bf25a14650c4acdb54d529c80ed24148cdf71670bf7a18a3a17be85ff",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-semicolon-nbsp-key",
+   "rationale": "The whitespace class in the regex is JAI whitespace.",
+   "document": {
+    "prompt": [
+     "a; b=c"
+    ]
+   },
+   "text": "jai:a\\; b=c",
+   "json": "{\"jai\":1,\"prompt\":\"a; b=c\"}",
+   "identity": "06348f3d5063a1bda3678856a25db2a792ab5cf25f99c170164946036fa39606",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-windows-path",
+   "rationale": "Other backslashes are not escaped.",
+   "document": {
+    "prompt": [
+     "C:\\Users\\me"
+    ]
+   },
+   "text": "jai:C:\\Users\\me",
+   "json": "{\"jai\":1,\"prompt\":\"C:\\\\Users\\\\me\"}",
+   "identity": "aab498db5219807ea383bc611dbd1363b00ade1eb5066fc351e3f782b5b5f4be",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-backslash-semicolon-value",
+   "rationale": "Backslash before ; is escaped; the ; itself is followed by b.",
+   "document": {
+    "prompt": [
+     "a\\;b"
+    ]
+   },
+   "text": "jai:a\\\\;b",
+   "json": "{\"jai\":1,\"prompt\":\"a\\\\;b\"}",
+   "identity": "2c6d560dfa9cc2e25622ca838719b086716f27360d36e53830dece840b974c49",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-backslash-equals",
+   "rationale": "Backslash before = is escaped.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "acme.v": [
+     "a\\=b"
+    ]
+   },
+   "text": "jai:x;acme.v=a\\\\=b",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"acme.v\":\"a\\\\=b\"}",
+   "identity": "e8403ed6d4179a8b2d156cdf04e47b3544d9f4f5603b993ea26c6dd3b58e162e",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-double-backslash",
+   "rationale": "Only a backslash followed by a significant character is escaped; the second one precedes b.",
+   "document": {
+    "prompt": [
+     "a\\\\b"
+    ]
+   },
+   "text": "jai:a\\\\\\b",
+   "json": "{\"jai\":1,\"prompt\":\"a\\\\\\\\b\"}",
+   "identity": "78551737ce66b3e6e9c53843f77c9b63adfb03c139f64ce58b610d0b0313fba7",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-equals-not-escaped",
+   "rationale": "= is never escaped.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "acme.formula": [
+     "E=mc2"
+    ]
+   },
+   "text": "jai:x;acme.formula=E=mc2",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"acme.formula\":\"E=mc2\"}",
+   "identity": "2ee08eba57f2ffd259e8ae53f31247a34c31b01b65ac59ee39283d13510ca9e5",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-no-prompt",
+   "rationale": "No prompt.",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "text": "jai:mode=transform;style=anime",
+   "json": "{\"jai\":1,\"mode\":\"transform\",\"style\":\"anime\"}",
+   "identity": "0122136f683c8f4afd535719e8ea847c7fd56fab95eed3a1f2ee7f436350e7e7",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-empty",
+   "rationale": "Empty document.",
+   "document": {},
+   "text": "jai:",
+   "json": "{\"jai\":1}",
+   "identity": "57699e5ff95f81eb648f43a8cb88957dd10454d59669956f8e3c13350759a428",
+   "bare": "",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-prompt-jai-prefix",
+   "rationale": "Prefixed form protects a jai:-initial prompt by the prefix.",
+   "document": {
+    "prompt": [
+     "jai:x"
+    ]
+   },
+   "text": "jai:jai:x",
+   "json": "{\"jai\":1,\"prompt\":\"jai:x\"}",
+   "identity": "83d940a18499bb4f360478b93a4f5fbc1f27ef6d3f70c27766b7df14db2a84e1",
+   "bare": "prompt=jai:x",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-prompt-bom",
+   "rationale": "Bare form protects a U+FEFF-initial prompt.",
+   "document": {
+    "prompt": [
+     "﻿x"
+    ]
+   },
+   "text": "jai:﻿x",
+   "json": "{\"jai\":1,\"prompt\":\"﻿x\"}",
+   "identity": "f1671ee9f2a393ebeff87e3a27c5bef6e0e6dfc64cbaabde69f950c59f136f76",
+   "bare": "prompt=﻿x",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-prompt-brace",
+   "rationale": "Bare form protects a {-initial prompt.",
+   "document": {
+    "prompt": [
+     "{x}"
+    ]
+   },
+   "text": "jai:{x}",
+   "json": "{\"jai\":1,\"prompt\":\"{x}\"}",
+   "identity": "8f7315b2802629b213dd895b25012410d3f3a7b15aa60afed9798d3f4fc54afc",
+   "bare": "prompt={x}",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-data-uri-charset",
+   "rationale": "A media-type parameter semicolon is escaped.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "source": [
+     "data:image/svg+xml;charset=utf-8,<svg/>"
+    ]
+   },
+   "text": "jai:x;source=data:image/svg+xml\\;charset=utf-8,<svg/>",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"source\":\"data:image/svg+xml;charset=utf-8,<svg/>\"}",
+   "identity": "a783f4da579c2c58c86affbebf1c082d48b9ff73af91ab9597b84c50011e0e6a",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-control-chars",
+   "rationale": "Canonical JSON escapes only per RFC 8785.",
+   "document": {
+    "prompt": [
+     "tab\there\u001fend é/"
+    ]
+   },
+   "text": "jai:tab\there\u001fend é/",
+   "json": "{\"jai\":1,\"prompt\":\"tab\\there\\u001fend é/\"}",
+   "identity": "7f170039a9e0cf58f3e51331f65d9c47c6c95381e9601811ae9b617c8a7eee1d",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-unicode",
+   "rationale": "Non-ASCII literal.",
+   "document": {
+    "prompt": [
+     "قلعة سحرية"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "text": "jai:قلعة سحرية;style=anime",
+   "json": "{\"jai\":1,\"prompt\":\"قلعة سحرية\",\"style\":\"anime\"}",
+   "identity": "3aeae837e0be3d8d046b6e53131f709cf16502e2b4e8fb10f55b752c5695e422",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-nfc",
+   "rationale": "NFC spelling.",
+   "document": {
+    "prompt": [
+     "Café"
+    ]
+   },
+   "text": "jai:Café",
+   "json": "{\"jai\":1,\"prompt\":\"Café\"}",
+   "identity": "18642ae6081cfd884913ef6132dbd8e3a7e31fb1ef30e06420541e86e0742c1e",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-nfd",
+   "rationale": "NFD spelling: a different identity.",
+   "document": {
+    "prompt": [
+     "Café"
+    ]
+   },
+   "text": "jai:Café",
+   "json": "{\"jai\":1,\"prompt\":\"Café\"}",
+   "identity": "037a879fb35c38d096cbe35402c7aef5952e350e893e4b0ca9472e7d9d537661",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-preview-in-identity",
+   "rationale": "preview is part of identity.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "preview": [
+     "data:image/webp;base64,UklGRkI="
+    ]
+   },
+   "text": "jai:x;preview=data:image/webp;base64,UklGRkI=",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"preview\":\"data:image/webp;base64,UklGRkI=\"}",
+   "identity": "8704944bbd6223131e291f48fa2f7df2ff899d50d22c6c4f262265adf1a295ce",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-vendor-dc",
+   "rationale": "Vendor keys sort by code point.",
+   "document": {
+    "prompt": [
+     "A brass astrolabe on velvet"
+    ],
+    "comfy.sampler": [
+     "euler"
+    ],
+    "dc.title": [
+     "Astrolabe study"
+    ]
+   },
+   "text": "jai:A brass astrolabe on velvet;comfy.sampler=euler;dc.title=Astrolabe study",
+   "json": "{\"jai\":1,\"prompt\":\"A brass astrolabe on velvet\",\"comfy.sampler\":\"euler\",\"dc.title\":\"Astrolabe study\"}",
+   "identity": "a98608b3b5f0f0661a03158f623769436dc51e7da158a284f529d83fd718c368",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-key-order-codepoint",
+   "rationale": "Code point order: - (2D) < . (2E) < _ (5F).",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "b": [
+     "1"
+    ],
+    "a.z": [
+     "2"
+    ],
+    "a-b": [
+     "3"
+    ],
+    "a_b": [
+     "4"
+    ],
+    "a": [
+     "5"
+    ]
+   },
+   "text": "jai:x;a=5;a-b=3;a.z=2;a_b=4;b=1",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"a\":\"5\",\"a-b\":\"3\",\"a.z\":\"2\",\"a_b\":\"4\",\"b\":\"1\"}",
+   "identity": "383a357267aca65ec920108e7d37a50bdf865f6dfe1a5b6be34fe0dc4a6720f7",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-multiline",
+   "rationale": "Line breaks are literal in the text form.",
+   "document": {
+    "prompt": [
+     "A castle\n\nMist below"
+    ]
+   },
+   "text": "jai:A castle\n\nMist below",
+   "json": "{\"jai\":1,\"prompt\":\"A castle\\n\\nMist below\"}",
+   "identity": "9bb368acdfb9e81eae73225cdfeef5f9fcb77de9d195d3d942cc085ef284366c",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-semicolon-newline-key",
+   "rationale": "; followed by LF then key=.",
+   "document": {
+    "prompt": [
+     "a;\nb=c"
+    ]
+   },
+   "text": "jai:a\\;\nb=c",
+   "json": "{\"jai\":1,\"prompt\":\"a;\\nb=c\"}",
+   "identity": "273679f75f917ecb202928bbbe1e1bccf6ada8b6588cb34b9d84dc5bf4d31226",
+   "since": "1.0-draft"
+  }
+ ]
+}
