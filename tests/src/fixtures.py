@@ -22,16 +22,18 @@ def T(s):
 
 
 def canon_json(doc):
-    """Canonical JSON per spec: jai, prompt, then code point order; RFC 8785 strings."""
+    """Canonical JSON per spec: jai, prompt, prompt/<target> by code point, then code point order; RFC 8785 strings."""
     parts = ['"jai":1']
     def enc(vals):
         v = vals[0] if len(vals) == 1 else vals
         return json.dumps(v, ensure_ascii=False, separators=(",", ":"))
-    if "prompt" in doc:
-        parts.append('"prompt":' + enc(doc["prompt"]))
-    for k in sorted(k for k in doc if k != "prompt"):
+    for k in ordered_keys(doc):
         parts.append(json.dumps(k) + ":" + enc(doc[k]))
     return "{" + ",".join(parts) + "}"
+
+def ordered_keys(doc):
+    first = (["prompt"] if "prompt" in doc else []) + sorted(k for k in doc if k.startswith("prompt/"))
+    return first + sorted(k for k in doc if k not in first)
 
 def identity(doc):
     return hashlib.sha256(canon_json(doc).encode("utf-8")).hexdigest()
@@ -468,10 +470,11 @@ CATALOG = [
     {"id": "stability-ai/sdxl", "aliases": [], "family": "sdxl", "image_input": True},
 ]
 FAMILIES = {"flux": ["flux", "kontext"], "sdxl": ["sdxl", "stable diffusion xl"]}
-def i(id, doc, interpreted, diags=(), rationale="", catalog=False, has_original=False):
+def i(id, doc, interpreted, diags=(), rationale="", catalog=False, has_original=False, selected=None):
     c = case(id, rationale, document=doc, interpreted=interpreted, diagnostics=list(diags))
     if catalog: c["catalog"] = CATALOG; c["families"] = FAMILIES
     if has_original: c["has_original"] = True
+    if selected: c["selected"] = selected
     I.append(c)
 
 i("int-description", {"prompt": ["A castle", "Mist below"]}, {"description": "A castle\nMist below"}, rationale="Prompt values joined with LF.")
@@ -562,6 +565,49 @@ ir("int-ratio-landscape-agrees", {"aspect": ["landscape"]}, 1.5, 1.5, rationale=
 ir("int-ratio-landscape-differs", {"aspect": ["landscape"]}, 0.75, 0.75, ["ignored-value:aspect"], rationale="landscape differs from a tall shape.")
 ir("int-ratio-portrait-square", {"aspect": ["portrait"]}, 1.0, 1.0, ["ignored-value:aspect"], rationale="portrait differs from a square shape.")
 ir("int-ratio-invalid-aspect", {"aspect": ["wide"]}, 1.5, 1.5, ["invalid-value:aspect"], rationale="An invalid aspect is absent; nothing to ignore.")
+
+# ---------------------------------------------------------------- qualified keys (per-model refinements)
+p("parse-qualified-prompt", "A girl holding a red balloon;prompt/flux=soft rim light", {"prompt": ["A girl holding a red balloon"], "prompt/flux": ["soft rim light"]}, rationale="A qualified key: name, slash, target.")
+p("parse-qualified-case", "x;Style/SDXL=film grain", {"prompt": ["x"], "style/sdxl": ["film grain"]}, rationale="Qualified keys are lowercased like any key.")
+p("parse-qualified-alias-chars", "x;avoid/flux-schnell_2=text", {"prompt": ["x"], "avoid/flux-schnell_2": ["text"]}, rationale="A target is one key segment: letters, digits, - and _.")
+p("parse-qualified-ows", "x; prompt/flux = soft light", {"prompt": ["x"], "prompt/flux": ["soft light"]}, rationale="Whitespace around = as for any key.")
+p("parse-qualified-other-key", "x;seed/flux=42", {"prompt": ["x"], "seed/flux": ["42"]}, rationale="Other keys may carry a target syntactically; validators warn.", advisories=["invalid-qualifier"])
+p("parse-slash-in-prose", "A castle; a/b=c", {"prompt": ["A castle"], "a/b": ["c"]}, rationale="Sharp edge 5: a/b=c after a semicolon is an assignment.", advisories=["invalid-qualifier", "unknown-key"])
+p("parse-slash-escaped", T("A castle; a/b¥=c"), {"prompt": ["A castle; a/b=c"]}, rationale="Escaping the = keeps the prose.")
+p("parse-two-slashes", "x;prompt/a/b=c", {"prompt": ["x;prompt/a/b=c"]}, rationale="Only one target: a second slash makes the segment prose.")
+p("parse-empty-target", "x;prompt/=c", {"prompt": ["x;prompt/=c"]}, rationale="An empty target is not a key.")
+p("parse-target-leading-dash", "x;prompt/-a=c", {"prompt": ["x;prompt/-a=c"]}, rationale="A target starts with a letter or digit.")
+p("parse-qualified-vendor", "x;acme.light/flux=rim", {"prompt": ["x"], "acme.light/flux": ["rim"]}, rationale="Vendor keys may carry a target syntactically; validators warn.", advisories=["invalid-qualifier"])
+
+s("ser-qualified-order", {"style/sdxl": ["film grain"], "model": ["flux", "sdxl"], "prompt/sdxl": ["35mm photo"], "prompt": ["A girl holding a red balloon"], "prompt/flux": ["soft rim light"], "style": ["watercolor"]},
+  "jai:A girl holding a red balloon;prompt/flux=soft rim light;prompt/sdxl=35mm photo;model=flux;model=sdxl;style=watercolor;style/sdxl=film grain",
+  "Core prompt, then qualified prompt keys by code point, then the rest by code point.")
+s("ser-qualified-no-core", {"prompt/flux": ["soft rim light"], "style": ["anime"]}, "jai:prompt/flux=soft rim light;style=anime", "Qualified prompt keys lead even without a core prompt.")
+s("ser-qualified-codepoint", {"prompt": ["x"], "style": ["a"], "style-x": ["b"], "style/a": ["c"], "style.x": ["d"]}, "jai:x;style=a;style-x=b;style.x=d;style/a=c", "Code point order: - (2D) < . (2E) < / (2F).")
+r("rt-qualified", {"prompt": ["a"], "prompt/flux": ["b;c", "d"], "avoid/sdxl": ["e=f"]}, "Qualified keys with delimiters in their values.")
+j("json-qualified", '{"jai":1,"prompt":"x","Prompt/FLUX":["a","b"],"style/sdxl":"c"}', {"prompt": ["x"], "prompt/flux": ["a", "b"], "style/sdxl": ["c"]}, rationale="JSON member names carry the slash and are lowercased.")
+j("json-qualified-invalid", '{"jai":1,"prompt":"x","prompt/":"a","prompt/a/b":"b"}', {"prompt": ["x"]}, ["invalid-key", "invalid-key"], rationale="Names that are not keys are dropped.")
+
+i("int-qualified-merge", {"prompt": ["A girl holding a red balloon"], "prompt/flux": ["soft rim light"], "prompt/sdxl": ["35mm photo"], "model": ["flux-schnell"]},
+  {"description": "A girl holding a red balloon\nsoft rim light"}, rationale="The selected model's family qualifier is appended to the core.", catalog=True)
+i("int-qualified-alias", {"prompt": ["x"], "prompt/flux-schnell": ["a"], "prompt/flux": ["b"], "model": ["flux-schnell"]},
+  {"description": "x\nb\na"}, rationale="Family and alias both match; matching keys contribute in code point order of the key.", catalog=True)
+i("int-qualified-id", {"prompt": ["x"], "prompt/SDXL": ["a"], "model": ["stability-ai/sdxl"]},
+  {"description": "x\na"}, rationale="Matching is ASCII case-insensitive.", catalog=True)
+i("int-qualified-unmatched", {"prompt": ["x"], "prompt/midjourney": ["a"], "model": ["stability-ai/sdxl"]},
+  {"description": "x", "model": "stability-ai/sdxl"}, rationale="Unmatched qualifiers are silently unused.", catalog=True)
+i("int-qualified-no-select", {"prompt": ["x"], "prompt/sdxl": ["a"]},
+  {"description": "x", "model": "black-forest-labs/flux-schnell"}, ["no-matching-model:model"], rationale="Qualifiers never select a model.", catalog=True)
+i("int-qualified-style-avoid", {"prompt": ["x"], "style": ["watercolor"], "style/flux": ["loose washes"], "avoid": ["text"], "avoid/sdxl": ["watermark"], "model": ["flux-schnell"]},
+  {"style": ["watercolor", "loose washes"], "avoid": ["text"]}, rationale="style and avoid merge the same way.", catalog=True)
+i("int-qualified-no-core", {"prompt/flux": ["a"], "model": ["flux-schnell"]},
+  {"description": "a"}, rationale="A qualified prompt alone still describes the image for that model.", catalog=True)
+i("int-qualified-selected", {"prompt": ["x"], "prompt/sdxl": ["a"], "prompt/flux": ["b"], "model": ["flux-schnell"]},
+  {"description": "x\na", "model": "stability-ai/sdxl"}, rationale="A viewer that imposes the user's chosen model merges that model's qualifiers.", catalog=True, selected="stability-ai/sdxl")
+i("int-qualified-seed-ignored", {"prompt": ["x"], "seed/flux": ["7"], "model": ["flux-schnell"]},
+  {"seed": None, "description": "x"}, rationale="Only prompt, style and avoid merge.", catalog=True)
+i("int-qualified-no-catalog", {"prompt": ["x"], "prompt/flux": ["a"]},
+  {"description": "x"}, rationale="Without a selected model nothing merges.")
 
 counts = {}
 counts["parse"] = write("parse", P, "input -> document + exact parser diagnostics; advisories are validator codes that must be present when a validator runs.")

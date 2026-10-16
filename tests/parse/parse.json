@@ -1444,6 +1444,169 @@
     "split-data-uri"
    ],
    "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-prompt",
+   "rationale": "A qualified key: name, slash, target.",
+   "input": "A girl holding a red balloon;prompt/flux=soft rim light",
+   "document": {
+    "prompt": [
+     "A girl holding a red balloon"
+    ],
+    "prompt/flux": [
+     "soft rim light"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-case",
+   "rationale": "Qualified keys are lowercased like any key.",
+   "input": "x;Style/SDXL=film grain",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "style/sdxl": [
+     "film grain"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-alias-chars",
+   "rationale": "A target is one key segment: letters, digits, - and _.",
+   "input": "x;avoid/flux-schnell_2=text",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "avoid/flux-schnell_2": [
+     "text"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-ows",
+   "rationale": "Whitespace around = as for any key.",
+   "input": "x; prompt/flux = soft light",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/flux": [
+     "soft light"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-other-key",
+   "rationale": "Other keys may carry a target syntactically; validators warn.",
+   "input": "x;seed/flux=42",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "seed/flux": [
+     "42"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "invalid-qualifier"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-slash-in-prose",
+   "rationale": "Sharp edge 5: a/b=c after a semicolon is an assignment.",
+   "input": "A castle; a/b=c",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "a/b": [
+     "c"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "invalid-qualifier",
+    "unknown-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-slash-escaped",
+   "rationale": "Escaping the = keeps the prose.",
+   "input": "A castle; a/b\\=c",
+   "document": {
+    "prompt": [
+     "A castle; a/b=c"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-two-slashes",
+   "rationale": "Only one target: a second slash makes the segment prose.",
+   "input": "x;prompt/a/b=c",
+   "document": {
+    "prompt": [
+     "x;prompt/a/b=c"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty-target",
+   "rationale": "An empty target is not a key.",
+   "input": "x;prompt/=c",
+   "document": {
+    "prompt": [
+     "x;prompt/=c"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-target-leading-dash",
+   "rationale": "A target starts with a letter or digit.",
+   "input": "x;prompt/-a=c",
+   "document": {
+    "prompt": [
+     "x;prompt/-a=c"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-qualified-vendor",
+   "rationale": "Vendor keys may carry a target syntactically; validators warn.",
+   "input": "x;acme.light/flux=rim",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "acme.light/flux": [
+     "rim"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "invalid-qualifier"
+   ],
+   "since": "1.0-draft"
   }
  ]
 }

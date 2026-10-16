@@ -23,6 +23,7 @@ export const MESSAGES = {
   'malformed-container': ['The gzip container is damaged or does not contain JAI JSON.', 'Re-export the .jai file.'],
   'undecodable': ['These bytes are not UTF-8 text.', 'Save the file as UTF-8.'],
   'first-segment-assignment': ['The text starts with "{key}=", so it was read as a setting and there is no description.', 'Start with "prompt=" or write "\\=" to keep the "=" in the description.'],
+  'invalid-qualifier': ['"{key}" names a model, but only prompt, style and avoid can be refined per model.', 'Drop the "/…" part, or write "\\=" if this was meant as text.'],
   'unknown-key': ['"{key}" is not a standard setting. Undotted names are reserved.', 'Put it in the description, use a standard setting, or a vendor name like "acme.{key}".'],
   'continuation-into-single-valued-key': ['Text after "{key}=" was added to that setting.', 'Move the text into the description, or start it with ";prompt=".'],
   'no-prompt': ['There is no description.', 'Write the description first.'],

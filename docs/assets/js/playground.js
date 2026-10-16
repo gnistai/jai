@@ -14,6 +14,7 @@ const EXAMPLES = [
   ['Settings after the description', 'jai:A lighthouse on a cliff in a storm;style=watercolor;aspect=3:2;avoid=text'],
   ['Semicolons inside the description', 'jai:A wizard stands in a doorway; behind him, a dragon sleeps;model=flux'],
   ['Restyle the page image', 'jai:The same harbour scene as a pencil sketch on cream paper;mode=transform;strength=70%'],
+  ['Core prompt plus per-model tweaks', 'jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;style/sdxl=35mm film photo;model=flux;model=sdxl'],
   ['Sharp edge: starts with word=', 'E=mc2 written on a chalkboard'],
   ['Sharp edge: text after a setting', 'jai:A castle;style=anime;with a moat and a drawbridge'],
   ['Habits from other tools', 'a cyberpunk city at night, neon rain --ar 16:9 --no people --v 6'],
@@ -120,8 +121,17 @@ function renderPlain(a) {
     row('Preview', '', { node: img });
   }
   if (a.document.has('animate')) row('Animated', it.animate ? 'yes' : 'no');
+  // Per-model refinements: grouped by target; a renderer adds them only for a matching model.
+  const isRefinement = k => k.includes('/') && J.QUALIFIABLE.has(k.split('/')[0]);
+  const byTarget = new Map();
+  for (const [k, v] of a.document) if (isRefinement(k)) {
+    const [base, target] = k.split('/');
+    if (!byTarget.has(target)) byTarget.set(target, []);
+    byTarget.get(target).push(`${base} + ${v.join(' | ')}`);
+  }
+  for (const [target, parts] of byTarget) row(`Only for models matching "${target}"`, parts);
   const std = new Set(J.STANDARD_KEYS);
-  const other = [...a.document].filter(([k]) => !std.has(k)).map(([k, v]) => `${k} = ${v.join(' | ')}`);
+  const other = [...a.document].filter(([k]) => !std.has(k) && !isRefinement(k)).map(([k, v]) => `${k} = ${v.join(' | ')}`);
   row('Other settings (kept, not standard)', other);
 }
 

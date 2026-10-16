@@ -25,7 +25,9 @@ const WS_ONLY_RE = new RegExp(`^[${WS_CLASS}]*$`);
 const TRIM_RE = new RegExp(`^[${WS_CLASS}]+|[${WS_CLASS}]+$`, 'g');
 const LEADING_WS_RE = new RegExp(`^[${WS_CLASS}]*`);
 
-const KEY_SRC = '[a-z0-9][a-z0-9_-]*(?:\\.[a-z0-9][a-z0-9_-]*)*';
+const KEY_SRC = '[a-z0-9][a-z0-9_-]*(?:\\.[a-z0-9][a-z0-9_-]*)*(?:/[a-z0-9][a-z0-9_-]*)?';
+/** Names that take a per-model target (spec §Per-model refinements). */
+export const QUALIFIABLE = new Set(['prompt', 'style', 'avoid']);
 /** The key grammar (lowercase). */
 export const KEY_RE = new RegExp(`^${KEY_SRC}$`);
 const ASSIGNMENT_PATTERN_RE = new RegExp(`^[${WS_CLASS}]*${KEY_SRC}[${WS_CLASS}]*=`, 'i');
@@ -214,6 +216,13 @@ export function parse(input) {
   return { document: doc, diagnostics, info: { prefixed, segments, pending } };
 }
 
+const byCP = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+/** Canonical key order after `prompt`: the qualified prompt keys, then every other key, each by code point. */
+function orderedKeys(doc) {
+  const rest = [...doc.keys()].filter(k => k !== 'prompt');
+  return [...rest.filter(k => k.startsWith('prompt/')).sort(byCP), ...rest.filter(k => !k.startsWith('prompt/')).sort(byCP)];
+}
+
 /** escape-value (spec §Canonical text serialisation): one left-to-right pass. */
 export function escapeValue(v) { return v.replace(ESCAPE_VALUE_RE, m => '\\' + m); }
 
@@ -229,8 +238,7 @@ export function serialize(doc, { bare = false } = {}) {
     if (!needsPromptForm && bare && (/^jai:/i.test(v) || v.charCodeAt(0) === 0xfeff || v[0] === '{')) needsPromptForm = true;
     segments.push(needsPromptForm ? 'prompt=' + escapeValue(v) : escapeValue(v));
   });
-  const keys = [...doc.keys()].filter(k => k !== 'prompt').sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-  for (const k of keys) for (const v of doc.get(k)) segments.push(k + '=' + escapeValue(v));
+  for (const k of orderedKeys(doc)) for (const v of doc.get(k)) segments.push(k + '=' + escapeValue(v));
   return (bare ? '' : 'jai:') + segments.join(';');
 }
 
@@ -311,8 +319,7 @@ export function canonicalJSON(doc) {
   const parts = ['"jai":1'];
   const enc = v => (v.length === 1 ? JSON.stringify(v[0]) : JSON.stringify(v));
   if (doc.has('prompt')) parts.push('"prompt":' + enc(doc.get('prompt')));
-  const keys = [...doc.keys()].filter(k => k !== 'prompt').sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-  for (const k of keys) parts.push(JSON.stringify(k) + ':' + enc(doc.get(k)));
+  for (const k of orderedKeys(doc)) parts.push(JSON.stringify(k) + ':' + enc(doc.get(k)));
   return '{' + parts.join(',') + '}';
 }
 
@@ -871,7 +878,7 @@ export function parseAspect(v) {
  * catalog: [{id, aliases: [], family, imageInput|image_input: bool, default: bool}], families: {name: [spellings]}.
  * hasOriginal: whether the carrier offers an original image.
  */
-export function interpret(doc, { catalog = [], families = {}, hasOriginal = false, governingRatio = null } = {}) {
+export function interpret(doc, { catalog = [], families = {}, hasOriginal = false, governingRatio = null, selected = null } = {}) {
   const diagnostics = [];
   const out = { prompt: null, description: '', style: [], avoid: [], model: [], aspect: null, mode: 'generate', strength: null, seed: null, source: null, preview: null, animate: false };
   const single = key => {
@@ -940,12 +947,27 @@ export function interpret(doc, { catalog = [], families = {}, hasOriginal = fals
     }
     out.ratio = governingRatio;
   }
+  let chosen = null;
   if (catalog.length) {
     const needsImage = out.mode === 'transform' && (hasOriginal || out.source !== null);
-    const m = matchModel(out.model, { catalog, families, needsImage });
+    // `selected` lets a viewer impose the model the user picked; otherwise model matching decides.
+    const forced = selected ? catalog.find(m => m.id === selected) || null : null;
+    const m = forced ? { model: forced, diagnostics: [] } : matchModel(out.model, { catalog, families, needsImage });
+    chosen = m.model;
     out.matched = m.model ? m.model.id : null;
     diagnostics.push(...m.diagnostics);
     if (needsImage && m.model && !(m.model.imageInput || m.model.image_input)) diagnostics.push(diag('mode-degraded', 'mode'));
+  }
+  // Per-model refinements (spec §Per-model refinements): core values, then matching qualified values.
+  if (chosen) {
+    const names = [chosen.family, chosen.id, ...(chosen.aliases || [])].filter(Boolean).map(asciiLower);
+    const qualified = [...doc.keys()].filter(k => k.includes('/')).sort(byCP);
+    for (const base of QUALIFIABLE) {
+      const extra = qualified.filter(k => k.startsWith(base + '/') && names.includes(k.slice(base.length + 1))).flatMap(k => doc.get(k));
+      if (!extra.length) continue;
+      if (base === 'prompt') { out.prompt = [...(out.prompt || []), ...extra]; out.description = out.prompt.join('\n'); }
+      else out[base] = [...out[base], ...extra];
+    }
   }
   return { interpreted: out, diagnostics };
 }
@@ -1019,7 +1041,9 @@ export function validate(doc, info) {
   const stdset = new Set(STANDARD_KEYS);
   const utf8 = s => new TextEncoder().encode(s).length;
   for (const [k, vals] of doc) {
-    if (!k.includes('.') && !stdset.has(k)) d.push(diag('unknown-key', k));
+    const base = k.split('/')[0];
+    if (!base.includes('.') && !stdset.has(base)) d.push(diag('unknown-key', k));
+    if (k.includes('/') && !QUALIFIABLE.has(base)) d.push(diag('invalid-qualifier', k));
     for (const v of vals) {
       if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f-\u009f]/.test(v)) d.push(diag('control-character', k));
       if (/[​-‍⁠]|.﻿/s.test(v)) d.push(diag('invisible-char', k));

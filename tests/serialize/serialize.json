@@ -574,6 +574,76 @@
    "identity": "0330d6f514d6eadf67b1d076bb70b67f8c3e294abf1f108975768c6dd6c0f2a7",
    "url": "data:image/jai,%2Fimagine%20a%20cat",
    "since": "1.0-draft"
+  },
+  {
+   "id": "ser-qualified-order",
+   "rationale": "Core prompt, then qualified prompt keys by code point, then the rest by code point.",
+   "document": {
+    "style/sdxl": [
+     "film grain"
+    ],
+    "model": [
+     "flux",
+     "sdxl"
+    ],
+    "prompt/sdxl": [
+     "35mm photo"
+    ],
+    "prompt": [
+     "A girl holding a red balloon"
+    ],
+    "prompt/flux": [
+     "soft rim light"
+    ],
+    "style": [
+     "watercolor"
+    ]
+   },
+   "text": "jai:A girl holding a red balloon;prompt/flux=soft rim light;prompt/sdxl=35mm photo;model=flux;model=sdxl;style=watercolor;style/sdxl=film grain",
+   "json": "{\"jai\":1,\"prompt\":\"A girl holding a red balloon\",\"prompt/flux\":\"soft rim light\",\"prompt/sdxl\":\"35mm photo\",\"model\":[\"flux\",\"sdxl\"],\"style\":\"watercolor\",\"style/sdxl\":\"film grain\"}",
+   "identity": "c02f09891d466f1bf58eb675d2324ffc01ad175bdcbd85a15c067e8b87fb737a",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-qualified-no-core",
+   "rationale": "Qualified prompt keys lead even without a core prompt.",
+   "document": {
+    "prompt/flux": [
+     "soft rim light"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "text": "jai:prompt/flux=soft rim light;style=anime",
+   "json": "{\"jai\":1,\"prompt/flux\":\"soft rim light\",\"style\":\"anime\"}",
+   "identity": "3efbc3a5b6c57e2f1f2c4fd4c685978ff2e99e370415d724b26007e15880777a",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-qualified-codepoint",
+   "rationale": "Code point order: - (2D) < . (2E) < / (2F).",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "style": [
+     "a"
+    ],
+    "style-x": [
+     "b"
+    ],
+    "style/a": [
+     "c"
+    ],
+    "style.x": [
+     "d"
+    ]
+   },
+   "text": "jai:x;style=a;style-x=b;style.x=d;style/a=c",
+   "json": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"a\",\"style-x\":\"b\",\"style.x\":\"d\",\"style/a\":\"c\"}",
+   "identity": "c189d45ccf8cd9445b7d4e8af0163679aec04584d60dabd40c8e44784ab2dec7",
+   "since": "1.0-draft"
   }
  ]
 }

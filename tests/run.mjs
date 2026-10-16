@@ -240,7 +240,7 @@ const runners = {
   },
   interpret(c) {
     const doc = J.fromObject(c.document);
-    const r = J.interpret(doc, { catalog: c.catalog || [], families: c.families || {}, hasOriginal: !!c.has_original, governingRatio: c.governing_ratio ?? null });
+    const r = J.interpret(doc, { catalog: c.catalog || [], families: c.families || {}, hasOriginal: !!c.has_original, governingRatio: c.governing_ratio ?? null, selected: c.selected ?? null });
     const it = r.interpreted;
     const errs = [];
     for (const [k, want] of Object.entries(c.interpreted)) {
@@ -248,7 +248,7 @@ const runners = {
       if (k === 'aspect') got = it.aspect == null ? null : it.aspect.kind === 'keyword' ? it.aspect.keyword : it.aspect.width / it.aspect.height;
       else if (k === 'model') got = it.matched ?? null;
       else got = it[k] ?? null;
-      const ok = typeof want === 'number' && typeof got === 'number' ? Math.abs(want - got) < 1e-9 : want === got;
+      const ok = typeof want === 'number' && typeof got === 'number' ? Math.abs(want - got) < 1e-9 : Array.isArray(want) ? JSON.stringify(want) === JSON.stringify(got) : want === got;
       if (!ok) errs.push(`${k}: ${show(got)} != ${show(want)}`);
     }
     if (!diagsEqual(r.diagnostics, c.diagnostics, { filter: INTERPRETER_CODES })) errs.push(`diagnostics [${fmtDiags(r.diagnostics.filter(d => INTERPRETER_CODES.has(d.code)))}] != [${c.diagnostics.join(', ')}]`);

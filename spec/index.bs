@@ -389,14 +389,22 @@ A document describes exactly one image.
 The <dfn export>key grammar</dfn> is, in ABNF [[!RFC5234]]:
 
 ```abnf
-key      = segment *( "." segment )
+key      = name [ "/" target ]
+name     = segment *( "." segment )
+target   = segment
 segment  = ALPHANUM *( ALPHANUM / "_" / "-" )
 ALPHANUM = %x61-7A / DIGIT          ; a-z, 0-9
 ```
 
-A key is a non-empty sequence of segments separated by single full stops,
-where each segment starts with a lowercase ASCII letter or digit and continues
-with lowercase ASCII letters, digits, `_` and `-`.
+A key is a *name*, a non-empty sequence of segments separated by single full
+stops, optionally followed by `/` and a *target*, one segment. Each segment
+starts with a lowercase ASCII letter or digit and continues with lowercase
+ASCII letters, digits, `_` and `-`. A key with a target, such as
+`prompt/flux`, is a <dfn export>qualified key</dfn>: it holds refinements for
+the models that target names ([[#model-refinements]]). Only the names
+`prompt`, `style` and `avoid` take a target in this edition; parsers and
+serialisers keep other qualified keys unchanged, and validators report them
+with `invalid-qualifier`.
 
 Keys are compared for equality after [=ASCII lowercase=] conversion: readers
 convert every key they receive to ASCII lowercase before anything else, so a
@@ -525,7 +533,7 @@ A `\` that does not begin an `escape` is an ordinary character.
 
 *This section is informative.*
 
-The assignment rule is deliberately simple, and four consequences are worth
+The assignment rule is deliberately simple, and five consequences are worth
 knowing. Validators report each of them ([[#diagnostics]]).
 
 1. A description that *begins* with a word, an equals sign and more text is an
@@ -543,6 +551,8 @@ knowing. Validators report each of them ([[#diagnostics]]).
     semicolons (`data:image/svg+xml\;charset=utf-8,…`); the canonical
     serialiser does so. A plain `data:…;base64,` URL needs nothing, because
     `base64,…` is not an assignment.
+5. A word, `/`, a word and `=` after a semicolon is a [=qualified key=]:
+    `A ratio; a/b=c` assigns `c` to `a/b`. Write `a/b\=c` to keep it as text.
 
 ## Escaping arbitrary text ## {#text-escaping}
 
@@ -669,10 +679,13 @@ not satisfy the data model (keys not lowercase, values not normalised).
     JAI whitespace, a [=key=], optional JAI whitespace, `=`, matched ASCII
     case-insensitively at the start of *v*), append [=escape-value=](*v*) to
     *segments*; otherwise append `prompt=` followed by escape-value(*v*).
-4. For each remaining key, in ascending order of key by code point, for each
+4. For each [=qualified key=] whose name is `prompt`, in ascending order of
+    key by code point, for each of its values *v* in order: append the key,
+    `=`, and escape-value(*v*) to *segments*.
+5. For each remaining key, in ascending order of key by code point, for each
     of its values *v* in order: append the key, `=`, and escape-value(*v*) to
     *segments*.
-5. Join *segments* with `;`, append the result to *out*, and return *out*.
+6. Join *segments* with `;`, append the result to *out*, and return *out*.
 
 <dfn export>escape-value</dfn>(*v*) is one left-to-right pass over *v* that inserts a
 `\` before:
@@ -884,8 +897,9 @@ The <dfn export>canonical JSON form</dfn> of a document is the following byte
 sequence, and every serialiser produces exactly it:
 
 - UTF-8 without a byte order mark; no whitespace outside strings.
-- Members in this order: `jai`, then `prompt` if present, then every other
-    key in ascending code point order of the key.
+- Members in this order: `jai`, then `prompt` if present, then the
+    [=qualified keys=] whose name is `prompt` in ascending code point order,
+    then every other key in ascending code point order of the key.
 - The value of `jai` is `1`. Every other member's value is a JSON string when
     the key has one value and a JSON array of strings when it has several.
 - Strings are serialised exactly as RFC 8785 §3.2.2.2 [[!RFC8785]] specifies:
@@ -1377,6 +1391,33 @@ without `:flux` matches nothing, so nothing is removed; the words `replicate`,
 Appendix [[#families]] lists family names informatively. There is no
 registry of models: a renderer advertises what it knows, and the user
 configures what the renderer may use.
+
+## Per-model refinements ## {#model-refinements}
+
+A document can carry a core description that every model receives, plus
+refinements for particular models in [=qualified keys=]:
+
+<div class=example id=ex-refinements>
+```
+jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;prompt/imagen=The balloon is glossy;model=flux;model=imagen
+```
+</div>
+
+The <dfn>selected model</dfn> is the model that [[#model-matching]] selects,
+or the model the user chose when a viewer lets the user override the
+document's preference. Once a model is selected, an interpreter forms the
+values it uses for `prompt`, `style` and `avoid`: the core values of the key,
+followed by the values of every qualified key with that name whose target
+matches the [=selected model=], in ascending code point order of the key. A target
+matches when it equals, [=ASCII case-insensitively=], the model's family name,
+its identifier or one of its aliases. The [=description=] given to the model is
+formed from these values.
+
+Qualified keys never select a model: `model` remains the ordered preference
+list, like a font stack, and the core values are the fallback that every model
+receives. Qualified keys whose target does not match the [=selected model=] are unused,
+without a diagnostic. An encoder typically evolves the core
+first and then adds refinements for the models in its preference list.
 
 ## Never document intent ## {#parameters-not-intent}
 
@@ -2148,6 +2189,7 @@ key.
 <tr><td>`malformed-container`<td>parser<td>none<td>The gzip member was malformed, followed by bytes, over the bound, or did not contain JSON; the document is empty.
 <tr><td>`undecodable`<td>parser<td>none<td>The bytes are not well-formed UTF-8 or exceed the text bound; the document is empty.
 <tr><td>`first-segment-assignment`<td>validator<td>the key concerned<td>The first segment was an assignment to an unknown key and the document has no prompt.
+<tr><td>`invalid-qualifier`<td>validator<td>the key concerned<td>A [=qualified key=] whose name is not `prompt`, `style` or `avoid`.
 <tr><td>`unknown-key`<td>validator<td>the key concerned<td>An undotted key that this specification does not define.
 <tr><td>`continuation-into-single-valued-key`<td>validator<td>the key concerned<td>Prose continued the value of `aspect`, `mode`, `strength`, `seed` or `animate` (not `source` or `preview`, whose `data:` URLs contain semicolons; see `split-data-uri`).
 <tr><td>`no-prompt`<td>validator<td>none<td>No prompt, and the interpreted `mode` is `generate`.
@@ -2256,13 +2298,16 @@ validator codes that it MUST NOT emit.
     mapping each family name to its spellings in order; optional
     `has_original` (boolean, default `false`: whether the carrier offers an
     original image); optional `governing_ratio` (number: the element's
-    [=governing ratio=], absent for none) → `interpreted` and `diagnostics`. `interpreted` is
-    compared only for the members present: `description` (string); `aspect`
+    [=governing ratio=], absent for none); optional `selected` (the `id` of
+    a catalog entry the user chose, which is then the selected model instead
+    of the result of [[#model-matching]]) → `interpreted` and `diagnostics`. `interpreted` is
+    compared only for the members present: `description` (string, after
+    [[#model-refinements]]); `style` and `avoid` (arrays of strings, after
+    [[#model-refinements]]); `aspect`
     (W/H as a number, `square` as 1, or the string `landscape` or
     `portrait`); `mode` (string, the interpreted value of the `mode` key);
     `strength` (number); `seed`, `source`, `preview` (string); `animate`
-    (boolean); `model` (the `id` of the catalog entry that [[#model-matching]]
-    selects); `ratio` (the ratio to render at under [[#rendering-size]], W/H
+    (boolean); `model` (the `id` of the selected catalog entry); `ratio` (the ratio to render at under [[#rendering-size]], W/H
     as a number; `null` when the `preview` or the renderer's default decides). `null` means absent or invalid. `diagnostics` is the exact
     multiset of interpreter codes.
 

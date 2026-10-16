@@ -227,6 +227,25 @@ mood). The render is marked as personalised, the document is unchanged, an
 unpersonalised render stays available, and neither documents nor pages can
 trigger it. It may never be used to get past a refusal.
 
+## 6c. Per-model refinements
+
+`prompt/<target>`, `style/<target>` and `avoid/<target>` refine the core for
+one model, like a font stack: `model=` stays the ordered preference, the core
+is the fallback every model receives, and the selected model's matching
+qualified values are appended after the core. Decisions, with the owner:
+
+- The target is one family name, identifier or alias token, matched ASCII
+  case-insensitively. Rejected: lists or wildcards in the target, and
+  qualifiers that select a model (two mechanisms for one choice).
+- Only `prompt`, `style` and `avoid` take a target. Single-valued keys such
+  as `aspect` or `seed` would need override rather than append semantics and
+  would let one document carry different images per model. Other keys with a
+  target parse and round-trip but draw `invalid-qualifier`.
+- Append, not replace: the core never disappears, so a refinement cannot turn
+  the document into a different image for one model.
+- Cost: `; a/b=c` in prose now parses as an assignment (sharp edge 5). The
+  same edge already existed for `; a=c`, and the escape is the same.
+
 ## 7. Extensibility
 
 Undotted keys are reserved for the spec; vendors use `vendor.name`; `dc.`

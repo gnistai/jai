@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="a66dadd20a87bef58c5877f97b116de6430210a2" name="revision">
+  <meta content="7bbfde2a31b558e27159d676d9ae417f4fec7c97" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -2317,7 +2317,8 @@ Parts of this work may be from another specification document.  If so, those par
         <li><a href="#key-animate"><span class="secno">8.1.9</span> <span class="content"><code>animate</code></span></a>
        </ol>
       <li><a href="#model-matching"><span class="secno">8.2</span> <span class="content">Model matching</span></a>
-      <li><a href="#parameters-not-intent"><span class="secno">8.3</span> <span class="content">Never document intent</span></a>
+      <li><a href="#model-refinements"><span class="secno">8.3</span> <span class="content">Per-model refinements</span></a>
+      <li><a href="#parameters-not-intent"><span class="secno">8.4</span> <span class="content">Never document intent</span></a>
      </ol>
     <li>
      <a href="#rendering"><span class="secno">9</span> <span class="content">Rendering</span></a>
@@ -2768,13 +2769,21 @@ order of distinct keys is not significant and carries no meaning.</p>
    <p>A document describes exactly one image.</p>
    <h3 class="heading settled" data-level="4.1" id="keys"><span class="secno">4.1. </span><span class="content">Keys</span><a class="self-link" href="#keys"></a></h3>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="key-grammar">key grammar</dfn> is, in ABNF <a data-link-type="biblio" href="#biblio-rfc5234" title="Augmented BNF for Syntax Specifications: ABNF">[RFC5234]</a>:</p>
-<pre class="highlight language-abnf"><c- nc>key</c->      <c- o>=</c-> <c- nc>segment</c-> <c- o>*</c-><c- p>(</c-> <c- l>"."</c-> <c- nc>segment</c-> <c- p>)</c->
+<pre class="highlight language-abnf"><c- nc>key</c->      <c- o>=</c-> <c- nc>name</c-> <c- p>[</c-> <c- l>"/"</c-> <c- nc>target</c-> <c- p>]</c->
+<c- nc>name</c->     <c- o>=</c-> <c- nc>segment</c-> <c- o>*</c-><c- p>(</c-> <c- l>"."</c-> <c- nc>segment</c-> <c- p>)</c->
+<c- nc>target</c->   <c- o>=</c-> <c- nc>segment</c->
 <c- nc>segment</c->  <c- o>=</c-> <c- nc>ALPHANUM</c-> <c- o>*</c-><c- p>(</c-> <c- nc>ALPHANUM</c-> <c- o>/</c-> <c- l>"_"</c-> <c- o>/</c-> <c- l>"-"</c-> <c- p>)</c->
 <c- nc>ALPHANUM</c-> <c- o>=</c-> <c- l>%x61-7A</c-> <c- o>/</c-> <c- k>DIGIT</c->          <c- c1>; a-z, 0-9</c->
 </pre>
-   <p>A key is a non-empty sequence of segments separated by single full stops,
-where each segment starts with a lowercase ASCII letter or digit and continues
-with lowercase ASCII letters, digits, <code>_</code> and <code>-</code>.</p>
+   <p>A key is a <em>name</em>, a non-empty sequence of segments separated by single full
+stops, optionally followed by <code>/</code> and a <em>target</em>, one segment. Each segment
+starts with a lowercase ASCII letter or digit and continues with lowercase
+ASCII letters, digits, <code>_</code> and <code>-</code>. A key with a target, such as
+<code>prompt/flux</code>, is a <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="qualified-key">qualified key</dfn>: it holds refinements for
+the models that target names (<a href="#model-refinements">§ 8.3 Per-model refinements</a>). Only the names
+<code>prompt</code>, <code>style</code> and <code>avoid</code> take a target in this edition; parsers and
+serialisers keep other qualified keys unchanged, and validators report them
+with <code>invalid-qualifier</code>.</p>
    <p>Keys are compared for equality after <a data-link-type="dfn" href="#ascii-lowercase" id="ref-for-ascii-lowercase①">ASCII lowercase</a> conversion: readers
 convert every key they receive to ASCII lowercase before anything else, so a
 document never contains two keys that differ only in case.</p>
@@ -2933,7 +2942,7 @@ whitespace inside values is preserved.</p>
    </div>
    <h4 class="heading settled" data-level="5.2.1" id="text-sharp-edges"><span class="secno">5.2.1. </span><span class="content">Sharp edges</span><a class="self-link" href="#text-sharp-edges"></a></h4>
    <p><em>This section is informative.</em></p>
-   <p>The assignment rule is deliberately simple, and four consequences are worth
+   <p>The assignment rule is deliberately simple, and five consequences are worth
 knowing. Validators report each of them (<a href="#diagnostics">§ 13 Diagnostics</a>).</p>
    <ol>
     <li data-md>
@@ -2955,6 +2964,9 @@ assigns to <code>e</code>. Write <code>e \= mc2</code>.</p>
 semicolons (<code>data:image/svg+xml\;charset=utf-8,…</code>); the canonical
 serialiser does so. A plain <code>data:…;base64,</code> URL needs nothing, because
 <code>base64,…</code> is not an assignment.</p>
+    <li data-md>
+     <p>A word, <code>/</code>, a word and <code>=</code> after a semicolon is a <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key">qualified key</a>:
+<code>A ratio; a/b=c</code> assigns <code>c</code> to <code>a/b</code>. Write <code>a/b\=c</code> to keep it as text.</p>
    </ol>
    <h3 class="heading settled" data-level="5.3" id="text-escaping"><span class="secno">5.3. </span><span class="content">Escaping arbitrary text</span><a class="self-link" href="#text-escaping"></a></h3>
    <p>An authoring tool or template that places text it did not write into a
@@ -3158,6 +3170,10 @@ value and <em>v</em> does not match the <dfn class="dfn-paneled" data-dfn-type="
 JAI whitespace, a <a data-link-type="dfn" href="#key" id="ref-for-key②">key</a>, optional JAI whitespace, <code>=</code>, matched ASCII
 case-insensitively at the start of <em>v</em>), append <a data-link-type="dfn" href="#escape-value" id="ref-for-escape-value">escape-value</a>(<em>v</em>) to
 <em>segments</em>; otherwise append <code>prompt=</code> followed by escape-value(<em>v</em>).</p>
+    <li data-md>
+     <p>For each <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key①">qualified key</a> whose name is <code>prompt</code>, in ascending order of
+key by code point, for each of its values <em>v</em> in order: append the key,
+<code>=</code>, and escape-value(<em>v</em>) to <em>segments</em>.</p>
     <li data-md>
      <p>For each remaining key, in ascending order of key by code point, for each
 of its values <em>v</em> in order: append the key, <code>=</code>, and escape-value(<em>v</em>) to
@@ -3451,8 +3467,9 @@ sequence, and every serialiser produces exactly it:</p>
     <li data-md>
      <p>UTF-8 without a byte order mark; no whitespace outside strings.</p>
     <li data-md>
-     <p>Members in this order: <code>jai</code>, then <code>prompt</code> if present, then every other
-key in ascending code point order of the key.</p>
+     <p>Members in this order: <code>jai</code>, then <code>prompt</code> if present, then the
+<a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key②">qualified keys</a> whose name is <code>prompt</code> in ascending code point order,
+then every other key in ascending code point order of the key.</p>
     <li data-md>
      <p>The value of <code>jai</code> is <code>1</code>. Every other member’s value is a JSON string when
 the key has one value and a JSON array of strings when it has several.</p>
@@ -4000,7 +4017,30 @@ without <code>:flux</code> matches nothing, so nothing is removed; the words <co
    <p>Appendix <a href="#families">Appendix B. Model family names</a> lists family names informatively. There is no
 registry of models: a renderer advertises what it knows, and the user
 configures what the renderer may use.</p>
-   <h3 class="heading settled" data-level="8.3" id="parameters-not-intent"><span class="secno">8.3. </span><span class="content">Never document intent</span><a class="self-link" href="#parameters-not-intent"></a></h3>
+   <h3 class="heading settled" data-level="8.3" id="model-refinements"><span class="secno">8.3. </span><span class="content">Per-model refinements</span><a class="self-link" href="#model-refinements"></a></h3>
+   <p>A document can carry a core description that every model receives, plus
+refinements for particular models in <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key③">qualified keys</a>:</p>
+   <div class="example" id="ex-refinements">
+    <a class="self-link" href="#ex-refinements"></a>
+
+<pre>jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;prompt/imagen=The balloon is glossy;model=flux;model=imagen
+</pre>
+   </div>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="selected-model">selected model</dfn> is the model that <a href="#model-matching">§ 8.2 Model matching</a> selects,
+or the model the user chose when a viewer lets the user override the
+document’s preference. Once a model is selected, an interpreter forms the
+values it uses for <code>prompt</code>, <code>style</code> and <code>avoid</code>: the core values of the key,
+followed by the values of every qualified key with that name whose target
+matches the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model">selected model</a>, in ascending code point order of the key. A target
+matches when it equals, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑤">ASCII case-insensitively</a>, the model’s family name,
+its identifier or one of its aliases. The <a data-link-type="dfn" href="#description" id="ref-for-description②">description</a> given to the model is
+formed from these values.</p>
+   <p>Qualified keys never select a model: <code>model</code> remains the ordered preference
+list, like a font stack, and the core values are the fallback that every model
+receives. Qualified keys whose target does not match the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model①">selected model</a> are unused,
+without a diagnostic. An encoder typically evolves the core
+first and then adds refinements for the models in its preference list.</p>
+   <h3 class="heading settled" data-level="8.4" id="parameters-not-intent"><span class="secno">8.4. </span><span class="content">Never document intent</span><a class="self-link" href="#parameters-not-intent"></a></h3>
    <p>The following are settings of the user’s renderer, never parameters of a
 document, and renderers MUST NOT let any key, standard or vendor, set them: output format,
 number of candidates, quality or speed tier, resolution beyond the layout
@@ -4071,7 +4111,7 @@ render (<a href="#rendering-prompt">§ 9.2 Assembling the model input</a>).
    <h3 class="heading settled" data-level="9.2" id="rendering-prompt"><span class="secno">9.2. </span><span class="content">Assembling the model input</span><a class="self-link" href="#rendering-prompt"></a></h3>
    <ul>
     <li data-md>
-     <p>A renderer MUST send the model the <a data-link-type="dfn" href="#description" id="ref-for-description②">description</a> it intends, explicitly,
+     <p>A renderer MUST send the model the <a data-link-type="dfn" href="#description" id="ref-for-description③">description</a> it intends, explicitly,
 even when the document has no <code>prompt</code> (an empty description); a provider’s
 default prompt is never a JAI default.</p>
     <li data-md>
@@ -4876,6 +4916,12 @@ key.</p>
       <td>The first segment was an assignment to an unknown key and the document has no prompt.
 
      <tr>
+      <td><code>invalid-qualifier</code>
+      <td>validator
+      <td>the key concerned
+      <td>A <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified key</a> whose name is not <code>prompt</code>, <code>style</code> or <code>avoid</code>.
+
+     <tr>
       <td><code>unknown-key</code>
       <td>validator
       <td>the key concerned
@@ -5248,13 +5294,16 @@ entry is the default); optional <code>families</code>, the renderer’s family l
 mapping each family name to its spellings in order; optional
 <code>has_original</code> (boolean, default <code>false</code>: whether the carrier offers an
 original image); optional <code>governing_ratio</code> (number: the element’s
-<a data-link-type="dfn" href="#governing-ratio" id="ref-for-governing-ratio">governing ratio</a>, absent for none) → <code>interpreted</code> and <code>diagnostics</code>. <code>interpreted</code> is
-compared only for the members present: <code>description</code> (string); <code>aspect</code>
+<a data-link-type="dfn" href="#governing-ratio" id="ref-for-governing-ratio">governing ratio</a>, absent for none); optional <code>selected</code> (the <code>id</code> of
+a catalog entry the user chose, which is then the selected model instead
+of the result of <a href="#model-matching">§ 8.2 Model matching</a>) → <code>interpreted</code> and <code>diagnostics</code>. <code>interpreted</code> is
+compared only for the members present: <code>description</code> (string, after
+<a href="#model-refinements">§ 8.3 Per-model refinements</a>); <code>style</code> and <code>avoid</code> (arrays of strings, after
+<a href="#model-refinements">§ 8.3 Per-model refinements</a>); <code>aspect</code>
 (W/H as a number, <code>square</code> as 1, or the string <code>landscape</code> or
 <code>portrait</code>); <code>mode</code> (string, the interpreted value of the <code>mode</code> key);
 <code>strength</code> (number); <code>seed</code>, <code>source</code>, <code>preview</code> (string); <code>animate</code>
-(boolean); <code>model</code> (the <code>id</code> of the catalog entry that <a href="#model-matching">§ 8.2 Model matching</a>
-selects); <code>ratio</code> (the ratio to render at under <a href="#rendering-size">§ 9.3 Size and aspect</a>, W/H
+(boolean); <code>model</code> (the <code>id</code> of the selected catalog entry); <code>ratio</code> (the ratio to render at under <a href="#rendering-size">§ 9.3 Size and aspect</a>, W/H
 as a number; <code>null</code> when the <code>preview</code> or the renderer’s default decides). <code>null</code> means absent or invalid. <code>diagnostics</code> is the exact
 multiset of interpreter codes.</p>
    </dl>
@@ -5702,9 +5751,11 @@ the repository’s design record.</p>
    <li><a href="#prose">prose</a><span>, in § 5.2</span>
    <li><a href="#provider">provider</a><span>, in § 3</span>
    <li><a href="#publisher">publisher</a><span>, in § 3</span>
+   <li><a href="#qualified-key">qualified key</a><span>, in § 4.1</span>
    <li><a href="#raw-segments">raw segments</a><span>, in § 5.4</span>
    <li><a href="#renderer">renderer</a><span>, in § 2.1</span>
    <li><a href="#scalar-value-string">scalar value string</a><span>, in § 3</span>
+   <li><a href="#selected-model">selected model</a><span>, in § 8.3</span>
    <li><a href="#serialiser">serialiser</a><span>, in § 2.1</span>
    <li><a href="#standard-key">standard key</a><span>, in § 3</span>
    <li><a href="#text-form">text form</a><span>, in § 3</span>
@@ -5967,7 +6018,7 @@ function parseHTML(markup) {
 {
 let dfnPanelData = {
 "advisory": {"dfnID":"advisory","dfnText":"advisory","external":false,"refSections":[{"refs":[{"id":"ref-for-advisory"}],"title":"8. Standard parameters"}],"url":"#advisory"},
-"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"5.5.1. Bare serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.2. Model matching"}],"url":"#ascii-case-insensitive"},
+"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"5.5.1. Bare serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2464"}],"title":"8.3. Per-model refinements"}],"url":"#ascii-case-insensitive"},
 "ascii-lowercase": {"dfnID":"ascii-lowercase","dfnText":"ASCII lowercase","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-lowercase"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-ascii-lowercase\u2460"}],"title":"4.1. Keys"},{"refs":[{"id":"ref-for-ascii-lowercase\u2461"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-lowercase\u2462"}],"title":"6.3. Reading"}],"url":"#ascii-lowercase"},
 "assignment": {"dfnID":"assignment","dfnText":"assignment","external":false,"refSections":[],"url":"#assignment"},
 "assignment-pattern": {"dfnID":"assignment-pattern","dfnText":"assignment pattern","external":false,"refSections":[],"url":"#assignment-pattern"},
@@ -5986,7 +6037,7 @@ let dfnPanelData = {
 "continuation": {"dfnID":"continuation","dfnText":"continuation","external":false,"refSections":[],"url":"#continuation"},
 "decoder": {"dfnID":"decoder","dfnText":"decoder","external":false,"refSections":[{"refs":[{"id":"ref-for-decoder"}],"title":"5.5.1. Bare serialisation"}],"url":"#decoder"},
 "decoding-algorithm": {"dfnID":"decoding-algorithm","dfnText":"decoding algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-decoding-algorithm"}],"title":"10.2. Transport decoding"}],"url":"#decoding-algorithm"},
-"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"9.2. Assembling the model input"}],"url":"#description"},
+"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-description\u2462"}],"title":"9.2. Assembling the model input"}],"url":"#description"},
 "diagnostic": {"dfnID":"diagnostic","dfnText":"diagnostic","external":false,"refSections":[],"url":"#diagnostic"},
 "discovery": {"dfnID":"discovery","dfnText":"discovery","external":false,"refSections":[],"url":"#discovery"},
 "document": {"dfnID":"document","dfnText":"document","external":false,"refSections":[{"refs":[{"id":"ref-for-document"}],"title":"4. Data model"}],"url":"#document"},
@@ -6015,9 +6066,11 @@ let dfnPanelData = {
 "prose": {"dfnID":"prose","dfnText":"prose","external":false,"refSections":[],"url":"#prose"},
 "provider": {"dfnID":"provider","dfnText":"provider","external":false,"refSections":[],"url":"#provider"},
 "publisher": {"dfnID":"publisher","dfnText":"publisher","external":false,"refSections":[],"url":"#publisher"},
+"qualified-key": {"dfnID":"qualified-key","dfnText":"qualified key","external":false,"refSections":[{"refs":[{"id":"ref-for-qualified-key"}],"title":"5.2.1. Sharp edges"},{"refs":[{"id":"ref-for-qualified-key\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-qualified-key\u2461"}],"title":"6.4. Canonical JSON"},{"refs":[{"id":"ref-for-qualified-key\u2462"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-qualified-key\u2463"}],"title":"13. Diagnostics"}],"url":"#qualified-key"},
 "raw-segments": {"dfnID":"raw-segments","dfnText":"raw segments","external":false,"refSections":[],"url":"#raw-segments"},
 "renderer": {"dfnID":"renderer","dfnText":"renderer","external":false,"refSections":[],"url":"#renderer"},
 "scalar-value-string": {"dfnID":"scalar-value-string","dfnText":"scalar value string","external":false,"refSections":[{"refs":[{"id":"ref-for-scalar-value-string"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-scalar-value-string\u2460"}],"title":"6.4. Canonical JSON"}],"url":"#scalar-value-string"},
+"selected-model": {"dfnID":"selected-model","dfnText":"selected model","external":false,"refSections":[{"refs":[{"id":"ref-for-selected-model"},{"id":"ref-for-selected-model\u2460"}],"title":"8.3. Per-model refinements"}],"url":"#selected-model"},
 "serialiser": {"dfnID":"serialiser","dfnText":"serialiser","external":false,"refSections":[{"refs":[{"id":"ref-for-serialiser"}],"title":"5.5. Canonical text serialisation"}],"url":"#serialiser"},
 "standard-key": {"dfnID":"standard-key","dfnText":"standard key","external":false,"refSections":[{"refs":[{"id":"ref-for-standard-key"}],"title":"8. Standard parameters"}],"url":"#standard-key"},
 "text-form": {"dfnID":"text-form","dfnText":"text form","external":false,"refSections":[{"refs":[{"id":"ref-for-text-form"}],"title":"4.1. Keys"}],"url":"#text-form"},
@@ -6441,7 +6494,9 @@ let refsData = {
 "#key-grammar": {"displayText":"key grammar","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"key grammar","type":"dfn","url":"#key-grammar"},
 "#layout-box": {"displayText":"layout box","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"layout box","type":"dfn","url":"#layout-box"},
 "#original-image": {"displayText":"original image","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"original image","type":"dfn","url":"#original-image"},
+"#qualified-key": {"displayText":"qualified key","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"qualified key","type":"dfn","url":"#qualified-key"},
 "#scalar-value-string": {"displayText":"scalar value string","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"scalar value string","type":"dfn","url":"#scalar-value-string"},
+"#selected-model": {"displayText":"selected model","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"selected model","type":"dfn","url":"#selected-model"},
 "#serialiser": {"displayText":"serialiser","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"serialiser","type":"dfn","url":"#serialiser"},
 "#standard-key": {"displayText":"standard key","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"standard key","type":"dfn","url":"#standard-key"},
 "#text-form": {"displayText":"text form","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"text form","type":"dfn","url":"#text-form"},

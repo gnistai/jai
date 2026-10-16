@@ -87,6 +87,22 @@ With `mode=transform`, describe the finished picture, including what stays the
 same, not the change ("Same …", "make it …"). If the original cannot be read,
 the description is all the renderer gets.
 
+### Per-model refinements
+
+`prompt`, `style` and `avoid` can carry a model target after a slash:
+`prompt/flux=…`, `style/sdxl=…`. A renderer appends those values to the core
+values only when its selected model's family, identifier or alias matches the
+target. Write the core first, complete enough for any model, then add short
+per-model tweaks only when you know a model needs them:
+
+```
+jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;model=flux;model=sdxl
+```
+
+Targets never choose the model; `model=` does. Other keys take no target.
+Because `word/word=` after a semicolon is a parameter, write `\=` when prose
+contains one: `a/b\=c`.
+
 Other undotted keys are reserved: do not invent `lighting=` or `mood=`; put
 those in the description. Tool-specific settings use a dotted vendor key such
 as `comfy.sampler=euler`.
@@ -274,7 +290,8 @@ Before you hand a document back, check:
 
 - [ ] It starts with `jai:` (unless it goes inside `data-jai` or a `data:` URL).
 - [ ] The description comes first, or is introduced with `prompt=`.
-- [ ] Every parameter is `;key=value` with a known key or a dotted vendor key.
+- [ ] Every parameter is `;key=value` with a known key or a dotted vendor key;
+      only `prompt`, `style` and `avoid` take a `/target`.
 - [ ] No text after a parameter was meant as more description (text after
       `;style=anime;` belongs to `style` until the next `;key=`).
 - [ ] `aspect` is `W:H` or a keyword; `strength` only with `mode=transform`.
@@ -285,8 +302,8 @@ Before you hand a document back, check:
 - [ ] Inside an HTML attribute there is no raw `"`: use `&quot;` in `data-jai`
       and `alt`, `%22` in URLs.
 
-The canonical spelling puts `jai:`, then the description, then the other keys
-in alphabetical order, with no spaces around `;` and `=`. When a JavaScript
+The canonical spelling puts `jai:`, then the description, then any
+`prompt/<target>` keys, then the other keys in code point order, with no spaces around `;` and `=`. When a JavaScript
 runtime is available, the reference library normalises and validates exactly
 (browsers and Deno import the URL directly; in Node, download `jai.js` and
 import the local file):

@@ -925,6 +925,42 @@
     "invalid-key"
    ],
    "since": "1.0-draft"
+  },
+  {
+   "id": "json-qualified",
+   "rationale": "JSON member names carry the slash and are lowercased.",
+   "input": "{\"jai\":1,\"prompt\":\"x\",\"Prompt/FLUX\":[\"a\",\"b\"],\"style/sdxl\":\"c\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/flux": [
+     "a",
+     "b"
+    ],
+    "style/sdxl": [
+     "c"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "json-qualified-invalid",
+   "rationale": "Names that are not keys are dropped.",
+   "input": "{\"jai\":1,\"prompt\":\"x\",\"prompt/\":\"a\",\"prompt/a/b\":\"b\"}",
+   "context": true,
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "invalid-key",
+    "invalid-key"
+   ],
+   "since": "1.0-draft"
   }
  ]
 }

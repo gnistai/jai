@@ -181,6 +181,23 @@
     ]
    },
    "since": "1.0-draft"
+  },
+  {
+   "id": "rt-qualified",
+   "rationale": "Qualified keys with delimiters in their values.",
+   "document": {
+    "prompt": [
+     "a"
+    ],
+    "prompt/flux": [
+     "b;c",
+     "d"
+    ],
+    "avoid/sdxl": [
+     "e=f"
+    ]
+   },
+   "since": "1.0-draft"
   }
  ]
 }

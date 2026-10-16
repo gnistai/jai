@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0-draft, per-model refinements — 2026-10-16
+
+- Qualified keys `prompt/<target>`, `style/<target>` and `avoid/<target>`
+  carry refinements for one model family, identifier or alias. Interpreters
+  append the matching values to the core values after model matching;
+  qualifiers never select a model. Other keys with a target draw the new
+  validator code `invalid-qualifier`.
+- Canonical order: `prompt`, then `prompt/<target>` keys by code point, then
+  the other keys by code point.
+- New sharp edge: `a/b=c` after a semicolon is an assignment.
+- Fixtures: 27 new cases (492 total); `interpret` fixtures gain `selected`,
+  `style` and `avoid`.
+
 ## 1.0-draft, vision and layout — 2026-10-16
 
 - The introduction now frames JAI as compression (rate–distortion, a

@@ -2602,6 +2602,543 @@
    ],
    "governing_ratio": 1.5,
    "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-merge",
+   "rationale": "The selected model's family qualifier is appended to the core.",
+   "document": {
+    "prompt": [
+     "A girl holding a red balloon"
+    ],
+    "prompt/flux": [
+     "soft rim light"
+    ],
+    "prompt/sdxl": [
+     "35mm photo"
+    ],
+    "model": [
+     "flux-schnell"
+    ]
+   },
+   "interpreted": {
+    "description": "A girl holding a red balloon\nsoft rim light"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-alias",
+   "rationale": "Family and alias both match; matching keys contribute in code point order of the key.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/flux-schnell": [
+     "a"
+    ],
+    "prompt/flux": [
+     "b"
+    ],
+    "model": [
+     "flux-schnell"
+    ]
+   },
+   "interpreted": {
+    "description": "x\nb\na"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-id",
+   "rationale": "Matching is ASCII case-insensitive.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/SDXL": [
+     "a"
+    ],
+    "model": [
+     "stability-ai/sdxl"
+    ]
+   },
+   "interpreted": {
+    "description": "x\na"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-unmatched",
+   "rationale": "Unmatched qualifiers are silently unused.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/midjourney": [
+     "a"
+    ],
+    "model": [
+     "stability-ai/sdxl"
+    ]
+   },
+   "interpreted": {
+    "description": "x",
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-no-select",
+   "rationale": "Qualifiers never select a model.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/sdxl": [
+     "a"
+    ]
+   },
+   "interpreted": {
+    "description": "x",
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "no-matching-model:model"
+   ],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-style-avoid",
+   "rationale": "style and avoid merge the same way.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "style": [
+     "watercolor"
+    ],
+    "style/flux": [
+     "loose washes"
+    ],
+    "avoid": [
+     "text"
+    ],
+    "avoid/sdxl": [
+     "watermark"
+    ],
+    "model": [
+     "flux-schnell"
+    ]
+   },
+   "interpreted": {
+    "style": [
+     "watercolor",
+     "loose washes"
+    ],
+    "avoid": [
+     "text"
+    ]
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-no-core",
+   "rationale": "A qualified prompt alone still describes the image for that model.",
+   "document": {
+    "prompt/flux": [
+     "a"
+    ],
+    "model": [
+     "flux-schnell"
+    ]
+   },
+   "interpreted": {
+    "description": "a"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-selected",
+   "rationale": "A viewer that imposes the user's chosen model merges that model's qualifiers.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/sdxl": [
+     "a"
+    ],
+    "prompt/flux": [
+     "b"
+    ],
+    "model": [
+     "flux-schnell"
+    ]
+   },
+   "interpreted": {
+    "description": "x\na",
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "selected": "stability-ai/sdxl",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-seed-ignored",
+   "rationale": "Only prompt, style and avoid merge.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "seed/flux": [
+     "7"
+    ],
+    "model": [
+     "flux-schnell"
+    ]
+   },
+   "interpreted": {
+    "seed": null,
+    "description": "x"
+   },
+   "diagnostics": [],
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-qualified-no-catalog",
+   "rationale": "Without a selected model nothing merges.",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "prompt/flux": [
+     "a"
+    ]
+   },
+   "interpreted": {
+    "description": "x"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
   }
  ]
 }
