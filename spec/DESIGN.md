@@ -235,7 +235,7 @@ validator, interpreter, renderer, viewer, authoring tool. Fixtures are
 normative; diagnostics are codes; parser codes are exact, validator codes
 advisory, renderer codes mandatory when the condition occurs. Reference
 implementation: `jai.js` + `tests/` in this repository; reference viewer: the
-extension in `jai-extensions`. Living document with a pinned date and an
+extension in `jai-tools`. Living document with a pinned date and an
 edition stamp (`1.0-draft`); keys are never removed; fixtures are append-only
 after the first tag. Everything in this repository is CC0-1.0.
 

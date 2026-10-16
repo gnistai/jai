@@ -26,7 +26,7 @@ embedded in HTML so that browsers without JAI support show ordinary pixels:
 - **Agent Skill:** [`skills/jai/SKILL.md`](skills/jai/SKILL.md), published at <https://jai.gnist.ai/SKILL.md>
 - **Design record:** [`spec/DESIGN.md`](spec/DESIGN.md) — why the spec says what it says
 - **Website and playground:** [`docs/`](docs/), served by GitHub Pages
-- **Reference viewer (browser extension):** [gnistai/jai-extensions](https://github.com/gnistai/jai-extensions)
+- **Reference viewer (browser extension):** [gnistai/jai-tools](https://github.com/gnistai/jai-tools)
 
 ## Status
 

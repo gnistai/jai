@@ -25,7 +25,7 @@ const force = args.includes('--force'), dry = args.includes('--dry-run');
 const token = process.env.REPLICATE_API_TOKEN;
 if (!token && !dry) { console.error('REPLICATE_API_TOKEN is not set'); process.exit(1); }
 
-// The reference renderer's mapping (mirrors jai-extensions/src/renderers/replicate).
+// The reference renderer's mapping (mirrors jai-tools/src/renderers/replicate).
 const MODELS = {
   'black-forest-labs/flux-schnell': { aspects: ['1:1', '16:9', '21:9', '3:2', '2:3', '4:5', '5:4', '3:4', '4:3', '9:16', '9:21'], negative: false, image: false },
   'black-forest-labs/flux-dev': { aspects: ['1:1', '16:9', '21:9', '3:2', '2:3', '4:5', '5:4', '3:4', '4:3', '9:16', '9:21'], negative: false, image: true },
