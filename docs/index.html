@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAI — Just AI Images</title>
+<meta name="description" content="JAI is an open standard for images stored as a description instead of pixels. Any AI image generator is the decoder.">
+<meta property="og:title" content="JAI — Just AI Images">
+<meta property="og:description" content="An open standard for images stored as a description instead of pixels.">
+<meta property="og:image" content="assets/images/hero-castle.webp">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c2410c'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='12' font-weight='700' fill='white' text-anchor='middle'%3Ejai%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/site.css">
+<script type="module" src="assets/js/site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="draft-banner">Edition 1.0-draft — the format is open for review. <a href="https://github.com/gnistai/jai/issues">Comment on GitHub</a>.</div>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">jai</span> JAI</a>
+    <nav class="nav" aria-label="Main">
+      <a href="./" aria-current="page">Home</a>
+      <a href="examples/">Examples</a>
+      <a href="playground/">Playground</a>
+      <a href="spec/">Specification</a>
+      <a href="SKILL.md">Agent Skill</a>
+      <a href="https://github.com/gnistai/jai">GitHub</a>
+    </nav>
+    <button class="theme-toggle" type="button">Dark</button>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Just AI Images</div>
+      <h1>Images as words.<br>Any AI is the decoder.</h1>
+      <p class="lede">JAI is an open standard for storing an image as a short description and a few optional settings instead of pixels. Hand it to any image generator and you get the picture back: different pixels, same intent.</p>
+      <div class="jai-line">
+        <code id="hero-jai" data-jai-highlight>jai:A magical castle;style=anime</code>
+        <button type="button" data-copy="#hero-jai" aria-label="Copy the example">Copy</button>
+      </div>
+      <p class="muted">That line is a complete JAI image. The picture beside it is one way to decode it.</p>
+      <div class="actions">
+        <a class="btn" href="playground/">Try the playground</a>
+        <a class="btn secondary" href="spec/">Read the specification</a>
+      </div>
+    </div>
+    <figure class="hero-figure">
+      <img src="assets/images/hero-castle.webp" width="1024" height="1024" alt="An anime-style fairytale castle with red-roofed spires above a waterfall, framed by trees under a blue sky.">
+      <figcaption>Rendered from <code>jai:A magical castle;style=anime</code> by FLUX.1 schnell. Another renderer would draw a different castle.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="what">
+  <div class="wrap">
+    <div class="eyebrow">The idea</div>
+    <h2>An extremely lossy image format</h2>
+    <p class="lede">A JPEG throws away detail you will not miss. JAI throws away all the pixels and keeps only what you would say about the picture. A generative model fills the rest back in when the image is viewed.</p>
+    <div class="grid grid-3" style="margin-top:28px">
+      <div class="card">
+        <h3>Portable</h3>
+        <p>A JAI image is not tied to a model, a service, a language or a browser. Today's renderer and next year's both understand the same sentence.</p>
+      </div>
+      <div class="card">
+        <h3>Editable</h3>
+        <p>Change the words, change the picture. Swap <code>style=anime</code> for <code>style=watercolor</code> and render again. The description is the source; pixels are a build output.</p>
+      </div>
+      <div class="card">
+        <h3>Readable by people and agents</h3>
+        <p>The simplest JAI document is an ordinary sentence. People write it by hand; AI agents write it from a request or from an existing image.</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:24px">Honest limits: decoding is not exact. It takes seconds, usually costs money, runs under the viewer's own account with a provider they choose, and two renderers never draw the same pixels. When you already have the right pixels, ship them, and let JAI travel alongside as the editable source.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="eyebrow">How it works</div>
+    <h2>One document, three spellings</h2>
+    <div class="grid grid-3" style="margin-top:20px">
+      <div class="card">
+        <span class="badge">Text</span>
+        <h3 style="margin-top:10px">For people</h3>
+        <pre><code>jai:A magical castle;style=anime</code></pre>
+        <p class="muted">Description first, then <code>;key=value</code> settings. Ordinary semicolons inside the description are fine.</p>
+      </div>
+      <div class="card">
+        <span class="badge">JSON</span>
+        <h3 style="margin-top:10px">For programs</h3>
+        <pre><code>{"jai":1,"prompt":"A magical castle","style":"anime"}</code></pre>
+        <p class="muted">Every value is a string or a list of strings. One canonical byte sequence per document, so every image has a stable identity.</p>
+      </div>
+      <div class="card">
+        <span class="badge">File</span>
+        <h3 style="margin-top:10px">For files and the web</h3>
+        <pre><code>castle.jai      image/jai
+gzip( JSON )</code></pre>
+        <p class="muted">A <code>.jai</code> file is the JSON, gzip-compressed. It can be served, linked and embedded like any other image file.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="write">
+  <div class="wrap">
+    <div class="eyebrow">Write one</div>
+    <h2>Five rules cover almost everything</h2>
+    <div class="grid grid-2" style="margin-top:20px">
+      <ol class="steps">
+        <li><strong>Describe the picture first,</strong> as you would to someone on the phone: what is in it, where, the light, the medium.</li>
+        <li><strong>Add settings after a semicolon,</strong> each as <code>name=value</code>: <code>;style=watercolor</code>, <code>;aspect=16:9</code>, <code>;avoid=text</code>.</li>
+        <li><strong>Put <code>jai:</code> in front</strong> when the place you write in does not already say it is JAI.</li>
+        <li><strong>Repeat a setting for several items:</strong> <code>;style=ink;style=loose</code>. A model preference is only a preference.</li>
+        <li><strong>If the description starts with <code>word=</code>,</strong> begin with <code>prompt=</code> instead.</li>
+      </ol>
+      <div>
+        <div class="jai-line"><code id="ex1" data-jai-highlight>A red bicycle leaning against a whitewashed wall, afternoon sun</code><button type="button" data-copy="#ex1">Copy</button></div>
+        <div class="jai-line"><code id="ex2" data-jai-highlight>jai:A lighthouse on a cliff in a storm;style=watercolor;aspect=3:2</code><button type="button" data-copy="#ex2">Copy</button></div>
+        <div class="jai-line"><code id="ex3" data-jai-highlight>jai:A wizard in a doorway; behind him, a dragon sleeps;style=ink;avoid=text</code><button type="button" data-copy="#ex3">Copy</button></div>
+        <div class="jai-line"><code id="ex4" data-jai-highlight>jai:Same street at night with neon signs;mode=transform;strength=0.6</code><button type="button" data-copy="#ex4">Copy</button></div>
+        <p class="muted">The standard settings are <code>style</code>, <code>avoid</code>, <code>aspect</code>, <code>model</code>, <code>mode</code>, <code>strength</code>, <code>seed</code>, <code>source</code>, <code>preview</code> and <code>animate</code>. <a href="spec/#parameters">What each one means</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="web">
+  <div class="wrap">
+    <div class="eyebrow">On the web</div>
+    <h2>Works in every browser today</h2>
+    <p class="lede">Put JAI next to a normal image with HTML's own format negotiation. Browsers that do not understand <code>image/jai</code> skip it and show the PNG, without downloading the <code>.jai</code>. A JAI-aware browser or extension can render the description instead, when the reader chooses.</p>
+    <div class="grid grid-2" style="margin-top:20px">
+      <div>
+        <h3>With fallback pixels (recommended)</h3>
+<pre><code>&lt;picture&gt;
+  &lt;source type="image/jai" srcset="castle.jai"&gt;
+  &lt;img src="castle.png" alt="A magical castle at dusk"&gt;
+&lt;/picture&gt;</code></pre>
+        <h3>Inline, no extra file</h3>
+<pre><code>&lt;img src="castle.png" alt="A magical castle at dusk"
+     data-jai="A magical castle at dusk;style=anime"&gt;</code></pre>
+      </div>
+      <div>
+        <h3>JAI in <code>src</code>, like a data URI</h3>
+<pre><code>&lt;img src="data:image/jai,A%20magical%20castle;style=anime"
+     alt="A magical castle" width="800" height="600"&gt;</code></pre>
+        <p class="muted">The pure form: the image is the description, with no pixels at all. It needs a JAI-aware viewer; everywhere else readers see the <code>alt</code> text, so it must be real prose.</p>
+        <p class="muted">The reader is always in control: nothing is rendered without their chosen provider and their consent, and the original image is always one click away. The <a href="https://github.com/gnistai/jai-extensions">reference browser extension</a> shows how.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="agents">
+  <div class="wrap">
+    <div class="grid grid-2">
+      <div>
+        <div class="eyebrow">For AI agents</div>
+        <h2>An installable Agent Skill</h2>
+        <p>The JAI skill teaches any coding agent or assistant to write JAI from a request, describe an existing image as JAI, translate Midjourney or Stable Diffusion prompts, shorten long descriptions, embed JAI in HTML and Markdown, and validate the result.</p>
+        <div class="actions">
+          <a class="btn" href="SKILL.md">Open SKILL.md</a>
+          <a class="btn secondary" href="https://github.com/gnistai/jai/tree/master/skills/jai">Source on GitHub</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Install</h3>
+        <p class="muted">Copy the folder into your agent's skills directory, for example for Claude Code:</p>
+<pre><code>mkdir -p ~/.claude/skills/jai
+curl -o ~/.claude/skills/jai/SKILL.md \
+  https://gnistai.github.io/jai/SKILL.md</code></pre>
+        <p class="muted">Or point any assistant at the URL and ask it to follow the instructions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="build">
+  <div class="wrap">
+    <div class="eyebrow">Build with it</div>
+    <h2>An open standard, not a product</h2>
+    <div class="grid grid-3" style="margin-top:20px">
+      <div class="card"><h3><a href="spec/">Specification</a></h3><p>Precise enough for independent parsers and renderers: a normative parsing algorithm, canonical forms, security requirements.</p></div>
+      <div class="card"><h3><a href="https://github.com/gnistai/jai/tree/master/tests">Conformance tests</a></h3><p>361 machine-readable fixtures. Two implementations that pass them agree on every input, including malformed ones.</p></div>
+      <div class="card"><h3><a href="https://github.com/gnistai/jai/blob/master/docs/assets/js/jai.js">jai.js</a></h3><p>A dependency-free reference implementation for browsers and Node. The playground runs on it.</p></div>
+    </div>
+    <p class="muted" style="margin-top:20px">Everything is public domain (CC0). No account, registry or hosted service is needed, and no inference goes through anyone's servers but the reader's chosen provider.</p>
+  </div>
+</section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>JAI — Just AI Images · Edition 1.0-draft · <a href="https://github.com/gnistai/jai/blob/master/LICENSE">CC0 1.0</a></div>
+    <div><a href="spec/">Spec</a> · <a href="examples/">Examples</a> · <a href="playground/">Playground</a> · <a href="https://github.com/gnistai/jai">GitHub</a></div>
+  </div>
+</footer>
+</body>
+</html>
