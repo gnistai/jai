@@ -9,7 +9,8 @@
     "test": "node tests/run.mjs",
     "build:spec": "bikeshed spec spec/index.bs docs/spec/index.html",
     "check:skill": "node scripts/check-skill-sync.mjs",
-    "sync:skill": "node scripts/check-skill-sync.mjs --write"
+    "sync:skill": "node scripts/check-skill-sync.mjs --write",
+    "check:examples": "node scripts/check-examples.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -1060,18 +1060,6 @@
    "since": "1.0-draft"
   },
   {
-   "id": "int-quoted-model-unaffected",
-   "rationale": "Text keys are not interpreted further.",
-   "document": {
-    "model": [
-     "\"flux\""
-    ]
-   },
-   "interpreted": {},
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
    "id": "int-model-exact",
    "rationale": "Exact id.",
    "document": {
@@ -1686,6 +1674,760 @@
      "stable diffusion xl"
     ]
    },
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-quoted-prompt-kept",
+   "rationale": "Quotes are removed only from single-valued keys (R2-5).",
+   "document": {
+    "prompt": [
+     "\"Welcome home\""
+    ]
+   },
+   "interpreted": {
+    "description": "\"Welcome home\""
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-trailing-dot-kept",
+   "rationale": "A trailing full stop is not removed from model values (R2-5).",
+   "document": {
+    "model": [
+     "flux-schnell."
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-dev",
+     "aliases": [],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "flux-schnell",
+     "aliases": [],
+     "family": "flux",
+     "image_input": false
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-dev"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-quoted-kept",
+   "rationale": "Quotes are not removed from model values, so the alias does not match exactly (R2-5).",
+   "document": {
+    "model": [
+     "\"flux-kontext\""
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-transform-degraded",
+   "rationale": "transform: no preferred image-capable model and a default without image input (R2-11).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "model": [
+     "midjourney"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "has_original": true,
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "no-matching-model:model",
+    "mode-degraded:mode"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-transform-default-image",
+   "rationale": "transform: an image-capable default is used (R2-11).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "model": [
+     "midjourney"
+    ]
+   },
+   "has_original": true,
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true,
+     "default": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-kontext-pro"
+   },
+   "diagnostics": [
+    "no-matching-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-transform-no-image-model",
+   "rationale": "transform with no image-capable model at all (R2-11).",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "mode": [
+     "transform"
+    ]
+   },
+   "has_original": true,
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "no-matching-model:model",
+    "mode-degraded:mode"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-versioned-id-exact",
+   "rationale": "A configured id containing a version matches itself exactly (R2-10).",
+   "document": {
+    "model": [
+     "acme/painter:v2"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    },
+    {
+     "id": "acme/painter:v2",
+     "aliases": [],
+     "family": null,
+     "image_input": false
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "acme/painter:v2"
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-provider-prefix",
+   "rationale": "replicate:flux has no version; it matches by family (R2-10).",
+   "document": {
+    "model": [
+     "replicate:flux"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-provider-prefix-sdxl",
+   "rationale": "replicate:sdxl matches by family, not by stripping (R2-10).",
+   "document": {
+    "model": [
+     "replicate:sdxl"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-failed-version-no-stray",
+   "rationale": "A stripped value that matches nothing leaves no version-ignored behind (R2-10).",
+   "document": {
+    "model": [
+     "foo:1",
+     "sdxl"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-at-version",
+   "rationale": "An @version suffix is removed when that makes an exact match (R2-10).",
+   "document": {
+    "model": [
+     "flux-schnell@1.2"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "version-ignored:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-family-name-only",
+   "rationale": "A catalog family name is a spelling of itself even when the families map omits it (R2-10).",
+   "document": {
+    "model": [
+     "openai/dall-e-3"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    },
+    {
+     "id": "openai/dall-e-2",
+     "aliases": [],
+     "family": "dall-e",
+     "image_input": false
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "openai/dall-e-2"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-family-earliest",
+   "rationale": "When two families occur, the earlier run wins (R2-10).",
+   "document": {
+    "model": [
+     "sdxl-flux-merge"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "stability-ai/sdxl"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-model-family-earliest-2",
+   "rationale": "When two families occur, the earlier run wins (R2-10).",
+   "document": {
+    "model": [
+     "flux-sdxl-merge"
+    ]
+   },
+   "catalog": [
+    {
+     "id": "black-forest-labs/flux-schnell",
+     "aliases": [
+      "flux-schnell"
+     ],
+     "family": "flux",
+     "image_input": false,
+     "default": true
+    },
+    {
+     "id": "black-forest-labs/flux-kontext-pro",
+     "aliases": [
+      "flux-kontext"
+     ],
+     "family": "flux",
+     "image_input": true
+    },
+    {
+     "id": "stability-ai/sdxl",
+     "aliases": [],
+     "family": "sdxl",
+     "image_input": true
+    }
+   ],
+   "families": {
+    "flux": [
+     "flux",
+     "kontext"
+    ],
+    "sdxl": [
+     "sdxl",
+     "stable diffusion xl"
+    ]
+   },
+   "interpreted": {
+    "model": "black-forest-labs/flux-schnell"
+   },
+   "diagnostics": [
+    "substituted-model:model"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-source-javascript",
+   "rationale": "A source with a scheme other than http, https or data is invalid (R2-28).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "source": [
+     "javascript:alert(1)"
+    ]
+   },
+   "interpreted": {
+    "source": null
+   },
+   "diagnostics": [
+    "invalid-image:source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-source-data-bad-base64",
+   "rationale": "A data: source the processor rejects is invalid (R2-28).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "source": [
+     "data:image/png;base64,!!!"
+    ]
+   },
+   "interpreted": {
+    "source": null
+   },
+   "diagnostics": [
+    "invalid-image:source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-source-data-no-comma",
+   "rationale": "A data: source without a comma is invalid (R2-28).",
+   "document": {
+    "mode": [
+     "transform"
+    ],
+    "source": [
+     "data:image/png"
+    ]
+   },
+   "interpreted": {
+    "source": null
+   },
+   "diagnostics": [
+    "invalid-image:source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-source-invalid-generate",
+   "rationale": "An invalid source is absent, so ignored-value is not added (R2-28).",
+   "document": {
+    "source": [
+     "data:image/svg+xml,<svg/>"
+    ]
+   },
+   "interpreted": {
+    "source": null
+   },
+   "diagnostics": [
+    "invalid-image:source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "int-seed-arabic-indic",
+   "rationale": "Non-ASCII digits are invalid (S-35).",
+   "document": {
+    "seed": [
+     "١٢٣"
+    ]
+   },
+   "interpreted": {
+    "seed": null
+   },
+   "diagnostics": [
+    "invalid-value:seed"
+   ],
    "since": "1.0-draft"
   }
  ]

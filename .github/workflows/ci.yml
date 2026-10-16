@@ -11,5 +11,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm test
-      - run: npm run check:skill
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fixtures are generated from their authoring source
+        run: python3 -I tests/src/fixtures.py && git diff --exit-code tests/
+      - name: Conformance suite against jai.js
+        run: npm test
+      - name: Spec examples agree with jai.js
+        run: npm run check:examples
+      - name: Agent Skill copy is in sync
+        run: npm run check:skill
+      - name: Spec builds and the committed build is current
+        run: |
+          pipx install bikeshed
+          bikeshed update
+          bikeshed spec spec/index.bs /tmp/index.html
+          ! grep -n '^| ' /tmp/index.html
+          diff <(grep -v -E 'Date|dfn-panel|generator' /tmp/index.html) <(grep -v -E 'Date|dfn-panel|generator' docs/spec/index.html) > /dev/null || echo "::warning::docs/spec/index.html differs from a fresh build"

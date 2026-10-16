@@ -241,22 +241,37 @@ export function serialize(doc, { bare = false } = {}) {
 /** Number -> string per ECMAScript Number::toString (RFC 8785 §3.2.2.3). */
 export function numberToString(n) { return String(n); }
 
+/** True when arrays/objects nest deeper than `max` anywhere (the top-level object has depth 1). */
+function jsonDepthExceeds(s, max) {
+  let d = 0, inStr = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (inStr) { if (c === 92) i++; else if (c === 34) inStr = false; continue; }
+    if (c === 34) inStr = true;
+    else if (c === 123 || c === 91) { if (++d > max) return true; }
+    else if (c === 125 || c === 93) d--;
+  }
+  return false;
+}
+
 /**
  * JSON reading algorithm (spec §Reading). `text` is a string or an already
- * parsed object. {inContext} says whether the context establishes JAI.
+ * parsed object. {inContext} says whether the input is in a JAI context.
  */
 export function readJSON(text, { inContext = true } = {}) {
   const diagnostics = [];
   const doc = createDocument();
+  const fail = () => { diagnostics.push(diag('invalid-json')); return { document: createDocument(), diagnostics, isJAI: false }; };
   let obj;
   if (typeof text === 'string') {
-    try { obj = JSON.parse(text); } catch { diagnostics.push(diag('invalid-json')); return { document: doc, diagnostics, isJAI: false }; }
+    if (jsonDepthExceeds(text, 32)) return fail();
+    try {
+      // A number that rounds to an infinite binary64 value makes the text invalid.
+      obj = JSON.parse(text, (k, v) => { if (typeof v === 'number' && !Number.isFinite(v)) throw new RangeError('overflow'); return v; });
+    } catch { return fail(); }
   } else obj = text;
-  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
-    diagnostics.push(diag('invalid-json')); return { document: doc, diagnostics, isJAI: false };
-  }
-  // JSON.parse already applied "exact repeat replaces in place"; we cannot see repeats.
-  let isJAI = true;
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return fail();
+  // JSON.parse already applied "an exact repeat replaces in place"; readers do not diagnose it.
   if (!Object.prototype.hasOwnProperty.call(obj, 'jai')) {
     if (!inContext) return { document: doc, diagnostics, isJAI: false };
     diagnostics.push(diag('missing-marker'));
@@ -266,31 +281,29 @@ export function readJSON(text, { inContext = true } = {}) {
       if (m !== 1) diagnostics.push(diag('unsupported-version'));
     } else diagnostics.push(diag('invalid-marker'));
   }
+  const seen = new Set();
   for (const name of Object.keys(obj)) {
     if (name === 'jai') continue;
     const key = asciiLower(name);
     if (!isKey(key)) { diagnostics.push(diag('invalid-key', name)); continue; }
     if (key === 'jai') { diagnostics.push(diag('duplicate-member', 'jai')); continue; }
+    if (seen.has(key)) diagnostics.push(diag('duplicate-key', key));
+    seen.add(key);
     const raw = obj[name];
     const items = Array.isArray(raw) ? raw : [raw];
-    const existed = doc.has(key);
-    let added = false;
     for (const it of items) {
       let cand;
       if (typeof it === 'string') cand = it;
-      else if (typeof it === 'number') {
-        if (!Number.isFinite(it)) { diagnostics.push(diag('invalid-json')); continue; }
-        cand = numberToString(it); diagnostics.push(diag('number-value', key));
-      } else if (typeof it === 'boolean') { cand = it ? 'true' : 'false'; diagnostics.push(diag('number-value', key)); }
+      else if (typeof it === 'number') { cand = numberToString(it); diagnostics.push(diag('number-value', key)); }
+      else if (typeof it === 'boolean') { cand = it ? 'true' : 'false'; diagnostics.push(diag('number-value', key)); }
       else if (it === null) { diagnostics.push(diag('empty-value', key)); continue; }
       else { diagnostics.push(diag('unsupported-member', key)); continue; }
       const v = normalizeValue(cand);
       if (v === null) { diagnostics.push(diag('empty-value', key)); continue; }
-      addValue(doc, key, v); added = true;
+      addValue(doc, key, v);
     }
-    if (existed && added) diagnostics.push(diag('duplicate-key', key));
   }
-  return { document: doc, diagnostics, isJAI };
+  return { document: doc, diagnostics, isJAI: true };
 }
 
 /** Canonical JSON form (spec §Canonical JSON). */
@@ -342,7 +355,10 @@ export function crc32(bytes) {
 
 class InflateError extends Error {}
 
-/** Inflate a raw deflate stream. Returns {output, consumed}. Throws InflateError. */
+/**
+ * Inflate a raw deflate stream (RFC 1951). Returns {output, consumed}. Throws
+ * InflateError on exactly the streams zlib's inflate rejects (spec §File form).
+ */
 export function inflateRaw(input, start = 0, maxOutput = 16 * 1024 * 1024) {
   let pos = start, bitBuf = 0, bitCnt = 0;
   let out = new Uint8Array(Math.min(maxOutput, Math.max(1024, input.length * 4)));
@@ -363,10 +379,17 @@ export function inflateRaw(input, start = 0, maxOutput = 16 * 1024 * 1024) {
     bitBuf >>>= n; bitCnt -= n;
     return v;
   };
-  const buildTree = lengths => {
+  // kind: 'codes' (code-length code), 'lens' (literal/length), 'dists' (distance); checks as zlib's inflate_table.
+  const buildTree = (lengths, kind) => {
     const count = new Uint16Array(16), symbol = new Uint16Array(lengths.length);
-    for (const l of lengths) count[l]++;
+    let max = 0;
+    for (const l of lengths) { count[l]++; if (l > max) max = l; }
     count[0] = 0;
+    if (max > 0 && kind !== 'fixed') { // zlib builds the fixed tables without these checks (the fixed distance code is incomplete)
+      let left = 1;
+      for (let len = 1; len < 16; len++) { left <<= 1; left -= count[len]; if (left < 0) throw new InflateError('over-subscribed'); }
+      if (left > 0 && (kind === 'codes' || max !== 1)) throw new InflateError('incomplete');
+    }
     const offs = new Uint16Array(16);
     for (let i = 1; i < 16; i++) offs[i] = offs[i - 1] + count[i - 1];
     for (let s = 0; s < lengths.length; s++) if (lengths[s]) symbol[offs[lengths[s]]++] = s;
@@ -391,7 +414,7 @@ export function inflateRaw(input, start = 0, maxOutput = 16 * 1024 * 1024) {
     if (!fixedL) {
       const l = new Uint8Array(288);
       l.fill(8, 0, 144); l.fill(9, 144, 256); l.fill(7, 256, 280); l.fill(8, 280, 288);
-      fixedL = buildTree(l); fixedD = buildTree(new Uint8Array(30).fill(5));
+      fixedL = buildTree(l, 'fixed'); fixedD = buildTree(new Uint8Array(30).fill(5), 'fixed');
     }
     return [fixedL, fixedD];
   };
@@ -413,6 +436,7 @@ export function inflateRaw(input, start = 0, maxOutput = 16 * 1024 * 1024) {
       }
     }
   };
+  const ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
   let final;
   do {
     final = bits(1);
@@ -429,24 +453,26 @@ export function inflateRaw(input, start = 0, maxOutput = 16 * 1024 * 1024) {
       const [lt, dt] = fixedTrees(); inflateBlock(lt, dt);
     } else if (type === 2) {
       const hlit = bits(5) + 257, hdist = bits(5) + 1, hclen = bits(4) + 4;
-      const ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+      if (hlit > 286 || hdist > 30) throw new InflateError('too-many-codes');
       const cl = new Uint8Array(19);
       for (let k = 0; k < hclen; k++) cl[ORDER[k]] = bits(3);
-      const ct = buildTree(cl);
+      const ct = buildTree(cl, 'codes');
       const lens = new Uint8Array(hlit + hdist);
       for (let n = 0; n < hlit + hdist;) {
         const sym = decodeSym(ct);
-        if (sym < 16) lens[n++] = sym;
-        else if (sym === 16) { if (n === 0) throw new InflateError('bad-repeat'); const prev = lens[n - 1]; let r = 3 + bits(2); while (r--) lens[n++] = prev; }
-        else if (sym === 17) { let r = 3 + bits(3); while (r--) lens[n++] = 0; }
-        else { let r = 11 + bits(7); while (r--) lens[n++] = 0; }
-        if (n > hlit + hdist) throw new InflateError('bad-lengths');
+        if (sym < 16) { lens[n++] = sym; continue; }
+        let r, val = 0;
+        if (sym === 16) { if (n === 0) throw new InflateError('bad-repeat'); val = lens[n - 1]; r = 3 + bits(2); }
+        else if (sym === 17) r = 3 + bits(3);
+        else r = 11 + bits(7);
+        if (n + r > hlit + hdist) throw new InflateError('bad-lengths');
+        while (r--) lens[n++] = val;
       }
-      inflateBlock(buildTree(lens.subarray(0, hlit)), buildTree(lens.subarray(hlit)));
+      if (lens[256] === 0) throw new InflateError('missing-end-of-block');
+      inflateBlock(buildTree(lens.subarray(0, hlit), 'lens'), buildTree(lens.subarray(hlit), 'dists'));
     } else throw new InflateError('bad-block-type');
   } while (!final);
-  // bytes already pulled into the bit buffer but unused belong to the stream's end: give back whole bytes
-  pos -= bitCnt >> 3;
+  pos -= bitCnt >> 3; // give back whole bytes pulled into the bit buffer but unused
   return { output: out.subarray(0, outLen), consumed: pos - start };
 }
 
@@ -463,7 +489,12 @@ export function gunzipOne(bytes, maxOutput = 16 * 1024 * 1024) {
   if (flg & 0x04) { if (p + 2 > bytes.length) throw new InflateError('truncated'); const xlen = bytes[p] | (bytes[p + 1] << 8); p += 2 + xlen; }
   if (flg & 0x08) { while (p < bytes.length && bytes[p] !== 0) p++; p++; }
   if (flg & 0x10) { while (p < bytes.length && bytes[p] !== 0) p++; p++; }
-  if (flg & 0x02) p += 2;
+  if (flg & 0x02) {
+    if (p + 2 > bytes.length) throw new InflateError('truncated');
+    const hcrc = bytes[p] | (bytes[p + 1] << 8);
+    if ((crc32(bytes.subarray(0, p)) & 0xffff) !== hcrc) throw new InflateError('bad-header-crc');
+    p += 2;
+  }
   if (p > bytes.length) throw new InflateError('truncated');
   const { output, consumed } = inflateRaw(bytes, p, maxOutput);
   p += consumed;
@@ -545,9 +576,12 @@ export function decode(bytes, { inContext = true, maxInflate = 16 * 1024 * 1024,
     catch (e) { diagnostics.push(diag('malformed-container', null, { reason: e.message })); return empty(null); }
   }
   if (bytes.length > maxText && !fromGzip) { diagnostics.push(diag('undecodable', null, { reason: 'bound' })); return empty(null); }
-  let text;
-  try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
-  catch { diagnostics.push(diag(fromGzip ? 'malformed-container' : 'undecodable', null, fromGzip ? { reason: 'not-utf8' } : undefined)); return empty(null); }
+  // Byte input never contains 00 (binary such as headerless UTF-16 must not become a prompt).
+  let text = null;
+  if (!bytes.includes(0)) {
+    try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { text = null; }
+  }
+  if (text === null) { diagnostics.push(diag(fromGzip ? 'malformed-container' : 'undecodable', null, fromGzip ? { reason: 'not-utf8' } : undefined)); return empty(null); }
   let i = 0;
   while (text.charCodeAt(i) === 0xfeff) i++;
   text = text.slice(i);
@@ -596,29 +630,34 @@ function forgivingBase64(s) {
   return out.subarray(0, o);
 }
 
+/** Essence of a MIME type as the Fetch Standard's MIME type parser computes it; text/plain on failure. */
+function fetchMimeEssence(mimeType) {
+  const t = mimeType.replace(/^[\t\n\r ]+|[\t\n\r ]+$/g, '');
+  const m = /^([!#$%&'*+.^_`|~0-9A-Za-z-]+)\/([!#$%&'*+.^_`|~0-9A-Za-z-]+)[\t\n\r ]*(?:;|$)/.exec(t);
+  return m ? asciiLower(m[1] + '/' + m[2]) : 'text/plain';
+}
+
 /**
- * Minimal data: URL processor (Fetch Standard). Input is the attribute/URL
- * string; applies the URL parser's stripping of leading/trailing C0+space and
- * of tab/newline, drops the fragment. Returns {mime, bytes} or null.
+ * data: URL processor (Fetch Standard), applied to the URL as the URL parser
+ * serialises it. Returns {mime, essence, bytes} or null when the processor fails.
  */
 export function parseDataURL(url) {
-  let s = String(url).replace(/^[\u0000- ]+|[\u0000- ]+$/g, '').replace(/[\t\n\r]/g, '');
-  if (!/^data:/i.test(s)) return null;
-  s = s.slice(5);
+  let href;
+  try { href = new URL(String(url)).href; } catch { return null; }
+  if (!/^data:/i.test(href)) return null;
+  let s = href.slice(5);
   const hash = s.indexOf('#'); if (hash >= 0) s = s.slice(0, hash);
   const comma = s.indexOf(','); if (comma < 0) return null;
-  let mimeType = s.slice(0, comma).replace(/^[\t\n\r ]+|[\t\n\r ]+$/g, '');
-  const body = s.slice(comma + 1);
-  let bytes = percentDecode(body);
-  const m = /;[\t\n\r ]*base64$/i.exec(mimeType);
+  let mimeType = s.slice(0, comma).replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, '');
+  let bytes = percentDecode(s.slice(comma + 1));
+  const m = /;[ ]*base64$/i.exec(mimeType);
   if (m) {
     const b = forgivingBase64(new TextDecoder().decode(bytes));
     if (b === null) return null;
     bytes = b; mimeType = mimeType.slice(0, m.index);
   }
   if (mimeType.startsWith(';')) mimeType = 'text/plain' + mimeType;
-  const essence = asciiLower(mimeType.split(';')[0].trim());
-  return { mime: mimeType, essence, bytes };
+  return { mime: mimeType, essence: fetchMimeEssence(mimeType), bytes };
 }
 
 /** Decode a data:image/jai URL. Returns null when it is not one. */
@@ -635,7 +674,7 @@ export function encodeURLBody(text) {
   cps.forEach((ch, i) => {
     const c = ch.codePointAt(0);
     const last = i === cps.length - 1;
-    if (c < 0x21 || c === 0x7f || c === 0x25 || c === 0x23 || (last && c === 0x2c) || (i === 0 && c === 0x2f)) {
+    if (c < 0x21 || c === 0x7f || c === 0x25 || c === 0x23 || c === 0x22 || c === 0x27 || c === 0x3c || c === 0x3e || (last && c === 0x2c) || (i === 0 && c === 0x2f)) {
       out += '%' + c.toString(16).toUpperCase().padStart(2, '0');
     } else out += ch; // everything else, including non-ASCII, stays literal
   });
@@ -646,23 +685,23 @@ export function encodeURLBody(text) {
 export function toDataURL(doc) { return 'data:image/jai,' + encodeURLBody(serialize(doc, { bare: true })); }
 
 /**
- * Query forms. kind 'query': the whole query is the document (percent-decoded
- * once, + literal). kind 'param': the `jai` parameter in form encoding.
- * Returns {document, diagnostics} or null when nothing is found.
+ * Query forms (spec §Query forms). kind 'query': the whole query is the
+ * document (percent-decoded once, + literal). kind 'param': the first `jai`
+ * pair in form encoding. Returns {document, diagnostics} or null when the URL
+ * carries no document (no query, or no jai parameter).
  */
 export function fromQuery(url, kind = 'query') {
-  let s = String(url);
-  const q = s.indexOf('?'); if (q >= 0) s = s.slice(q + 1); else if (!/^[^#]*=/.test(s)) s = s;
-  const hash = s.indexOf('#'); if (hash >= 0) s = s.slice(0, hash);
+  let href;
+  try { href = new URL(String(url)).href; } catch { return null; }
+  const hash = href.indexOf('#'); if (hash >= 0) href = href.slice(0, hash);
+  const q = href.indexOf('?');
+  if (q < 0) return null; // the query is null
+  const query = href.slice(q + 1);
   if (kind === 'param') {
-    const params = new URLSearchParams(s);
-    const v = params.get('jai');
-    if (v === null) return null;
-    return parse(v);
+    const v = new URLSearchParams(query).get('jai');
+    return v === null ? null : parse(v);
   }
-  if (s === '') return null;
-  const text = new TextDecoder().decode(percentDecode(s.replace(/[\t\n\r]/g, '')));
-  return parse(text);
+  return parse(new TextDecoder().decode(percentDecode(query)));
 }
 
 /* ------------------------------------------------------------------ *
@@ -674,18 +713,58 @@ function mimeEssence(type) {
   return asciiLower(type.split(';')[0].replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, ''));
 }
 
-/** First candidate URL of a srcset attribute, or null (HTML srcset parsing, simplified: URL then descriptors). */
+/** HTML's "parse a srcset attribute": the candidates that survive, in order. */
+export function srcsetCandidates(input) {
+  const s = String(input ?? '');
+  const isWS = c => c === ' ' || c === '\t' || c === '\n' || c === '\f' || c === '\r';
+  const out = [];
+  let pos = 0;
+  for (;;) {
+    while (pos < s.length && (isWS(s[pos]) || s[pos] === ',')) pos++;
+    if (pos >= s.length) return out;
+    const start = pos;
+    while (pos < s.length && !isWS(s[pos])) pos++;
+    let url = s.slice(start, pos);
+    const descriptors = [];
+    if (url.endsWith(',')) url = url.replace(/,+$/, '');
+    else {
+      while (pos < s.length && isWS(s[pos])) pos++;
+      let current = '', state = 'in';
+      for (;;) {
+        const c = pos < s.length ? s[pos] : undefined;
+        if (state === 'in') {
+          if (c !== undefined && isWS(c)) { if (current) { descriptors.push(current); current = ''; } state = 'after'; }
+          else if (c === ',') { pos++; if (current) descriptors.push(current); break; }
+          else if (c === '(') { current += c; state = 'paren'; }
+          else if (c === undefined) { if (current) descriptors.push(current); break; }
+          else current += c;
+        } else if (state === 'paren') {
+          if (c === ')') { current += c; state = 'in'; }
+          else if (c === undefined) { descriptors.push(current); break; }
+          else current += c;
+        } else if (c === undefined) break;
+        else if (!isWS(c)) { state = 'in'; continue; }
+        pos++;
+      }
+    }
+    let error = false, w = null, d = null, h = null;
+    for (const desc of descriptors) {
+      const last = desc[desc.length - 1], val = desc.slice(0, -1);
+      if (last === 'w' && /^[0-9]+$/.test(val)) { if (w !== null || d !== null) error = true; else { w = +val; if (w === 0) error = true; } }
+      else if (last === 'x' && /^-?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/.test(val)) { if (w !== null || d !== null || h !== null) error = true; else { d = parseFloat(val); if (d < 0) error = true; } }
+      else if (last === 'h' && /^[0-9]+$/.test(val)) { if (h !== null || d !== null) error = true; else { h = +val; if (h === 0) error = true; } }
+      else error = true;
+    }
+    if (h !== null && w === null) error = true;
+    if (!error && url) out.push({ url, width: w, density: d, height: h });
+  }
+}
+
+/** First candidate URL of a srcset attribute under HTML's parsing, or null. */
 export function firstSrcsetURL(srcset) {
   if (srcset == null) return null;
-  let s = String(srcset);
-  let i = 0;
-  while (i < s.length && /[\t\n\f\r ,]/.test(s[i])) i++;
-  if (i >= s.length) return null;
-  let j = i;
-  while (j < s.length && !/[\t\n\f\r ]/.test(s[j])) j++;
-  let url = s.slice(i, j);
-  if (j >= s.length) url = url.replace(/,+$/, '');
-  return url || null;
+  const c = srcsetCandidates(srcset);
+  return c.length ? c[0].url : null;
 }
 
 /**
@@ -732,16 +811,17 @@ export function discover(img, { baseURL } = {}) {
   return null;
 }
 
-/** Discover every carried document in a root (Document or Element), in tree order. */
+/** Discover every carried document under a root (Document, Element or ShadowRoot), in tree order; open shadow trees are visited at their host. */
 export function discoverAll(root, opts) {
   const out = [];
-  const walk = node => {
-    const imgs = node.querySelectorAll ? node.querySelectorAll('img') : [];
-    for (const img of imgs) { const d = discover(img, opts); if (d) out.push({ element: img, ...d }); }
-    const all = node.querySelectorAll ? node.querySelectorAll('*') : [];
-    for (const el of all) if (el.shadowRoot) walk(el.shadowRoot);
+  const visit = node => {
+    for (const el of Array.from(node.children || [])) {
+      if (el.localName === 'img') { const d = discover(el, opts); if (d) out.push({ element: el, ...d }); }
+      if (el.shadowRoot) visit(el.shadowRoot);
+      visit(el);
+    }
   };
-  walk(root);
+  visit(root);
   return out;
 }
 
@@ -755,11 +835,10 @@ const ASPECT_NUM_RE = new RegExp(`^${NUM_SRC}$`);
 const STRENGTH_RE = new RegExp(`^(${NUM_SRC})[${WS_CLASS}]*(%)?$`);
 const SEED_RE = /^[0-9]{1,20}$/;
 
-function lexical(key, v, diagnostics) {
-  if (v.length >= 2 && (v[0] === '"' || v[0] === "'") && v[v.length - 1] === v[0]) {
-    diagnostics.push(diag('quoted-value', key)); v = trim(v.slice(1, -1));
-  }
-  if (key !== 'prompt' && key !== 'style' && key !== 'avoid' && v.endsWith('.')) v = v.slice(0, -1);
+function lexical(key, v) {
+  // Single-valued keys only: one surrounding pair of ASCII quotes, then one trailing full stop.
+  if (v.length >= 2 && (v[0] === '"' || v[0] === "'") && v[v.length - 1] === v[0]) v = trim(v.slice(1, -1));
+  if (v.endsWith('.')) v = v.slice(0, -1);
   return v;
 }
 
@@ -789,7 +868,8 @@ export function parseAspect(v) {
 
 /**
  * Interpretation (spec §Interpretation) plus model matching.
- * catalog: [{id, aliases: [], family, imageInput: bool, default: bool}], families: {name: [spellings]}.
+ * catalog: [{id, aliases: [], family, imageInput|image_input: bool, default: bool}], families: {name: [spellings]}.
+ * hasOriginal: whether the carrier offers an original image.
  */
 export function interpret(doc, { catalog = [], families = {}, hasOriginal = false } = {}) {
   const diagnostics = [];
@@ -798,13 +878,13 @@ export function interpret(doc, { catalog = [], families = {}, hasOriginal = fals
     const vals = doc.get(key);
     if (!vals) return null;
     if (vals.length > 1) diagnostics.push(diag('repeated-single', key));
-    return lexical(key, vals[vals.length - 1], diagnostics);
+    return lexical(key, vals[vals.length - 1]);
   };
   const prompts = doc.get('prompt');
   if (prompts) { out.prompt = prompts.slice(); out.description = prompts.join('\n'); }
+  // prompt, style, avoid and model are used exactly as written.
   out.style = (doc.get('style') || []).slice();
   out.avoid = (doc.get('avoid') || []).slice();
-  for (const a of out.avoid) if (/^(no|not|without|never)[\t\n\f\r  ]/i.test(a)) diagnostics.push(diag('negated-avoid', 'avoid'));
   out.model = (doc.get('model') || []).slice();
 
   let v;
@@ -823,16 +903,21 @@ export function interpret(doc, { catalog = [], families = {}, hasOriginal = fals
       if (n < 0 || n > 1) { n = Math.min(1, Math.max(0, n)); diagnostics.push(diag('adjusted-value', 'strength')); }
       out.strength = n;
     } else diagnostics.push(diag('invalid-value', 'strength'));
-    if (out.mode !== 'transform') diagnostics.push(diag('strength-without-transform', 'strength'));
   }
   if ((v = single('seed')) !== null) {
     if (SEED_RE.test(v)) out.seed = v; else diagnostics.push(diag('invalid-value', 'seed'));
   }
   if ((v = single('source')) !== null) {
-    const d = /^data:/i.test(v) ? parseDataURL(v) : null;
-    if (d) { if (RASTER_TYPES.has(d.essence)) out.source = v; else diagnostics.push(diag('invalid-image', 'source')); }
-    else out.source = v;
-    if (out.mode !== 'transform') { diagnostics.push(diag('ignored-value', 'source')); }
+    // Checked without fetching (spec §source).
+    let valid;
+    if (/^data:/i.test(v)) { const d = parseDataURL(v); valid = !!d && RASTER_TYPES.has(d.essence); }
+    else if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(v)) valid = /^https?:/i.test(v);
+    else valid = true; // a relative URL
+    if (!valid) diagnostics.push(diag('invalid-image', 'source'));
+    else {
+      out.source = v;
+      if (out.mode !== 'transform') diagnostics.push(diag('ignored-value', 'source'));
+    }
   }
   if ((v = single('preview')) !== null) {
     const d = /^data:/i.test(v) ? parseDataURL(v) : null;
@@ -845,49 +930,68 @@ export function interpret(doc, { catalog = [], families = {}, hasOriginal = fals
     else diagnostics.push(diag('invalid-value', 'animate'));
   }
   if (catalog.length) {
-    const m = matchModel(out.model, { catalog, families, needsImage: out.mode === 'transform' && (hasOriginal || out.source !== null) });
+    const needsImage = out.mode === 'transform' && (hasOriginal || out.source !== null);
+    const m = matchModel(out.model, { catalog, families, needsImage });
     out.matched = m.model ? m.model.id : null;
     diagnostics.push(...m.diagnostics);
+    if (needsImage && m.model && !(m.model.imageInput || m.model.image_input)) diagnostics.push(diag('mode-degraded', 'mode'));
   }
   return { interpreted: out, diagnostics };
 }
 
 const wordsOf = s => (asciiLower(s).match(/[a-z0-9]+/g) || []);
 
-/** Model matching (spec §Model matching). */
+/**
+ * Model matching (spec §Model matching): a selector, never a locator. Only
+ * catalog models (the user's configuration) can ever be returned.
+ */
 export function matchModel(values, { catalog = [], families = {}, needsImage = false, pinsVersions = false } = {}) {
   const diagnostics = [];
-  const usable = needsImage ? catalog.filter(m => m.imageInput || m.image_input) : catalog;
-  const familyOf = name => usable.find(m => m.family === name && m.default) || usable.find(m => m.family === name) || null;
-  for (const raw of values) {
-    let v = raw;
-    if (!pinsVersions) {
-      const stripped = v.replace(/[:@][^:@/]*$/, '');
-      if (stripped !== v && stripped.length) { v = stripped; diagnostics.push(diag('version-ignored', 'model')); }
-    }
+  const imageOk = m => !!(m.imageInput || m.image_input);
+  const eligible = needsImage ? catalog.filter(imageOk) : catalog.slice();
+  const userDefault = catalog.find(m => m.default) || catalog[0] || null;
+  const exact = v => {
     const lv = asciiLower(v);
-    const exact = usable.find(m => asciiLower(m.id) === lv || (m.aliases || []).some(a => asciiLower(a) === lv));
-    if (exact) return { model: exact, diagnostics };
-    const last = v.split('/').pop();
-    for (const candidate of [last, v]) {
+    return eligible.find(m => asciiLower(m.id) === lv || (m.aliases || []).some(a => asciiLower(a) === lv)) || null;
+  };
+  // Known families: the renderer's list in order, then catalog families not listed, in catalog order.
+  const known = Object.entries(families).map(([name, sp]) => ({ name, spellings: [name, ...(sp || [])] }));
+  for (const m of catalog) if (m.family && !known.some(f => f.name === m.family)) known.push({ name: m.family, spellings: [m.family] });
+  const familyDefault = name => (userDefault && eligible.includes(userDefault) && userDefault.family === name ? userDefault : eligible.find(m => m.family === name) || null);
+  for (const v of values) {
+    let m = exact(v);
+    if (m) return { model: m, diagnostics };
+    const slash = v.lastIndexOf('/');
+    const seg = v.slice(slash + 1);
+    if (!pinsVersions) {
+      let cut = -1;
+      for (let i = seg.length - 1; i >= 1; i--) if (seg[i] === ':' || seg[i] === '@') { cut = i; break; }
+      if (cut >= 1) {
+        m = exact(v.slice(0, slash + 1 + cut));
+        if (m) { diagnostics.push(diag('version-ignored', 'model')); return { model: m, diagnostics }; }
+      }
+    }
+    for (const candidate of [seg, v]) {
       const words = wordsOf(candidate);
-      for (const [fam, spellings] of Object.entries(families)) {
-        for (const sp of [fam, ...(spellings || [])]) {
+      let best = null;
+      known.forEach((f, order) => {
+        if (!familyDefault(f.name)) return;
+        for (const sp of f.spellings) {
           const sw = wordsOf(sp);
           if (!sw.length) continue;
           for (let i = 0; i + sw.length <= words.length; i++) {
             if (sw.every((w, k) => words[i + k] === w)) {
-              const m = familyOf(fam);
-              if (m) { diagnostics.push(diag('substituted-model', 'model', { family: fam })); return { model: m, diagnostics }; }
+              if (!best || i < best.start || (i === best.start && (sw.length > best.len || (sw.length === best.len && order < best.order)))) best = { name: f.name, start: i, len: sw.length, order };
+              break;
             }
           }
         }
-      }
+      });
+      if (best) { diagnostics.push(diag('substituted-model', 'model', { family: best.name })); return { model: familyDefault(best.name), diagnostics }; }
     }
   }
   diagnostics.push(diag('no-matching-model', 'model'));
-  const def = usable.find(m => m.default) || usable[0] || null;
-  return { model: def, diagnostics };
+  return { model: userDefault, diagnostics };
 }
 
 /* ------------------------------------------------------------------ *
@@ -902,31 +1006,32 @@ const KNOWN_FOREIGN = /(^|\s)--(ar|no|seed|niji|style|v|q|chaos|stylize)\b|^Nega
 export function validate(doc, info) {
   const d = [];
   const stdset = new Set(STANDARD_KEYS);
+  const utf8 = s => new TextEncoder().encode(s).length;
   for (const [k, vals] of doc) {
     if (!k.includes('.') && !stdset.has(k)) d.push(diag('unknown-key', k));
     for (const v of vals) {
       if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f-\u009f]/.test(v)) d.push(diag('control-character', k));
       if (/[​-‍⁠]|.﻿/s.test(v)) d.push(diag('invisible-char', k));
       if (/[‪-‮⁦-⁩]/.test(v)) d.push(diag('bidi-control', k));
-      if (v.length > 8192) d.push(diag('large-payload', k));
+      if (utf8(v) > 8192) d.push(diag('large-payload', k));
       if (/\n[\t\n\f\r ]*[A-Za-z0-9][A-Za-z0-9_.-]*[\t\n\f\r ]*=/.test(v)) d.push(diag('newline-assignment', k));
       if (k === 'prompt' && /^jai:/i.test(v)) d.push(diag('prefix-in-prompt', k));
       if (k === 'prompt' && KNOWN_FOREIGN.test(v)) d.push(diag('foreign-syntax', k));
       if (CONFUSABLE_DELIM.test(v)) d.push(diag('confusable-delimiter', k));
       else if (CONFUSABLE_EQ.test(v)) d.push(diag('confusable-equals', k));
       if (!['source', 'preview', 'model'].includes(k) && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /%[0-9A-Fa-f]{2}/.test(v) && !/%25/i.test(v)) d.push(diag('percent-encoded-text', k));
+      if (k === 'avoid' && /^(no|not|without|never)[\t\n\f\r  ]/i.test(v)) d.push(diag('negated-avoid', k));
+    }
+    if (SINGLE_VALUED.has(k)) {
+      const last = vals[vals.length - 1];
+      if (last.length >= 2 && (last[0] === '"' || last[0] === "'") && last[last.length - 1] === last[0]) d.push(diag('quoted-value', k));
     }
   }
-  if (!doc.has('prompt')) {
-    const mode = doc.get('mode');
-    const m = mode ? asciiLower(mode[mode.length - 1]) : 'generate';
-    if (m === 'generate' && !doc.has('source')) d.push(diag('no-prompt'));
-  }
-  for (const k of ['model', 'source', 'preview']) {
-    const vals = doc.get(k);
-    if (!vals) continue;
-    if (k === 'model') for (const v of vals) if (/^[a-z][a-z0-9+.-]*:\/\/|^\.?\.?\//i.test(v)) d.push(diag('model-looks-like-locator', k));
-  }
+  if (utf8(canonicalJSON(doc)) > 65536) d.push(diag('large-payload'));
+  const interp = interpret(doc);
+  if (!doc.has('prompt') && interp.interpreted.mode === 'generate') d.push(diag('no-prompt'));
+  if (doc.has('strength') && interp.interpreted.mode !== 'transform') d.push(diag('strength-without-transform', 'strength'));
+  for (const v of doc.get('model') || []) if (/^[a-z][a-z0-9+.-]*:\/\/|^\.?\.?\//i.test(v)) d.push(diag('model-looks-like-locator', 'model'));
   if (info && info.segments) {
     const segs = info.segments;
     if (segs.length && segs[0].kind === 'assignment' && !stdset.has(segs[0].key) && !segs[0].key.includes('.') && !doc.has('prompt')) d.push(diag('first-segment-assignment', segs[0].key));
@@ -942,22 +1047,62 @@ export function validate(doc, info) {
       if (s.kind === 'assignment' && ['charset', 'base64', 'name', 'filename'].includes(s.key) && prev.kind === 'assignment' && (prev.key === 'source' || prev.key === 'preview')) d.push(diag('split-data-uri', prev.key));
     }
   }
-  const interp = interpret(doc);
-  for (const x of interp.diagnostics) if (['repeated-single', 'invalid-value', 'negated-avoid', 'strength-without-transform', 'quoted-value'].includes(x.code)) d.push(x);
+  for (const x of interp.diagnostics) if (x.code === 'repeated-single' || x.code === 'invalid-value') d.push(x);
   const aspect = doc.get('aspect');
   if (aspect) { const v = aspect[aspect.length - 1]; const a = parseAspect(v); if (a && a.kind === 'ratio' && !/^[0-9]+:[0-9]+$/.test(v) && v.toLowerCase() !== 'square') d.push(diag('nonstandard-value', 'aspect', { suggestion: `${a.width}:${a.height}` })); }
   return d;
 }
 
-/** Advisories about how a document was delivered: decode() result and/or discover() result. */
-export function validateDelivery({ decoded, carrier, element } = {}) {
+/** Checks on a data:image/jai URL written in a carrier (validator codes). */
+function dataURLAdvisories(url) {
   const d = [];
-  if (decoded && (decoded.form === 'json' || decoded.form === 'text')) d.push(diag('non-canonical-encoding'));
+  const s = String(url).replace(/^[\u0000- ]+|[\u0000- ]+$/g, '');
+  if (!/^data:image\/jai(?=[;,]|$)/i.test(s)) return d;
+  const comma = s.indexOf(',');
+  if (comma < 0) { d.push(diag('data-url-missing-comma')); return d; }
+  const params = s.slice(5, comma).split(';').slice(1).map(p => asciiLower(p.trim().split('=')[0]));
+  if (params.some(p => p && p !== 'base64' && p !== 'charset')) d.push(diag('data-url-parameter'));
+  if (/[\t\n\r ]|#/.test(s.slice(comma + 1)) || /%(?![0-9A-Fa-f]{2})/.test(s.slice(comma + 1))) d.push(diag('unencoded-url-text'));
+  return d;
+}
+
+/**
+ * Advisories about how a document was delivered: a decode() result (bytes from
+ * a file or a fetched resource; pass viaDataURL for the body of a data: URL),
+ * and/or a discovery carrier with its element.
+ */
+export function validateDelivery({ decoded, carrier, element, viaDataURL = false } = {}) {
+  const d = [];
+  if (decoded && !viaDataURL && (decoded.form === 'json' || decoded.form === 'text')) d.push(diag('non-canonical-encoding'));
+  const doc = decoded && decoded.document;
   if (carrier === 4) {
     d.push(diag('alt-carrier'));
-    if (decoded && decoded.document) for (const vals of decoded.document.values()) if (vals.some(v => /data:/i.test(v))) { d.push(diag('alt-carrier-payload')); break; }
+    if (doc) for (const vals of doc.values()) if (vals.some(v => /data:/i.test(v))) { d.push(diag('alt-carrier-payload')); break; }
   }
   if (carrier === 3 && element && !(element.getAttribute('width') && element.getAttribute('height'))) d.push(diag('missing-size'));
+  if (carrier === 1 && doc) { const m = doc.get('mode'); if (m && asciiLower(trim(m[m.length - 1])) === 'keep') d.push(diag('keep-in-source')); }
+  if (element) {
+    const names = typeof element.getAttributeNames === 'function' ? element.getAttributeNames() : [];
+    if (names.some(n => /["';=]/.test(n))) d.push(diag('attribute-split'));
+    const src = element.getAttribute('src');
+    if (src) d.push(...dataURLAdvisories(src));
+    const parent = element.parentElement;
+    if (parent && parent.localName === 'picture') {
+      let after = false;
+      for (const ch of Array.from(parent.children)) {
+        if (ch === element) { after = true; continue; }
+        if (ch.localName !== 'source') continue;
+        const type = ch.getAttribute('type'), ss = ch.getAttribute('srcset') || '';
+        const isJai = mimeEssence(type) === MEDIA_TYPE;
+        const first = (ss.replace(/^[\t\n\f\r ,]+/, '').split(/[\t\n\f\r ]/)[0] || '').replace(/,+$/, '');
+        const looksJai = /^data:image\/jai(?=[;,]|$)/i.test(first) || /\.jai(?:[?#]|$)/i.test(first);
+        if (after) { if (isJai || looksJai) d.push(diag('source-after-img')); continue; }
+        if (isJai && srcsetCandidates(ss).length === 0) d.push(diag('srcset-unparseable'));
+        if (!type && looksJai) d.push(diag('source-missing-type'));
+        if (isJai) d.push(...dataURLAdvisories(first));
+      }
+    }
+  }
   return d;
 }
 

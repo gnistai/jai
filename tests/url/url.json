@@ -351,6 +351,256 @@
    "kind": "param",
    "discovered": false,
    "since": "1.0-draft"
+  },
+  {
+   "id": "url-query-no-query",
+   "rationale": "A null query carries no document (R2-12).",
+   "url": "https://example.org/play",
+   "kind": "query",
+   "discovered": false,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-query-empty",
+   "rationale": "An empty query is the empty document (R2-12).",
+   "url": "https://example.org/play?",
+   "kind": "query",
+   "document": {},
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-query-question-in-fragment",
+   "rationale": "? inside the fragment is not a query (R2-12).",
+   "url": "https://example.org/page#frag?A castle",
+   "kind": "query",
+   "discovered": false,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-query-latin1",
+   "rationale": "Query bytes are UTF-8 decoded with replacement (R2-12, S-48).",
+   "url": "https://example.org/play?caf%E9;style=x",
+   "kind": "query",
+   "document": {
+    "prompt": [
+     "caf�"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-query-pct2B",
+   "rationale": "%2B is a plus sign (S-48).",
+   "url": "https://example.org/play?A%2Bcastle",
+   "kind": "query",
+   "document": {
+    "prompt": [
+     "A+castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-query-pct26",
+   "rationale": "%26 is an ampersand (S-48).",
+   "url": "https://example.org/play?Salt%26pepper",
+   "kind": "query",
+   "document": {
+    "prompt": [
+     "Salt&pepper"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-query-json-is-text",
+   "rationale": "The whole-query form is text; it is never sniffed as JSON (R2-12).",
+   "url": "https://example.org/play?{%22jai%22:1,%22prompt%22:%22x%22}",
+   "kind": "query",
+   "document": {
+    "prompt": [
+     "{\"jai\":1,\"prompt\":\"x\"}"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-param-raw-lf",
+   "rationale": "The URL parser deletes raw LF before the form parser runs (R2-12).",
+   "url": "https://example.org/r?jai=A\ncastle",
+   "kind": "param",
+   "document": {
+    "prompt": [
+     "Acastle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-param-raw-tab",
+   "rationale": "The URL parser deletes raw TAB before the form parser runs (R2-12).",
+   "url": "https://example.org/r?jai=A\tcastle;style=x",
+   "kind": "param",
+   "document": {
+    "prompt": [
+     "Acastle"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-param-question-in-fragment",
+   "rationale": "? inside the fragment is not a query (R2-12).",
+   "url": "https://example.org/r#x?jai=A",
+   "kind": "param",
+   "discovered": false,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-param-first-wins",
+   "rationale": "The first jai parameter is used.",
+   "url": "https://example.org/r?jai=a&jai=b",
+   "kind": "param",
+   "document": {
+    "prompt": [
+     "a"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-param-empty",
+   "rationale": "An empty jai parameter is the empty document.",
+   "url": "https://example.org/r?jai=&w=800",
+   "kind": "param",
+   "document": {},
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-nbsp-mime",
+   "rationale": "Fetch's MIME parsing: NBSP is not whitespace, so the essence is not image/jai (R2-27).",
+   "url": "data:image/jai ,x",
+   "kind": "data",
+   "discovered": false,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-ff-mime",
+   "rationale": "The URL parser percent-encodes FF in the path, so the essence is not image/jai (R2-27).",
+   "url": "data:image/jai\f,x",
+   "kind": "data",
+   "discovered": false,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-space-mime",
+   "rationale": "ASCII whitespace around the media type is stripped by Fetch.",
+   "url": "data:image/jai ,x",
+   "kind": "data",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-bad-base64",
+   "rationale": "A body that forgiving-base64 rejects: no document (R2-27).",
+   "url": "data:image/jai;base64,!!!!",
+   "kind": "data",
+   "discovered": false,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-base64-bad-padding",
+   "rationale": "Wrong padding fails forgiving-base64: no document (R2-27).",
+   "url": "data:image/jai;base64,eyJqYWkiOjEsInByb21wdCI6IngifQ=",
+   "kind": "data",
+   "discovered": false,
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-nul",
+   "rationale": "%00 decodes to a 00 byte, which byte input rejects (R2-25).",
+   "url": "data:image/jai,A%00castle",
+   "kind": "data",
+   "document": {},
+   "diagnostics": [
+    "undecodable"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-question",
+   "rationale": "? is part of a data: URL body (S-8).",
+   "url": "data:image/jai,What%3F%20now?;style=x",
+   "kind": "data",
+   "document": {
+    "prompt": [
+     "What? now?"
+    ],
+    "style": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-tab-raw",
+   "rationale": "Raw TAB is deleted by the URL parser (S-8).",
+   "url": "data:image/jai,A\tcastle",
+   "kind": "data",
+   "document": {
+    "prompt": [
+     "Acastle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-trailing-comma-encoded",
+   "rationale": "An encoded final comma survives (S-8).",
+   "url": "data:image/jai,a%2C",
+   "kind": "data",
+   "document": {
+    "prompt": [
+     "a,"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-slash",
+   "rationale": "An encoded leading slash survives (S-8).",
+   "url": "data:image/jai,%2Fimagine%20a%20cat",
+   "kind": "data",
+   "document": {
+    "prompt": [
+     "/imagine a cat"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
   }
  ]
 }

@@ -522,6 +522,29 @@ i("int-model-url", {"model": ["https://example.org/flux-schnell"]}, {"model": "b
 i("int-model-transform-image", {"mode": ["transform"], "model": ["flux"]}, {"model": "black-forest-labs/flux-kontext-pro"}, ["substituted-model:model"], rationale="transform with an input considers only image-capable models.", catalog=True, has_original=True)
 i("int-model-transform-no-original", {"mode": ["transform"], "model": ["flux"]}, {"model": "black-forest-labs/flux-schnell"}, ["substituted-model:model"], rationale="Without an input image the restriction does not apply.", catalog=True)
 
+# ---------------------------------------------------------------- review round 2
+# Cases authored in review round 2 (bytes, canonical JSON and identities computed
+# with the Python standard library and cross-checked against an independent
+# implementation written from the spec alone). Each is added, or replaces the case
+# with the same id; while the suite is untagged, replacing is allowed.
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "round2.json"), encoding="utf-8") as fh:
+    ROUND2 = json.load(fh)
+REMOVED = {"int-quoted-model-unaffected"}  # asserted nothing (review round 2, R2-5)
+_lists = {"parse": P, "serialize": S, "roundtrip": R, "json": JS, "decode": D, "url": U, "html": H, "interpret": I}
+for _cls, _cases in ROUND2.items():
+    target = _lists[_cls]
+    for _c in _cases:
+        _c = {k: v for k, v in _c.items() if not k.startswith("_")}
+        _i = next((n for n, x in enumerate(target) if x["id"] == _c["id"]), None)
+        if _i is not None:
+            target[_i] = _c
+        else:
+            assert _c["id"] not in ALL_IDS, _c["id"]
+            ALL_IDS.add(_c["id"])
+            target.append(_c)
+for _lst in _lists.values():
+    _lst[:] = [c for c in _lst if c["id"] not in REMOVED]
+
 counts = {}
 counts["parse"] = write("parse", P, "input -> document + exact parser diagnostics; advisories are validator codes that must be present when a validator runs.")
 counts["serialize"] = write("serialize", S, "document -> canonical text, bare text, canonical JSON, identity.")

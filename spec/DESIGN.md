@@ -40,7 +40,7 @@ reason they lost.
 - **D1.1** A document is a map from *key* to an ordered list of one or more
   *values*. Order within a key is significant; order across keys is not.
   `prompt` is an ordinary key, special only in the text syntax.
-- **D1.2** Keys are ASCII, `[a-z][a-z0-9_-]*(\.[a-z0-9][a-z0-9_-]*)*`,
+- **D1.2** Keys are ASCII, `[a-z0-9][a-z0-9_-]*(\.[a-z0-9][a-z0-9_-]*)*`,
   compared after ASCII lowercasing. Every case operation in the spec is ASCII
   only; locale-sensitive mapping and Unicode case folding are forbidden
   (Turkish `I`, U+212A Kelvin, U+0130).
@@ -110,7 +110,8 @@ reason they lost.
 - **D3.2** Canonical JSON: UTF-8, no whitespace, members `jai`, `prompt`,
   then code point order; strings escaped exactly as RFC 8785 §3.2.2.2; no
   Unicode normalisation anywhere. Deviation from pure JCS: `jai`/`prompt`
-  first, so every file starts with `{"jai":1,"prompt":` after inflation.
+  first, so every file starts with `{"jai":1` followed by `,` or `}` after
+  inflation.
 - **D3.3** Identity = SHA-256 of canonical JSON; syntactic; names the
   document, never a render. A render cache key adds renderer configuration,
   every image input, and (for cross-site privacy) the top-level site.
@@ -122,7 +123,9 @@ reason they lost.
   fixed 16-byte header as MUST (`gzip -c` would be non-conforming), brotli/
   zstd/CBOR (not universally decodable in browsers).
 - **D3.5 Decoding is layered and total.** `1F 8B` → gunzip → must be JSON;
-  else strict UTF-8 (ill-formed → `undecodable`), skip JSON whitespace; `{`
+  else strict UTF-8 (ill-formed, or containing the byte 00 → `undecodable`;
+  the 00 rule keeps headerless UTF-16 and other binary from becoming a
+  prompt), skip JSON whitespace; `{`
   followed by `"` or `}` → JSON (failure → `invalid-json`, never a fallback);
   otherwise text. Rejected: falling back from JSON to text (renders garbage,
   splits decoders), text branch accepting any bytes.
@@ -238,6 +241,44 @@ implementation: `jai.js` + `tests/` in this repository; reference viewer: the
 extension in `jai-tools`. Living document with a pinned date and an
 edition stamp (`1.0-draft`); keys are never removed; fixtures are append-only
 after the first tag. Everything in this repository is CC0-1.0.
+
+## 9b. Review round 2 (spec-only implementation)
+
+An independent Python implementation was written from the specification
+alone, before its author saw the fixtures or `jai.js`. It passed 303 of the
+then 361 fixtures on spec-only choices and all of them after reading the
+fixtures; on 4,000 random inputs it agreed with `jai.js` every time. Its 31
+recorded guesses and 33 behavioural divergences became 76 fixes and 93 new or
+replaced fixtures (454 in total). Decisions taken:
+
+- Diagnostics carry a defined key (a Key column in the table); interpreter
+  codes are a normative class of their own; the fixture format is defined
+  normatively in the spec.
+- Quotes and a trailing full stop are stripped only from single-valued keys;
+  `prompt`, `style`, `avoid` and `model` are used as written.
+- `data-jai` is always the text form; "JAI context" is defined once (files,
+  `image/jai` resources, `data:` bodies).
+- Carrier 1 follows HTML's srcset parsing exactly (an unencoded space drops
+  the candidate). Rejected: a private first-URL rule, which would overlay a
+  render of the wrong text on the picture the browser shows.
+- Invalid deflate is defined as exactly what zlib rejects, so platform
+  decoders conform; FHCRC is verified; JSON nesting is limited to depth 32
+  (Python's standard library recurses); numbers that overflow binary64 make
+  the JSON invalid.
+- Model matching: try the value as written, then without a trailing
+  `:version`/`@version` of the last segment (reporting `version-ignored` only
+  when that matched), then families by earliest, longest, first-listed run;
+  the step-2 default may be ineligible, giving `mode-degraded` in transform.
+- The query forms parse the URL first (null query = no document, empty query =
+  empty document, UTF-8 with replacement).
+- Security prohibitions use BCP 14 keywords. Transform documents describe the
+  result, not the edit, because they are rendered as `generate` when the
+  original is unreadable.
+- `jai:  ;A castle` emits `empty-segment` like `;A castle` (D2.4; fixture
+  `parse-semicolon-ws-prefix`).
+- Informative one-liners proposed in round 1 for S-16, S-17, S-30, S-43, S-49,
+  S-64, S-65 and S-66 that are not in the spec were dropped deliberately to
+  keep it short; the website and the skill carry the author-facing parts.
 
 ## 10. Open questions for the owner
 

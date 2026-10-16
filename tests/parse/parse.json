@@ -1297,6 +1297,10 @@
     ]
    },
    "diagnostics": [],
+   "no_advisories": [
+    "no-prompt",
+    "first-segment-assignment"
+   ],
    "since": "1.0-draft"
   },
   {
@@ -1327,6 +1331,118 @@
     ]
    },
    "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-empty-prompt-assignment",
+   "rationale": "empty-value carries the key of the assignment, prompt included (R2-2).",
+   "input": "prompt=;style=x",
+   "document": {
+    "style": [
+     "x"
+    ]
+   },
+   "diagnostics": [
+    "empty-value:prompt"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-reserved-key-keyed",
+   "rationale": "reserved-key always concerns the key jai (R2-2).",
+   "input": "A castle;JAI=2",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [
+    "reserved-key:jai"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-continuation-aspect",
+   "rationale": "Prose after a single-valued key continues it (S-22).",
+   "input": "A castle;aspect=16:9;make it dramatic",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "aspect": [
+     "16:9;make it dramatic"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "continuation-into-single-valued-key:aspect"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-bare-key",
+   "rationale": "A prose segment that is exactly a standard key (S-22).",
+   "input": "A castle;animate",
+   "document": {
+    "prompt": [
+     "A castle;animate"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "bare-key"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-trailing-ideographic-space",
+   "rationale": "U+3000 is JAI whitespace (S-1).",
+   "input": "A castle　",
+   "document": {
+    "prompt": [
+     "A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-negated-avoid",
+   "rationale": "Negation inside avoid (S-37).",
+   "input": "A quiet street;avoid=no people",
+   "document": {
+    "prompt": [
+     "A quiet street"
+    ],
+    "avoid": [
+     "no people"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "negated-avoid:avoid"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-data-uri-charset-advisory",
+   "rationale": "An unescaped ;charset= splits a data: URL (S-23).",
+   "input": "x;source=data:image/svg+xml;charset=utf-8;base64,PHN2Zz4=",
+   "document": {
+    "prompt": [
+     "x"
+    ],
+    "source": [
+     "data:image/svg+xml"
+    ],
+    "charset": [
+     "utf-8;base64,PHN2Zz4="
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "split-data-uri"
+   ],
    "since": "1.0-draft"
   }
  ]

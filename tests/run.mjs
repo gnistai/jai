@@ -22,7 +22,8 @@ const selected = args.filter((a, i) => !a.startsWith('--') && (implIdx < 0 || i 
 const VERBOSE = flag('--verbose');
 
 const BASE = 'https://example.test/page/';
-const INTERPRETER_CODES = new Set(['repeated-single', 'invalid-value', 'adjusted-value', 'ignored-value', 'invalid-image', 'unsupported-preview', 'no-matching-model', 'substituted-model', 'version-ignored']);
+// Mirrors the diagnostics table rows whose class includes `interpreter`.
+const INTERPRETER_CODES = new Set(['repeated-single', 'invalid-value', 'adjusted-value', 'ignored-value', 'invalid-image', 'unsupported-preview', 'no-matching-model', 'substituted-model', 'version-ignored', 'mode-degraded']);
 
 // ---------------------------------------------------------------- comparison helpers
 
@@ -40,9 +41,9 @@ function docEquals(actualMap, expected) {
 }
 
 /** expected: ["code", "code:key"]; exact multiset on codes; keys checked when given. */
-function diagsEqual(actual, expected, { filter = null, optional = [] } = {}) {
-  let act = actual.filter(d => !filter || filter.has(d.code)).filter(d => !optional.includes(d.code));
-  const exp = expected.filter(e => !optional.includes(e.split(':')[0]));
+function diagsEqual(actual, expected, { filter = null } = {}) {
+  const act = actual.filter(d => !filter || filter.has(d.code));
+  const exp = expected;
   if (act.length !== exp.length) return false;
   const pool = act.slice();
   for (const e of exp) {
@@ -52,6 +53,10 @@ function diagsEqual(actual, expected, { filter = null, optional = [] } = {}) {
     pool.splice(i, 1);
   }
   return true;
+}
+
+function hasNone(actual, forbidden) {
+  return !forbidden.some(e => { const [code, key] = e.split(':'); return actual.some(d => d.code === code && (key === undefined || d.key === key)); });
 }
 
 function hasAll(actual, expected) {
@@ -74,8 +79,9 @@ const decodeEntities = s => s.replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (m, e)
 const VOID = new Set(['img', 'source', 'br', 'hr', 'meta', 'link', 'input']);
 
 class El {
-  constructor(name, attrs, parent) { this.localName = name; this.attrs = attrs; this.parentElement = parent; this.children = []; this.ownerDocument = { baseURI: BASE }; }
+  constructor(name, attrs, parent) { this.localName = name; this.attrs = attrs; this.parentElement = parent; this.children = []; this.ownerDocument = { baseURI: BASE }; this.shadowRoot = null; }
   getAttribute(n) { return Object.prototype.hasOwnProperty.call(this.attrs, n) ? this.attrs[n] : null; }
+  getAttributeNames() { return Object.keys(this.attrs); }
   *walk() { for (const c of this.children) { yield c; yield* c.walk(); } }
   querySelectorAll(sel) { const all = [...this.walk()]; return sel === '*' ? all : all.filter(e => e.localName === sel); }
 }
@@ -86,8 +92,9 @@ function parseHTML(html) {
   while (i < html.length) {
     if (html.startsWith('</', i)) {
       const j = html.indexOf('>', i); const name = html.slice(i + 2, j).trim().toLowerCase();
+      if (name === 'template' && cur.localName === '#shadow-root') { cur = cur.outer; i = j + 1; continue; }
       let n = cur; while (n && n.localName !== name) n = n.parentElement;
-      if (n && n.parentElement) cur = n.parentElement;
+      if (n) cur = n.container || root;
       i = j + 1; continue;
     }
     if (html[i] === '<') {
@@ -105,7 +112,17 @@ function parseHTML(html) {
         while (html[i] === ' ' || html[i] === '\n' || html[i] === '\t') i++;
       }
       if (html.startsWith('/>', i)) i += 2; else i += 1;
-      const el = new El(name, attrs, cur === root ? null : cur);
+      if (name === 'template' && attrs.shadowrootmode) {
+        // Declarative shadow root: its content becomes the parent's shadow tree (closed ones are inaccessible).
+        const sr = new El('#shadow-root', {}, null);
+        sr.host = cur;
+        if (attrs.shadowrootmode === 'open' && cur !== root) cur.shadowRoot = sr;
+        sr.outer = cur;
+        cur = sr;
+        continue;
+      }
+      const el = new El(name, attrs, cur === root || cur.localName === '#shadow-root' ? null : cur);
+      el.container = cur;
       cur.children.push(el);
       if (!VOID.has(name)) cur = el;
       continue;
@@ -123,9 +140,10 @@ const runners = {
     const errs = [];
     if (!docEquals(r.document, c.document)) errs.push(`document ${show(r.document)} != ${show(c.document)}`);
     if (!diagsEqual(r.diagnostics, c.diagnostics)) errs.push(`diagnostics [${fmtDiags(r.diagnostics)}] != [${c.diagnostics.join(', ')}]`);
-    if (c.advisories) {
+    if (c.advisories || c.no_advisories) {
       const v = J.validate(r.document, r.info);
-      if (!hasAll(v, c.advisories)) errs.push(`advisories [${fmtDiags(v)}] missing some of [${c.advisories.join(', ')}]`);
+      if (c.advisories && !hasAll(v, c.advisories)) errs.push(`advisories [${fmtDiags(v)}] missing some of [${c.advisories.join(', ')}]`);
+      if (c.no_advisories && !hasNone(v, c.no_advisories)) errs.push(`advisories [${fmtDiags(v)}] include one of [${c.no_advisories.join(', ')}]`);
     }
     return errs;
   },
@@ -137,6 +155,7 @@ const runners = {
     if (c.bare !== undefined) { const b = J.serialize(doc, { bare: true }); if (b !== c.bare) errs.push(`bare ${show(b)} != ${show(c.bare)}`); }
     const json = J.canonicalJSON(doc);
     if (json !== c.json) errs.push(`json ${show(json)} != ${show(c.json)}`);
+    if (c.url !== undefined) { const u = J.toDataURL(doc); if (u !== c.url) errs.push(`url ${show(u)} != ${show(c.url)}`); }
     const id = await J.identity(doc);
     if (id !== c.identity) errs.push(`identity ${id} != ${c.identity}`);
     const back = J.parse(text);
@@ -170,7 +189,7 @@ const runners = {
     const r = J.readJSON(c.input, { inContext: c.context !== false });
     const errs = [];
     if (!docEquals(r.document, c.document)) errs.push(`document ${show(r.document)} != ${show(c.document)}`);
-    if (!diagsEqual(r.diagnostics, c.diagnostics, { optional: c.optional || [] })) errs.push(`diagnostics [${fmtDiags(r.diagnostics)}] != [${c.diagnostics.join(', ')}]`);
+    if (!diagsEqual(r.diagnostics, c.diagnostics)) errs.push(`diagnostics [${fmtDiags(r.diagnostics)}] != [${c.diagnostics.join(', ')}]`);
     return errs;
   },
   decode(c) {
@@ -180,9 +199,10 @@ const runners = {
     const errs = [];
     if (!docEquals(r.document, c.document)) errs.push(`document ${show(r.document)} != ${show(c.document)}`);
     if (!diagsEqual(r.diagnostics, c.diagnostics)) errs.push(`diagnostics [${fmtDiags(r.diagnostics)}] != [${c.diagnostics.join(', ')}]`);
-    if (c.advisories) {
+    if (c.advisories || c.no_advisories) {
       const v = J.validateDelivery({ decoded: r });
-      if (!hasAll(v, c.advisories)) errs.push(`advisories [${fmtDiags(v)}] missing some of [${c.advisories.join(', ')}]`);
+      if (c.advisories && !hasAll(v, c.advisories)) errs.push(`advisories [${fmtDiags(v)}] missing some of [${c.advisories.join(', ')}]`);
+      if (c.no_advisories && !hasNone(v, c.no_advisories)) errs.push(`advisories [${fmtDiags(v)}] include one of [${c.no_advisories.join(', ')}]`);
     }
     return errs;
   },
@@ -211,9 +231,10 @@ const runners = {
         if (!diagsEqual(f.diagnostics || [], e.diagnostics || [])) errs.push(`#${n}: diagnostics [${fmtDiags(f.diagnostics || [])}] != [${(e.diagnostics || []).join(', ')}]`);
       }
     });
-    if (c.advisories) {
+    if (c.advisories || c.no_advisories) {
       const all = found.flatMap(f => [...J.validateDelivery({ carrier: f.carrier, element: f.element, decoded: f.document ? { document: f.document } : null }), ...(f.document ? J.validate(f.document, f.info) : [])]);
-      if (!hasAll(all, c.advisories)) errs.push(`advisories [${fmtDiags(all)}] missing some of [${c.advisories.join(', ')}]`);
+      if (c.advisories && !hasAll(all, c.advisories)) errs.push(`advisories [${fmtDiags(all)}] missing some of [${c.advisories.join(', ')}]`);
+      if (c.no_advisories && !hasNone(all, c.no_advisories)) errs.push(`advisories [${fmtDiags(all)}] include one of [${c.no_advisories.join(', ')}]`);
     }
     return errs;
   },

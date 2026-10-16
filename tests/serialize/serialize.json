@@ -508,6 +508,72 @@
    "json": "{\"jai\":1,\"prompt\":\"a;\\nb=c\"}",
    "identity": "273679f75f917ecb202928bbbe1e1bccf6ada8b6588cb34b9d84dc5bf4d31226",
    "since": "1.0-draft"
+  },
+  {
+   "id": "ser-url-quote",
+   "rationale": "The canonical URL form encodes \" so it can sit in a quoted attribute (R2-29).",
+   "document": {
+    "prompt": [
+     "A sign reading \"OPEN\""
+    ],
+    "style": [
+     "photo"
+    ]
+   },
+   "text": "jai:A sign reading \"OPEN\";style=photo",
+   "bare": "A sign reading \"OPEN\";style=photo",
+   "json": "{\"jai\":1,\"prompt\":\"A sign reading \\\"OPEN\\\"\",\"style\":\"photo\"}",
+   "identity": "e67e98d1aab955450fd276889171747719763469b54733a0fd239d472bbbe37c",
+   "url": "data:image/jai,A%20sign%20reading%20%22OPEN%22;style=photo",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-url-apostrophe-angle",
+   "rationale": "' < > are encoded in the canonical URL form (R2-29).",
+   "document": {
+    "prompt": [
+     "x < y > z"
+    ],
+    "style": [
+     "it's"
+    ]
+   },
+   "text": "jai:x < y > z;style=it's",
+   "bare": "x < y > z;style=it's",
+   "json": "{\"jai\":1,\"prompt\":\"x < y > z\",\"style\":\"it's\"}",
+   "identity": "f9ea6e11cb808f0b270b567f75d4d4eba20141723e00a912197589476c437b96",
+   "url": "data:image/jai,x%20%3C%20y%20%3E%20z;style=it%27s",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-url-trailing-comma",
+   "rationale": "A final , is %2C (#data-urls).",
+   "document": {
+    "prompt": [
+     "a,"
+    ]
+   },
+   "text": "jai:a,",
+   "bare": "a,",
+   "json": "{\"jai\":1,\"prompt\":\"a,\"}",
+   "identity": "96cac5c6f7a4030200a123243a13e86a17c7310945f5b5a7cbae80c2adb8ab75",
+   "url": "data:image/jai,a%2C",
+   "since": "1.0-draft"
+  },
+  {
+   "id": "ser-url-leading-slash",
+   "rationale": "A leading / is %2F (#data-urls).",
+   "document": {
+    "prompt": [
+     "/imagine a cat"
+    ]
+   },
+   "text": "jai:/imagine a cat",
+   "bare": "/imagine a cat",
+   "json": "{\"jai\":1,\"prompt\":\"/imagine a cat\"}",
+   "identity": "0330d6f514d6eadf67b1d076bb70b67f8c3e294abf1f108975768c6dd6c0f2a7",
+   "url": "data:image/jai,%2Fimagine%20a%20cat",
+   "since": "1.0-draft"
   }
  ]
 }

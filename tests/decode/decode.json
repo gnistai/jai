@@ -395,14 +395,12 @@
   },
   {
    "id": "dec-text-nul",
-   "rationale": "NUL is well-formed UTF-8; normalised to U+FFFD.",
+   "rationale": "A 00 byte in byte input is rejected (R2-25).",
    "bytes": "QQBjYXN0bGU=",
-   "document": {
-    "prompt": [
-     "A�castle"
-    ]
-   },
-   "diagnostics": [],
+   "document": {},
+   "diagnostics": [
+    "undecodable"
+   ],
    "since": "1.0-draft"
   },
   {
@@ -441,6 +439,120 @@
    "bytes": "",
    "document": {},
    "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-deflate-hdist-32",
+   "rationale": "More than 30 distance codes (R2-8).",
+   "bytes": "H4sIAAAAAAAA/wX/AZAkSZIkSQIAAAAAAAAAAAAAAAAAAAAACAAAAAAIAIAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAIAAAACACICACAgIAAiAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiKqqqqqqqqqqqqqqqqqqquqCiQITQlZ4NjAM3AO8aM0WFgAAAA==",
+   "document": {},
+   "diagnostics": [
+    "malformed-container"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-deflate-hlit-288",
+   "rationale": "More than 286 literal/length codes (R2-8).",
+   "bytes": "H4sIAAAAAAAA//3gAZAkSZIkSQIAAAAAAAAAAAAAAAAAAAAAKAAAAAAoAIACAAAAKAAAgKqqqqqqqioAAAAAAAAAAIACAACAKoCCKigoACiAggIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAqOIGJWWAEQR9tNonwGCBcwG8aM0WFgAAAA==",
+   "document": {},
+   "diagnostics": [
+    "malformed-container"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-deflate-incomplete-litcode",
+   "rationale": "Incomplete literal/length code (R2-8).",
+   "bytes": "H4sIAAAAAAAA/wXgAZAkSZIkSQIAAAAAAAAAAAAAAAAAAAAAKAAAAAAoAIACAAAAKAAAAAAAAAAAAAAAAAAAAAAAAIACAACAKoCCKigoACiAggIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKFrACAUYQSCV4FIDDAxwHrxozRYWAAAA",
+   "document": {},
+   "diagnostics": [
+    "malformed-container"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-deflate-oversubscribed-litcode",
+   "rationale": "Over-subscribed literal/length code (R2-8).",
+   "bytes": "H4sIAAAAAAAA/w3gAZAkSZIkSQIAAAAAAAAAAAAAAAAAAAAACAAAAAAIAIAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAIAAAACACICACAgIAAiAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiOCCiQITQlZ4NjAM3AO8aM0WFgAAAA==",
+   "document": {},
+   "diagnostics": [
+    "malformed-container"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-deflate-dist-one-len2",
+   "rationale": "A single distance code of length 2 is incomplete (R2-8).",
+   "bytes": "H4sIAAAAAAAA/wXgAZAkSZIkSQIAAAAAAAAAAAAAAAAAAAAACAAAAAAIAIAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAIAAAACACICACAgIAAiAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACC2YKDAhZIVnA8PAPbxozRYWAAAA",
+   "document": {},
+   "diagnostics": [
+    "malformed-container"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-deflate-dist-none",
+   "rationale": "A distance code with no codes is accepted when no distance is used (R2-8).",
+   "bytes": "H4sIAAAAAAAA/wXgAZAkSZIkSQIAAAAAAAAAAAAAAAAAAAAACAAAAAAIAIAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAIAAAACACICACAgIAAiAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCyYKDAhZIVnA8PAPbxozRYWAAAA",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-deflate-dist-one-len1",
+   "rationale": "A single distance code of length 1 is accepted (R2-8).",
+   "bytes": "H4sIAAAAAAAA/wXgAZAkSZIkSQIAAAAAAAAAAAAAAAAAAAAACAAAAAAIAIAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAIAAAACACICACAgIAAiAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACC6YKDAhZIVnA8PAPbxozRYWAAAA",
+   "document": {
+    "prompt": [
+     "x"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-gzip-bad-fhcrc",
+   "rationale": "dec-gzip-header-fields with one FHCRC byte changed: the header CRC is verified (R2-24).",
+   "bytes": "H4sIHgAAAAAA/wQASkEAAGNhc3RsZS5qc29uAGhlbGxvABT4q1bKSsxUsjLUUSooys8tKFGyUnJUyE1Mz0xOzFFITiwuyUlV0lEqLqkE0lZKiXmZualKtQCrqdd2NQAAAA==",
+   "document": {},
+   "diagnostics": [
+    "malformed-container"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-utf16le-nobom",
+   "rationale": "UTF-16 without a BOM is not decoded as a garbage prompt (R2-25, S-6).",
+   "bytes": "QQAgAGMAYQBzAHQAbABlAA==",
+   "document": {},
+   "diagnostics": [
+    "undecodable"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-gzip-nul",
+   "rationale": "A 00 byte inside a gzip member (R2-25).",
+   "bytes": "H4sIAAAAAAACA6tWykrMVLIy1FEqKMrPLShRslJyZEhOLC7JSVWqBQCaB/axHQAAAA==",
+   "document": {},
+   "diagnostics": [
+    "malformed-container"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-gzip-depth-33",
+   "rationale": "The nesting limit applies inside the file form (R2-9).",
+   "bytes": "H4sIAAAAAAACA6tWykrMVLIy1FEqKMrPLShRslKqUNJRSkzOTdXLU7KKJgBiCYBaAE1ANwBgAAAA",
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
    "since": "1.0-draft"
   }
  ]

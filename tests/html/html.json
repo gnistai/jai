@@ -102,18 +102,21 @@
   },
   {
    "id": "html-picture-unencoded-space",
-   "rationale": "An unencoded space ends the srcset URL; the rest is a descriptor.",
+   "rationale": "An unencoded space makes the rest of the attribute a descriptor; castle is not a valid descriptor, so HTML drops the candidate and the source is skipped (R2-7).",
    "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A castle\"><img src=\"a.png\" alt=\"a\" data-jai=\"fallback\"></picture>",
    "discovered": [
     {
-     "carrier": 1,
+     "carrier": 2,
      "document": {
       "prompt": [
-       "A"
+       "fallback"
       ]
      },
      "diagnostics": []
     }
+   ],
+   "advisories": [
+    "srcset-unparseable"
    ],
    "since": "1.0-draft"
   },
@@ -362,6 +365,278 @@
      "document": {},
      "diagnostics": []
     }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-srcset-trailing-comma",
+   "rationale": "HTML removes trailing commas from every candidate URL (R2-7).",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,a, b.jai 2x\"><img src=\"a.png\" alt=\"a\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "a"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-json",
+   "rationale": "data-jai is always the text form; JSON there is prose (R2-6).",
+   "html": "<img src=\"a.png\" alt=\"a\" data-jai='{\"jai\":1,\"prompt\":\"x\"}'>",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "{\"jai\":1,\"prompt\":\"x\"}"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-source-other-data-type",
+   "rationale": "A carrier-1 data: URL whose essence is not image/jai is skipped (R2-7).",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:text/plain,hello\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "two"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-source-data-default-type",
+   "rationale": "data:, has the default type text/plain and is skipped (R2-7).",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:,hello\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "two"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-source-data-bad-base64",
+   "rationale": "A carrier-1 data: URL the processor rejects is skipped (R2-7).",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai;base64,!!!\"><img src=\"a.png\" alt=\"a\" data-jai=\"two\"></picture>",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "two"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-data-bad-base64",
+   "rationale": "A carrier-3 data: URL the processor rejects: continue with carrier 4 (R2-7).",
+   "html": "<img src=\"data:image/jai;base64,!!!\" alt=\"jai:fallback\">",
+   "discovered": [
+    {
+     "carrier": 4,
+     "document": {
+      "prompt": [
+       "fallback"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "alt-carrier"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-shadow-tree-order",
+   "rationale": "Open shadow roots are visited in tree order, at their host (R2-35).",
+   "html": "<div><template shadowrootmode=\"open\"><img src=\"a.png\" alt=\"a\" data-jai=\"in shadow\"></template></div><img src=\"b.png\" alt=\"b\" data-jai=\"after host\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "in shadow"
+      ]
+     },
+     "diagnostics": []
+    },
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "after host"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-shadow-closed-skipped",
+   "rationale": "Closed shadow roots are skipped.",
+   "html": "<div><template shadowrootmode=\"closed\"><img src=\"a.png\" alt=\"a\" data-jai=\"hidden\"></template></div><img src=\"b.png\" alt=\"b\" data-jai=\"visible\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "visible"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-media-all",
+   "rationale": "A media query that matches everywhere (S-44).",
+   "html": "<picture><source type=\"image/jai\" media=\"all\" srcset=\"data:image/jai,x\"><img src=\"a.png\" alt=\"a\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "x"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-picture-media-print",
+   "rationale": "Fixtures run in an environment where every media value matches, as for implementations that cannot evaluate media queries (R2-7, D23).",
+   "html": "<picture><source type=\"image/jai\" media=\"print\" srcset=\"data:image/jai,first\"><source type=\"image/jai\" srcset=\"data:image/jai,second\"><img src=\"a.png\" alt=\"a\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "first"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-keep-in-source",
+   "rationale": "mode=keep in a <source> (S-44).",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,A%20team%20photo;mode=keep\"><img src=\"team.jpg\" alt=\"The team\"></picture>",
+   "discovered": [
+    {
+     "carrier": 1,
+     "document": {
+      "prompt": [
+       "A team photo"
+      ],
+      "mode": [
+       "keep"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "keep-in-source"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-missing-size",
+   "rationale": "Carrier 3 without width and height (S-45).",
+   "html": "<img src=\"data:image/jai,A%20castle\" alt=\"A castle\">",
+   "discovered": [
+    {
+     "carrier": 3,
+     "document": {
+      "prompt": [
+       "A castle"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "missing-size"
+   ],
+   "no_advisories": [
+    "non-canonical-encoding"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-carrier-payload",
+   "rationale": "A data: URL inside an alt carrier (S-11).",
+   "html": "<img src=\"a.png\" alt=\"jai:A castle;preview=data:image/png;base64,iVBORw0KGgo=\">",
+   "discovered": [
+    {
+     "carrier": 4,
+     "document": {
+      "prompt": [
+       "A castle"
+      ],
+      "preview": [
+       "data:image/png;base64,iVBORw0KGgo="
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "alt-carrier",
+    "alt-carrier-payload"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-attribute-split",
+   "rationale": "A raw \" ends the attribute early; validators flag the junk attributes (R2-30).",
+   "html": "<img src=\"a.png\" alt=\"a\" data-jai=\"A sign reading \"OPEN\" above a door;style=photo\">",
+   "discovered": [
+    {
+     "carrier": 2,
+     "document": {
+      "prompt": [
+       "A sign reading"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "attribute-split"
    ],
    "since": "1.0-draft"
   }
