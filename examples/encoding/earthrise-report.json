@@ -1,0 +1,1557 @@
+{
+ "source": "NASA-Apollo8-Dec24-Earthrise.jpg (NASA, public domain), 960x960 Wikimedia Commons rendition",
+ "size": [
+  960,
+  960
+ ],
+ "models": [
+  "black-forest-labs/flux-schnell",
+  "stability-ai/sdxl"
+ ],
+ "analyst": "google/gemini-2.5-flash",
+ "scorer": "krthr/clip-embeddings",
+ "budgetUSD": 0.8,
+ "text": "jai:A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.;prompt/flux=Ensure the Earth is the central subject, clearly distinct from the light grey, gently rolling lunar surface.;aspect=1:1;model=black-forest-labs/flux-schnell;model=stability-ai/sdxl;style=documentary photography",
+ "ranking": [
+  {
+   "model": "black-forest-labs/flux-schnell",
+   "score": 0.8917602930391111
+  },
+  {
+   "model": "stability-ai/sdxl",
+   "score": 0.5959252548219005
+  }
+ ],
+ "stopReason": "generations",
+ "error": null,
+ "spentEstimateUSD": 0.3785000000000002,
+ "seconds": 474.264,
+ "generations": [
+  {
+   "index": 0,
+   "phase": "evolve",
+   "candidates": [
+    "g0c1",
+    "g0c2",
+    "g0c3",
+    "g0c4"
+   ],
+   "best": "g0c4",
+   "bestFitness": 0.45984315483564564,
+   "notes": "The most challenging aspect is accurately portraying the specific crescent shape and partial visibility of Earth, and its precise position relative to the lunar horizon and overall frame, while also ensuring the vast blackness of space and the textured moon are prominent. FLUX.1 schnell: The best candidate reproduces the crescent shape and relative size of Earth, and the sharp horizon line of the lunar surface. The other candidates either have a full Earth, a different celestial body, or are missing Earth entirely, and often misrepresent the composition and scale. Stable Diffusion XL: The target image features a small, crescent Earth above a textured lunar horizon with vast black space. The best candidate fails by making Earth too large and full, and by depicting a flat, featureless lunar surface with extra elements, completely missing the distinct horizon and camera angle.",
+   "spent": 0.0665
+  },
+  {
+   "index": 1,
+   "phase": "evolve",
+   "candidates": [
+    "g1c1",
+    "g1c2",
+    "g1c3"
+   ],
+   "best": "g1c3",
+   "bestFitness": 0.48682451994774467,
+   "notes": "Earth's shape is too full, not a crescent, and its size is too large in both renders. The lunar surface horizon is not stark and straight enough, and its share of the frame is slightly off. Render 2 completely omitted the lunar surface. FLUX.1 schnell: The best candidate maintains the relative size and partial illumination of the Earth, and the low horizon line of the lunar surface, unlike the others which alter Earth's size/shape or raise the horizon. Stable Diffusion XL: The key differentiating factor is the presence and composition of the Moon's surface in the foreground, combined with the Earth's specific crescent shape and position against the deep black background. Only candidate 5 attempts to reproduce the dominant Moon foreground.",
+   "spent": 0.12350000000000001
+  },
+  {
+   "index": 2,
+   "phase": "evolve",
+   "candidates": [
+    "g2c1",
+    "g2c2",
+    "g2c3"
+   ],
+   "best": "g2c3",
+   "bestFitness": 0.46028316328554214,
+   "notes": "The Earth is not a slender crescent; it is a gibbous phase, more than half illuminated. The Earth's position is too high in the renders; it should be lower, closer to the horizon. The horizon line in the renders is too low; it should be higher, about two-fifths up from the bottom edge, making the lunar surface fill less of the frame. The Earth's size in Image 3 is far too small. FLUX.1 schnell: The best candidate failed to reproduce the Earth, instead showing the Moon, and none matched the specific crescent illumination or composition of the target. Stable Diffusion XL: The target image features a small, crescent-shaped Earth positioned above a high lunar horizon line, with vast black space. All candidates fundamentally alter the composition, depicting a gigantic, full Earth almost filling the frame from a very low horizon, which is the primary reason for their low scores. Candidate 1 is also very different, showing a high horizon and a tiny, almost invisible Earth.",
+   "spent": 0.18050000000000005
+  },
+  {
+   "index": 3,
+   "phase": "evolve",
+   "candidates": [
+    "g3c1",
+    "g3c2",
+    "g3c3"
+   ],
+   "best": "g2c3",
+   "bestFitness": 0.44650294588391215,
+   "notes": "Render 2 incorrectly shows a full moon instead of a gibbous Earth. Render 3 shows an Earth that is too large, too low, and not gibbous, appearing to emerge from the lunar surface. The Earth in the target is smaller (closer to 1/8th of the frame width) and positioned slightly higher (about one-third down). The lunar terrain in Render 3 is too dark. The space in Render 3 is dark blue, not absolute black. The horizon in the target is perfectly straight and sharp; Render 3 shows a curved horizon. FLUX.1 schnell: All candidates fail to replicate the subtle crescent Earth and its specific off-center placement and size. Candidates 2, 3, and 5 depict the Moon instead of the Earth, which is a fundamental subject error. Candidate 4 correctly shows the Earth, but its composition and lighting are still significantly different from the target. Stable Diffusion XL: The first candidate shows the Earth and Moon but with vastly different composition, scale, and lighting compared to the target. The other three candidates do not show Earth or the Moon, instead featuring a large asteroid-like object against a striped blue and white background.",
+   "spent": 0.2375000000000001
+  },
+  {
+   "index": 4,
+   "phase": "evolve",
+   "candidates": [
+    "g4c1",
+    "g4c2",
+    "g4c3"
+   ],
+   "best": "g4c1",
+   "bestFitness": 0.567322628709718,
+   "notes": "Render 2 incorrectly depicts the Moon instead of Earth, and Render 3 shows Earth as vastly too large, resting on the horizon, which is curved instead of straight. Both renders misinterpret Earth's size and position, with Render 2's celestial body being too large and centered, and Render 3's almost filling the frame. The horizon line in Render 2 is too high, and in Render 3 it's curved, whereas the target has a sharp, straight horizon at 2/5 up. The absolute blackness of space is not fully achieved in Render 3, which shows a dark blue gradient. FLUX.1 schnell: The key difference is the subject: the target shows Earth, while all candidates incorrectly render the Moon. Beyond that, the candidates vary in the Moon's size, exact position, and the clarity of the lunar surface details. Stable Diffusion XL: The best candidate (3) matches the horizon height, the overall composition, and the presence of the moon surface and Earth as a crescent in a vast dark space. Its main deviation is the Earth's size and slightly higher position. The other candidates fail significantly on composition, either with an incorrect horizon, a massive Earth, or by introducing a prominent crater.",
+   "spent": 0.29450000000000015
+  },
+  {
+   "index": 5,
+   "phase": "evolve",
+   "candidates": [
+    "g5c1",
+    "g5c2",
+    "g5c3"
+   ],
+   "best": "g4c1",
+   "bestFitness": 0.5173226287097179,
+   "notes": "The most important difference is the Earth's phase: the target shows a gibbous Earth, while the renders often show a crescent or full moon (FLUX.1). The original prompt's contradictory phrase \"gibbous Earth... appearing as a crescent\" likely caused confusion. The Earth's size and position are also off in both renders, with FLUX.1 showing a much larger, more central moon, and SDXL showing a larger, more central, and lower Earth than the target. The lunar surface in FLUX.1 is too textured and takes up too much of the frame. SDXL's space background is dark blue, not absolute black. FLUX.1 schnell: All candidates fail on the most important aspect: the subject. The target shows Earth, while all candidates show the Moon, which is a fundamental difference in content and color. The candidates also significantly differ in the size, illumination, and position of the celestial body, which is always centered and fully illuminated, unlike the crescent Earth in the target which is off-center. Stable Diffusion XL: The best candidate maintains the iconic composition of the Earth and the lunar horizon, though it struggles with the Earth's size and crescent shape. The others fail on composition, subject identity, or both.",
+   "spent": 0.3515000000000002
+  },
+  {
+   "index": 6,
+   "phase": "refine",
+   "candidates": [
+    "r6-flux-1",
+    "r6-flux-2"
+   ],
+   "best": "r6-flux-2",
+   "bestFitness": 0.6698840143762032,
+   "notes": "FLUX.1 schnell: The model rendered the Moon instead of the Earth, and the horizon line is too high and the lunar surface too detailed. FLUX.1 schnell: Candidate 4 is the best with excellent matching of Earth's size, position, and phase, as well as the lunar foreground details and horizon height. Candidate 3 has the correct subject but the Earth is too large and centrally placed. Candidate 2 features the Moon instead of Earth.",
+   "spent": 0.3785000000000002
+  }
+ ],
+ "best": {
+  "id": "r6-flux-2",
+  "generation": 4,
+  "phase": "refine",
+  "draft": {
+   "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+   "style": [
+    "documentary photography"
+   ],
+   "avoid": []
+  },
+  "refinements": {
+   "black-forest-labs/flux-schnell": [
+    "Ensure the Earth is the central subject, clearly distinct from the light grey, gently rolling lunar surface."
+   ]
+  },
+  "renders": [
+   {
+    "model": "stability-ai/sdxl",
+    "seed": 1,
+    "error": null,
+    "semantic": 0.9157377626761267,
+    "pixel": 0.6201887505468235,
+    "judge": 0.35,
+    "metric": 0.8418505096438009,
+    "score": 0.5959252548219005,
+    "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+   },
+   {
+    "model": "black-forest-labs/flux-schnell",
+    "seed": 1,
+    "error": null,
+    "semantic": 0.9038021391651674,
+    "pixel": 0.622675926817387,
+    "judge": 0.95,
+    "metric": 0.8335205860782223,
+    "score": 0.8917602930391111,
+    "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\nEnsure the Earth is the central subject, clearly distinct from the light grey, gently rolling lunar surface.\n\nStyle: documentary photography."
+   }
+  ],
+  "perModel": {
+   "black-forest-labs/flux-schnell": 0.8917602930391111,
+   "stability-ai/sdxl": 0.5959252548219005
+  },
+  "fitness": 0.6698840143762032
+ },
+ "candidates": [
+  {
+   "id": "g0c1",
+   "generation": 0,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "Photograph of a crescent Earth, blue and white, about one fifth of the frame width, positioned just left of centre, halfway up, rising above a vast, textured grey lunar surface that fills the bottom third of the frame. The illuminated Earth contrasts with the deep blackness of space in the upper two-thirds. The lunar foreground shows fine details of dust and small craters under a clear horizon line.",
+    "style": [
+     "space photography",
+     "35mm film photo"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8180532756472486,
+     "pixel": 0.7192668747032996,
+     "judge": 0.1,
+     "metric": 0.7933566754112614,
+     "score": 0.4466783377056307,
+     "sentPrompt": "Photograph of a crescent Earth, blue and white, about one fifth of the frame width, positioned just left of centre, halfway up, rising above a vast, textured grey lunar surface that fills the bottom third of the frame. The illuminated Earth contrasts with the deep blackness of space in the upper two-thirds. The lunar foreground shows fine details of dust and small craters under a clear horizon line.\n\nStyle: space photography, 35mm film photo."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8363240732099958,
+     "pixel": 0.4339722203467309,
+     "judge": 0.2,
+     "metric": 0.7357361099941796,
+     "score": 0.46786805499708983,
+     "sentPrompt": "space photography, 35mm film photo. Photograph of a crescent Earth, blue and white, about one fifth of the frame width, positioned just left of centre, halfway up, rising above a vast, textured grey lunar surface that fills the bottom third of the frame. The illuminated Earth contrasts with the deep blackness of space in the upper two-thirds. The lunar foreground shows fine details of dust and small craters under a clear horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.4466783377056307,
+    "stability-ai/sdxl": 0.46786805499708983
+   },
+   "fitness": 0.4519757670284955
+  },
+  {
+   "id": "g0c2",
+   "generation": 0,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A realistic photograph capturing a brilliant, crescent-shaped Earth, showing blue oceans and white clouds, approximately one quarter of the frame width, located in the upper left quadrant. It ascends above a sharply defined, grey lunar horizon that stretches across the bottom third of the image. The foreground displays the rugged, dusty surface of the moon, while the vast upper two-thirds of the frame is filled with the profound blackness of space.",
+    "style": [
+     "astrophotography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.9050960576431412,
+     "pixel": 0.6736546244755788,
+     "judge": 0.5,
+     "metric": 0.8472356993512505,
+     "score": 0.6736178496756253,
+     "sentPrompt": "A realistic photograph capturing a brilliant, crescent-shaped Earth, showing blue oceans and white clouds, approximately one quarter of the frame width, located in the upper left quadrant. It ascends above a sharply defined, grey lunar horizon that stretches across the bottom third of the image. The foreground displays the rugged, dusty surface of the moon, while the vast upper two-thirds of the frame is filled with the profound blackness of space.\n\nStyle: astrophotography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.706597251521056,
+     "pixel": 0.42937487769832305,
+     "judge": 0.1,
+     "metric": 0.6372916580653728,
+     "score": 0.3686458290326864,
+     "sentPrompt": "astrophotography. A realistic photograph capturing a brilliant, crescent-shaped Earth, showing blue oceans and white clouds, approximately one quarter of the frame width, located in the upper left quadrant. It ascends above a sharply defined, grey lunar horizon that stretches across the bottom third of the image. The foreground displays the rugged, dusty surface of the moon, while the vast upper two-thirds of the frame is filled with the profound blackness of space."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.6736178496756253,
+    "stability-ai/sdxl": 0.3686458290326864
+   },
+   "fitness": 0.4448888341934211
+  },
+  {
+   "id": "g0c3",
+   "generation": 0,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "Photograph from space showing the Earth as a blue and white crescent, about one fifth of the frame width, emerging just left of the vertical midline and slightly above the horizontal midline. Below it, the moon's dusty, grey, cratered surface occupies the bottom 30% of the frame, with a sharp, undulating horizon line. The majority of the image is pure, deep black space, emphasizing the isolation of the illuminated planet.",
+    "style": [
+     "nasa photo"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.733516995909199,
+     "pixel": 0.7875041149550147,
+     "judge": 0.05,
+     "metric": 0.747013775670653,
+     "score": 0.3985068878353265,
+     "sentPrompt": "Photograph from space showing the Earth as a blue and white crescent, about one fifth of the frame width, emerging just left of the vertical midline and slightly above the horizontal midline. Below it, the moon's dusty, grey, cratered surface occupies the bottom 30% of the frame, with a sharp, undulating horizon line. The majority of the image is pure, deep black space, emphasizing the isolation of the illuminated planet.\n\nStyle: nasa photo."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.6145390319937323,
+     "pixel": 0.19517735238927925,
+     "judge": 0,
+     "metric": 0.509698612092619,
+     "score": 0.2548493060463095,
+     "sentPrompt": "nasa photo. Photograph from space showing the Earth as a blue and white crescent, about one fifth of the frame width, emerging just left of the vertical midline and slightly above the horizontal midline. Below it, the moon's dusty, grey, cratered surface occupies the bottom 30% of the frame, with a sharp, undulating horizon line. The majority of the image is pure, deep black space, emphasizing the isolation of the illuminated planet."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.3985068878353265,
+    "stability-ai/sdxl": 0.2548493060463095
+   },
+   "fitness": 0.2907637014935638
+  },
+  {
+   "id": "g0c4",
+   "generation": 0,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph capturing a partially visible Earth, blue and white with swirling clouds, appearing as a crescent. This planet is approximately one fifth of the frame width, situated in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, which extends from the bottom edge to a stark horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8964514592203244,
+     "pixel": 0.5400602664784685,
+     "judge": 0.3,
+     "metric": 0.8073536610348605,
+     "score": 0.5536768305174302,
+     "sentPrompt": "A wide-angle photograph capturing a partially visible Earth, blue and white with swirling clouds, appearing as a crescent. This planet is approximately one fifth of the frame width, situated in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, which extends from the bottom edge to a stark horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.7187934246850352,
+     "pixel": 0.5388084961453008,
+     "judge": 0.1,
+     "metric": 0.6737971925501015,
+     "score": 0.38689859627505074,
+     "sentPrompt": "documentary photography. A wide-angle photograph capturing a partially visible Earth, blue and white with swirling clouds, appearing as a crescent. This planet is approximately one fifth of the frame width, situated in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, which extends from the bottom edge to a stark horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.5536768305174302,
+    "stability-ai/sdxl": 0.38689859627505074
+   },
+   "fitness": 0.42859315483564564
+  },
+  {
+   "id": "g1c2",
+   "generation": 1,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph capturing a thin crescent of Earth, blue and white with swirling clouds, its illuminated edge facing right. This planet is about one-eighth of the frame width, positioned in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, extending from the bottom edge to a stark, perfectly straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.7779427399726302,
+     "pixel": 0.6375573648425852,
+     "judge": 0.15,
+     "metric": 0.7428463961901189,
+     "score": 0.4464231980950595,
+     "sentPrompt": "A wide-angle photograph capturing a thin crescent of Earth, blue and white with swirling clouds, its illuminated edge facing right. This planet is about one-eighth of the frame width, positioned in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, extending from the bottom edge to a stark, perfectly straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.7964462790937258,
+     "pixel": 0.5869776031859887,
+     "judge": 0.15,
+     "metric": 0.7440791101167915,
+     "score": 0.44703955505839577,
+     "sentPrompt": "documentary photography. A wide-angle photograph capturing a thin crescent of Earth, blue and white with swirling clouds, its illuminated edge facing right. This planet is about one-eighth of the frame width, positioned in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, extending from the bottom edge to a stark, perfectly straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.4464231980950595,
+    "stability-ai/sdxl": 0.44703955505839577
+   },
+   "fitness": 0.4465772873358935
+  },
+  {
+   "id": "g1c1",
+   "generation": 1,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph capturing a distinct sliver of Earth, blue and white with swirling clouds, appearing as a thin crescent. This planet is approximately one-eighth of the frame width, situated in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, which extends from the bottom edge to a stark, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8642851243396052,
+     "pixel": 0.636435391527842,
+     "judge": 0.2,
+     "metric": 0.8073226911366644,
+     "score": 0.5036613455683322,
+     "sentPrompt": "A wide-angle photograph capturing a distinct sliver of Earth, blue and white with swirling clouds, appearing as a thin crescent. This planet is approximately one-eighth of the frame width, situated in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, which extends from the bottom edge to a stark, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.6837748819354996,
+     "pixel": 0.5265486555377089,
+     "judge": 0.05,
+     "metric": 0.644468325336052,
+     "score": 0.34723416266802604,
+     "sentPrompt": "documentary photography. A wide-angle photograph capturing a distinct sliver of Earth, blue and white with swirling clouds, appearing as a thin crescent. This planet is approximately one-eighth of the frame width, situated in the upper-middle-left, glowing against the absolute blackness of space that dominates the upper two-thirds. The lower third of the frame reveals the detailed, light grey, rocky lunar surface, which extends from the bottom edge to a stark, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.5036613455683322,
+    "stability-ai/sdxl": 0.34723416266802604
+   },
+   "fitness": 0.38634095839310256
+  },
+  {
+   "id": "g1c3",
+   "generation": 1,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a slender crescent Earth, blue and white with swirling clouds. The Earth is approximately one-eighth of the frame width, located in the upper-middle-left quadrant, glowing against the absolute blackness of space which fills the upper two-thirds. The lower third of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.7970599779054831,
+     "pixel": 0.65052372150879,
+     "judge": 0.15,
+     "metric": 0.7604259138063099,
+     "score": 0.45521295690315494,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a slender crescent Earth, blue and white with swirling clouds. The Earth is approximately one-eighth of the frame width, located in the upper-middle-left quadrant, glowing against the absolute blackness of space which fills the upper two-thirds. The lower third of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.7790966109432088,
+     "pixel": 0.3159838398224858,
+     "judge": 0.15,
+     "metric": 0.6633184181630281,
+     "score": 0.40665920908151404,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a slender crescent Earth, blue and white with swirling clouds. The Earth is approximately one-eighth of the frame width, located in the upper-middle-left quadrant, glowing against the absolute blackness of space which fills the upper two-thirds. The lower third of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.45521295690315494,
+    "stability-ai/sdxl": 0.40665920908151404
+   },
+   "fitness": 0.41879764603692426
+  },
+  {
+   "id": "g2c1",
+   "generation": 2,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, located just left of the vertical center and about two-fifths down from the top edge, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8768725562558983,
+     "pixel": 0.6367875208160647,
+     "judge": 0.3,
+     "metric": 0.8168512973959399,
+     "score": 0.55842564869797,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, located just left of the vertical center and about two-fifths down from the top edge, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8267052441081244,
+     "pixel": 0.5532261446447289,
+     "judge": 0.05,
+     "metric": 0.7583354692422755,
+     "score": 0.40416773462113775,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, located just left of the vertical center and about two-fifths down from the top edge, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.55842564869797,
+    "stability-ai/sdxl": 0.40416773462113775
+   },
+   "fitness": 0.44273221314034583
+  },
+  {
+   "id": "g2c2",
+   "generation": 2,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, positioned just left of centre and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8852142128250517,
+     "pixel": 0.6385770960691091,
+     "judge": 0.35,
+     "metric": 0.8235549336360661,
+     "score": 0.586777466818033,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, positioned just left of centre and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8286219389462648,
+     "pixel": 0.5439272022691037,
+     "judge": 0.05,
+     "metric": 0.7574482547769745,
+     "score": 0.4037241273884873,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, positioned just left of centre and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.586777466818033,
+    "stability-ai/sdxl": 0.4037241273884873
+   },
+   "fitness": 0.4494874622458737
+  },
+  {
+   "id": "g2c3",
+   "generation": 2,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.9011033076356246,
+     "pixel": 0.6385927745579028,
+     "judge": 0.15,
+     "metric": 0.8354756743661942,
+     "score": 0.4927378371830971,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8395405869173342,
+     "pixel": 0.5437644151388548,
+     "judge": 0.15,
+     "metric": 0.7655965439727144,
+     "score": 0.4577982719863572,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.4927378371830971,
+    "stability-ai/sdxl": 0.4577982719863572
+   },
+   "fitness": 0.4665331632855422
+  },
+  {
+   "id": "g3c1",
+   "generation": 3,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, about one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": [
+     "full earth",
+     "moon"
+    ]
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8958802004163406,
+     "pixel": 0.6458297634250447,
+     "judge": 0.05,
+     "metric": 0.8333675911685168,
+     "score": 0.4416837955842584,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, about one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography.\n\nThe image does not contain: full earth, moon."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.6357295977174057,
+     "pixel": 0.23694989610436357,
+     "judge": 0,
+     "metric": 0.5360346723141451,
+     "score": 0.26801733615707257,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, about one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.4416837955842584,
+    "stability-ai/sdxl": 0.26801733615707257
+   },
+   "fitness": 0.31143395101386906
+  },
+  {
+   "id": "g3c2",
+   "generation": 3,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, approximately one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing brightly against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": [
+     "full earth",
+     "moon"
+    ]
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.9003702844896779,
+     "pixel": 0.6506631092700492,
+     "judge": 0.4,
+     "metric": 0.8379434906847708,
+     "score": 0.6189717453423854,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, approximately one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing brightly against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography.\n\nThe image does not contain: full earth, moon."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.650099319557933,
+     "pixel": 0.2194018352732915,
+     "judge": 0,
+     "metric": 0.5424249484867726,
+     "score": 0.2712124742433863,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, approximately one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing brightly against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.6189717453423854,
+    "stability-ai/sdxl": 0.2712124742433863
+   },
+   "fitness": 0.35815229201813603
+  },
+  {
+   "id": "g3c3",
+   "generation": 3,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, about one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a razor-sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": [
+     "full earth",
+     "moon"
+    ]
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8926076536943339,
+     "pixel": 0.646130923240863,
+     "judge": 0.05,
+     "metric": 0.8309884710809661,
+     "score": 0.44049423554048306,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, about one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a razor-sharp, straight horizon line.\n\nStyle: documentary photography.\n\nThe image does not contain: full earth, moon."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.6372794613726127,
+     "pixel": 0.2362080885213551,
+     "judge": 0,
+     "metric": 0.5370116181597984,
+     "score": 0.2685058090798992,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is small, about one-eighth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a razor-sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.44049423554048306,
+    "stability-ai/sdxl": 0.2685058090798992
+   },
+   "fitness": 0.3115029156950452
+  },
+  {
+   "id": "g4c1",
+   "generation": 4,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.893232974391704,
+     "pixel": 0.6492751035368105,
+     "judge": 0.3,
+     "metric": 0.8322435066779806,
+     "score": 0.5661217533389903,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.9157377626761267,
+     "pixel": 0.6201887505468235,
+     "judge": 0.35,
+     "metric": 0.8418505096438009,
+     "score": 0.5959252548219005,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.5661217533389903,
+    "stability-ai/sdxl": 0.5959252548219005
+   },
+   "fitness": 0.5735726287097178
+  },
+  {
+   "id": "g4c2",
+   "generation": 4,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a small, gibbous Earth, blue and white with swirling clouds, partially lit. The Earth is approximately one-seventh of the frame width, positioned slightly left of the central vertical axis and about two-fifths of the way down from the top, glowing brightly against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.9058431421744997,
+     "pixel": 0.6591152883922924,
+     "judge": 0.15,
+     "metric": 0.8441611787289478,
+     "score": 0.4970805893644739,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a small, gibbous Earth, blue and white with swirling clouds, partially lit. The Earth is approximately one-seventh of the frame width, positioned slightly left of the central vertical axis and about two-fifths of the way down from the top, glowing brightly against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.817448278073177,
+     "pixel": 0.3702885598990878,
+     "judge": 0.3,
+     "metric": 0.7056583485296547,
+     "score": 0.5028291742648273,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a small, gibbous Earth, blue and white with swirling clouds, partially lit. The Earth is approximately one-seventh of the frame width, positioned slightly left of the central vertical axis and about two-fifths of the way down from the top, glowing brightly against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.4970805893644739,
+    "stability-ai/sdxl": 0.5028291742648273
+   },
+   "fitness": 0.49851773558956225
+  },
+  {
+   "id": "g4c3",
+   "generation": 4,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a distinct gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, clearly separated from the horizon and glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8874298850861702,
+     "pixel": 0.637414147504159,
+     "judge": 0.15,
+     "metric": 0.8249259506906674,
+     "score": 0.4874629753453337,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a distinct gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, clearly separated from the horizon and glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.6626897448705944,
+     "pixel": 0.31265909953003057,
+     "judge": 0.35,
+     "metric": 0.5751820835354534,
+     "score": 0.4625910417677267,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a distinct gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, clearly separated from the horizon and glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.4874629753453337,
+    "stability-ai/sdxl": 0.4625910417677267
+   },
+   "fitness": 0.46880902516212847
+  },
+  {
+   "id": "g5c1",
+   "generation": 5,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-sixth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top edge, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography",
+     "35mm film photo"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.874310724009628,
+     "pixel": 0.6446101648951559,
+     "judge": 0.15,
+     "metric": 0.81688558423101,
+     "score": 0.483442792115505,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-sixth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top edge, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography, 35mm film photo."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.6392666248549886,
+     "pixel": 0.428301047404098,
+     "judge": 0,
+     "metric": 0.5865252304922659,
+     "score": 0.29326261524613295,
+     "sentPrompt": "documentary photography, 35mm film photo. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-sixth of the frame width, placed just left of the central vertical axis and about one-third of the way down from the top edge, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.483442792115505,
+    "stability-ai/sdxl": 0.29326261524613295
+   },
+   "fitness": 0.34080765946347596
+  },
+  {
+   "id": "g5c2",
+   "generation": 5,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, positioned one-quarter of the way in from the left frame edge and one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography",
+     "high contrast"
+    ],
+    "avoid": []
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8120945227646817,
+     "pixel": 0.5048809234922793,
+     "judge": 0.18,
+     "metric": 0.735291122946581,
+     "score": 0.4576455614732905,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, positioned one-quarter of the way in from the left frame edge and one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography, high contrast."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8322953878669448,
+     "pixel": 0.5761877155718323,
+     "judge": 0.1,
+     "metric": 0.7682684697931667,
+     "score": 0.4341342348965833,
+     "sentPrompt": "documentary photography, high contrast. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-seventh of the frame width, positioned one-quarter of the way in from the left frame edge and one-third of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.4576455614732905,
+    "stability-ai/sdxl": 0.4341342348965833
+   },
+   "fitness": 0.4400120665407601
+  },
+  {
+   "id": "g5c3",
+   "generation": 5,
+   "phase": "evolve",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-sixth of the frame width, positioned just left of the central vertical axis and about 30% down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features light grey, rocky lunar terrain with subtle textures, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": [
+     "crescent"
+    ]
+   },
+   "refinements": {},
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8039566633261115,
+     "pixel": 0.5117806688047032,
+     "judge": 0.18,
+     "metric": 0.7309126646957593,
+     "score": 0.45545633234787963,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-sixth of the frame width, positioned just left of the central vertical axis and about 30% down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features light grey, rocky lunar terrain with subtle textures, extending from the bottom edge to a sharp, straight horizon line.\n\nStyle: documentary photography.\n\nThe image does not contain: crescent."
+    },
+    {
+     "model": "stability-ai/sdxl",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.8461604552274805,
+     "pixel": 0.5266348065269002,
+     "judge": 0.05,
+     "metric": 0.7662790430523354,
+     "score": 0.4081395215261677,
+     "sentPrompt": "documentary photography. A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds. The Earth is approximately one-sixth of the frame width, positioned just left of the central vertical axis and about 30% down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features light grey, rocky lunar terrain with subtle textures, extending from the bottom edge to a sharp, straight horizon line."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.45545633234787963,
+    "stability-ai/sdxl": 0.4081395215261677
+   },
+   "fitness": 0.4199687242315957
+  },
+  {
+   "id": "r6-flux-1",
+   "generation": 6,
+   "phase": "refine",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {
+    "black-forest-labs/flux-schnell": [
+     "Emphasize the Earth's distinct blue and white colors and its slightly more than half-illuminated gibbous phase."
+    ]
+   },
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.9181946516197909,
+     "pixel": 0.647816606621155,
+     "judge": 0.7,
+     "metric": 0.850600140370132,
+     "score": 0.775300070185066,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\nEmphasize the Earth's distinct blue and white colors and its slightly more than half-illuminated gibbous phase.\n\nStyle: documentary photography."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.775300070185066
+   },
+   "fitness": 0.775300070185066
+  },
+  {
+   "id": "r6-flux-2",
+   "generation": 6,
+   "phase": "refine",
+   "draft": {
+    "prompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.",
+    "style": [
+     "documentary photography"
+    ],
+    "avoid": []
+   },
+   "refinements": {
+    "black-forest-labs/flux-schnell": [
+     "Ensure the Earth is the central subject, clearly distinct from the light grey, gently rolling lunar surface."
+    ]
+   },
+   "renders": [
+    {
+     "model": "black-forest-labs/flux-schnell",
+     "seed": 1,
+     "error": null,
+     "semantic": 0.9038021391651674,
+     "pixel": 0.622675926817387,
+     "judge": 0.95,
+     "metric": 0.8335205860782223,
+     "score": 0.8917602930391111,
+     "sentPrompt": "A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.\nEnsure the Earth is the central subject, clearly distinct from the light grey, gently rolling lunar surface.\n\nStyle: documentary photography."
+    }
+   ],
+   "perModel": {
+    "black-forest-labs/flux-schnell": 0.8917602930391111
+   },
+   "fitness": 0.8917602930391111
+  }
+ ],
+ "spend": [
+  {
+   "kind": "scorer",
+   "label": "target",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "describe",
+   "usd": 0.01
+  },
+  {
+   "kind": "render",
+   "label": "g0c1 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g0c2 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g0c1 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "render",
+   "label": "g0c2 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c1 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c2 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c1 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g0c3 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c2 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c3 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g0c3 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c3 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g0c4 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c4 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g0c4 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g0c4 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "judge black-forest-labs/flux-schnell",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "judge stability-ai/sdxl",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "revise g1",
+   "usd": 0.01
+  },
+  {
+   "kind": "render",
+   "label": "g1c1 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g1c2 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g1c2 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "render",
+   "label": "g1c1 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g1c2 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g1c1 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g1c2 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g1c1 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g1c3 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g1c3 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g1c3 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g1c3 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "judge black-forest-labs/flux-schnell",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "judge stability-ai/sdxl",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "revise g2",
+   "usd": 0.01
+  },
+  {
+   "kind": "render",
+   "label": "g2c2 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "render",
+   "label": "g2c1 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "render",
+   "label": "g2c1 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g2c2 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g2c2 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g2c1 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g2c1 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g2c2 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g2c3 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g2c3 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g2c3 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g2c3 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "judge black-forest-labs/flux-schnell",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "judge stability-ai/sdxl",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "revise g3",
+   "usd": 0.01
+  },
+  {
+   "kind": "render",
+   "label": "g3c1 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g3c1 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g3c2 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g3c1 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g3c2 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g3c1 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g3c2 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g3c2 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g3c3 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g3c3 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g3c3 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g3c3 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "judge black-forest-labs/flux-schnell",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "judge stability-ai/sdxl",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "revise g4",
+   "usd": 0.01
+  },
+  {
+   "kind": "render",
+   "label": "g4c1 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "render",
+   "label": "g4c1 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g4c2 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g4c1 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g4c2 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g4c1 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g4c2 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g4c2 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g4c3 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g4c3 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g4c3 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g4c3 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "judge black-forest-labs/flux-schnell",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "judge stability-ai/sdxl",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "revise g5",
+   "usd": 0.01
+  },
+  {
+   "kind": "render",
+   "label": "g5c1 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "render",
+   "label": "g5c1 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "render",
+   "label": "g5c2 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g5c1 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g5c2 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "scorer",
+   "label": "g5c1 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g5c2 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g5c2 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g5c3 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "g5c3 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "g5c3 stability-ai/sdxl",
+   "usd": 0.005
+  },
+  {
+   "kind": "scorer",
+   "label": "g5c3 stability-ai/sdxl",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "judge black-forest-labs/flux-schnell",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "judge stability-ai/sdxl",
+   "usd": 0.01
+  },
+  {
+   "kind": "analyst",
+   "label": "refine black-forest-labs/flux-schnell",
+   "usd": 0.01
+  },
+  {
+   "kind": "render",
+   "label": "r6-flux-1 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "r6-flux-1 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "render",
+   "label": "r6-flux-2 black-forest-labs/flux-schnell",
+   "usd": 0.003
+  },
+  {
+   "kind": "scorer",
+   "label": "r6-flux-2 black-forest-labs/flux-schnell",
+   "usd": 0.0005
+  },
+  {
+   "kind": "analyst",
+   "label": "judge black-forest-labs/flux-schnell",
+   "usd": 0.01
+  }
+ ]
+}

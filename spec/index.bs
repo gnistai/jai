@@ -114,7 +114,7 @@ to say which ones, where and how. Speech coding has relied on the same idea for
 decades: a vocoder transmits the parameters of a model of the voice instead of
 the waveform, and a CELP encoder finds those parameters by running the decoder
 inside the encoder and keeping what sounds closest. JAI encoding is the same
-*analysis by synthesis*: an encoder describes an image, renders the
+*analysis by synthesis* ([[#image-encoding]]): an [=image encoder=] describes an image, renders the
 description with the target models, compares the renders with the original,
 and revises the description until they match as closely as time and budget
 allow. A document can carry a core description shared by all models plus small
@@ -1416,8 +1416,15 @@ formed from these values.
 Qualified keys never select a model: `model` remains the ordered preference
 list, like a font stack, and the core values are the fallback that every model
 receives. Qualified keys whose target does not match the [=selected model=] are unused,
-without a diagnostic. An encoder typically evolves the core
-first and then adds refinements for the models in its preference list.
+without a diagnostic.
+
+Because refinements follow the core, a model that reads only the start of its
+input, such as one with a 77-token text encoder, may never see them. Authors
+who refine for such a model keep the core short, with the essentials first.
+
+An [=image encoder=] typically
+evolves the core first and then adds refinements for the models in its
+preference list.
 
 ## Never document intent ## {#parameters-not-intent}
 
@@ -1561,6 +1568,81 @@ the absence of one the `preview` or the description, MUST NOT leave a
 permanent placeholder, and MUST NOT retry with an altered description. A
 refusal is a normal outcome: viewers MUST NOT rewrite the description, or let a
 document cause it to be rewritten, to evade a refusal.
+
+# Encoding images # {#image-encoding}
+
+*This section is informative.*
+
+An <dfn>image encoder</dfn> produces a document from an existing image. It is
+a tool, not a conformance class: its output is an ordinary document, and the
+[=encoder=] class above only concerns the file form. Nothing here constrains
+how an image encoder works; the section describes the approach that the
+compression view in [[#intro-compression]] suggests, and the conventions that
+make encoded documents easy to recognise and reuse.
+
+## Analysis by synthesis ## {#image-encoding-loop}
+
+An image encoder searches for the description whose renders look most like
+the original, using the target models themselves as the decoder:
+
+1. **Describe.** A vision-capable model writes a first description of the
+    original, following [[#authoring]]: medium first, subject and counts,
+    composition, light and colour, literal text in quotes.
+2. **Render.** Each candidate description is rendered with every target model,
+    with fixed seeds so that differences between candidates come from the
+    text, not from noise.
+3. **Compare.** Each render is scored against the original. Useful measures
+    are semantic (cosine similarity of image embeddings such as CLIP),
+    perceptual (colour and layout distance between small thumbnails), and a
+    vision model's list of the visible differences. The fitness of a
+    candidate is its mean score across the target models.
+4. **Revise.** The best candidates are kept, and new ones are written from
+    them by addressing the listed differences, while keeping what already
+    matches.
+5. **Refine per model.** Once the core description stops improving, the
+    encoder looks at models that lag behind and tries short
+    [[#model-refinements|per-model refinements]] for them, keeping a refinement
+    only when it raises that model's score.
+6. **Stop.** On a budget, a time limit, or when scores reach a plateau, the
+    encoder returns the best document found so far.
+
+This is the loop a CELP speech coder runs, with a description in place of
+codebook indices and a generative model in place of the synthesis filter. The
+result is a code tuned to the decoders the author chose. Other models still
+receive the core description, which remains a faithful general description of
+the image.
+
+The quality of an encoded document is bounded by its decoders: a model that
+cannot draw hands, legible text or exact counts will not do so because the
+description is better. Scores measure resemblance, not truth; an encoder that
+optimises an embedding score alone can drift towards text that games the
+metric, which is why the comparison step also uses a reader of the images.
+
+## Output conventions ## {#image-encoding-output}
+
+An image encoder is expected to produce a document that a person could have
+written by hand, so that it stays portable and editable:
+
+- `prompt` holds the core description, complete enough for any model;
+    `prompt/<target>` (and, rarely, `style/<target>` or `avoid/<target>`) holds
+    the per-model refinements, with the target set to the model's family name
+    when only one target model is in that family, else to its alias or
+    identifier.
+- `model` lists the target models, best-scoring first, so that viewers that
+    have several of them prefer the one that reproduced the image best.
+- `aspect` is the ratio of the original's pixel dimensions, reduced to small
+    whole numbers when that changes the ratio by less than 1%.
+- `seed` is left out unless the author wants exact reproduction with one
+    model: a description tuned on one seed is still meant to work on any.
+- `preview`, when wanted, is a tiny placeholder derived from the original,
+    within the bounds of [[#security-bounds]].
+- Scores and the encoder's settings, when recorded at all, go in the tool's
+    own vendor keys. Because vendor keys are part of the identity and add
+    bytes, published documents usually leave them out and keep the report
+    beside the document instead.
+- The original image is not embedded. An encoded document describes the
+    original; it is not a copy of it, and it does not carry the original's
+    provenance or rights information ([[#security-provenance]]).
 
 # HTML and URL integration # {#html}
 

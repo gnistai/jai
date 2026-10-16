@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0-draft, encoding images — 2026-10-16
+
+- New informative section *Encoding images*: analysis by synthesis (describe,
+  render with fixed seeds, compare, revise, refine per model, stop on budget or
+  plateau), its limits, and output conventions for image encoders (`model`
+  ordered by fidelity, `aspect` from the original's pixels, no `seed`, scores
+  only in the tool's vendor keys, never the original image).
+- *Per-model refinements* notes that models with a short prompt window may
+  never see refinements appended after a long core.
+- Examples page: NASA's *Earthrise* encoded for FLUX.1 schnell and SDXL with
+  the reference encoder in jai-tools (465 bytes against 64,374 for the JPEG),
+  with the document and the full report in `examples/encoding/`.
+
 ## 1.0-draft, per-model refinements — 2026-10-16
 
 - Qualified keys `prompt/<target>`, `style/<target>` and `avoid/<target>`

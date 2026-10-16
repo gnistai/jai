@@ -246,6 +246,25 @@ qualified values are appended after the core. Decisions, with the owner:
 - Cost: `; a/b=c` in prose now parses as an assignment (sharp edge 5). The
   same edge already existed for `; a=c`, and the escape is the same.
 
+## 6d. Encoding images
+
+The image encoder is a tool, not a conformance class: the existing class named
+*encoder* produces the file form, so the new section uses *image encoder*.
+Nothing about the algorithm is normative; output conventions are
+recommendations so that encoded documents stay hand-editable and portable.
+Lessons from the reference encoder's first runs, recorded because they shaped
+the text:
+
+- CLIP image similarity saturates (0.95 and up for any render of the right
+  subject), so it cannot rank layout. A coarse thumbnail colour distance and a
+  vision model's rating carry the selection.
+- Vision-model ratings drift between calls, so the current best is re-rated
+  in every call with the new candidates.
+- A plain mean lets the core sacrifice one model; fitness blends the mean with
+  the worst model's score.
+- Models with a 77-token text encoder never see refinements appended after a
+  long core, hence the note in *Per-model refinements*.
+
 ## 7. Extensibility
 
 Undotted keys are reserved for the spec; vendors use `vendor.name`; `dc.`

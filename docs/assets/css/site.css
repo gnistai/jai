@@ -174,3 +174,7 @@ th { color: var(--text-muted); font-weight: 600; font-size: .82rem; text-transfo
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: .9rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
 .toast.show { opacity: 1; }
 .draft-banner { background: var(--accent-soft); color: var(--accent-strong); text-align: center; font-size: .85rem; padding: 6px 16px; }
+
+/* Three-column gallery (encoding showcase): original, first and final renders per row. */
+.gallery.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 760px) { .gallery.three { grid-template-columns: minmax(0, 1fr); } .gallery.three .spacer { display: none; } }

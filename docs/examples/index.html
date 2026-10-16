@@ -136,9 +136,44 @@ data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%2
   </div>
 </section>
 
+<section id="encoding">
+  <div class="wrap">
+    <div class="eyebrow">5 · Encoding</div>
+    <h2>From a photograph to 465 bytes</h2>
+    <p class="lede">An encoder runs the decoder inside the loop: a vision model describes the image, the target models render the description, the renders are scored against the original, and the description is revised. This is NASA's <em>Earthrise</em>, taken by Bill Anders on Apollo 8 (public domain), encoded for FLUX.1 schnell and Stable Diffusion XL with the reference encoder in <a href="https://github.com/gnistai/jai-tools">jai-tools</a>.</p>
+    <div class="gallery three" style="margin-top:20px">
+      <figure class="shot">
+        <img src="../assets/images/encoding/earthrise-target.webp" width="640" height="640" loading="lazy" alt="Photograph from lunar orbit: a small, partly lit blue and white Earth above the grey lunar horizon in a black sky.">
+        <figcaption><strong>The original</strong><span class="meta">64,374 bytes as a 960 × 960 JPEG. Photo: NASA / Bill Anders, Apollo 8.</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="../assets/images/encoding/earthrise-g0-flux.webp" width="640" height="640" loading="lazy" alt="Render: a larger, full blue Earth high above a bright, curved lunar surface.">
+        <figcaption><strong>First description, FLUX.1 schnell</strong><span class="meta">The best of the first four drafts. The Earth is too large and the horizon curves.</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="../assets/images/encoding/earthrise-final-flux.webp" width="640" height="640" loading="lazy" alt="Render: a small gibbous Earth just above a flat, bright lunar horizon in a black sky.">
+        <figcaption><strong>Final document, FLUX.1 schnell</strong><span class="meta">After six generations and one per-model refinement: a small Earth over a flat horizon. The lunar ground is too bright.</span></figcaption>
+      </figure>
+      <div class="spacer" aria-hidden="true"></div>
+      <figure class="shot">
+        <img src="../assets/images/encoding/earthrise-g0-sdxl.webp" width="640" height="640" loading="lazy" alt="Render: a large dark planet with a thin lit rim floating above a cloudy blue Earth seen from orbit.">
+        <figcaption><strong>First description, Stable Diffusion XL</strong><span class="meta">The Moon is gone: a dark planet hangs above Earth's clouds.</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="../assets/images/encoding/earthrise-final-sdxl.webp" width="640" height="640" loading="lazy" alt="Render: a large crescent Earth above a flat, cratered lunar horizon against a dark blue-black sky.">
+        <figcaption><strong>Final document, Stable Diffusion XL</strong><span class="meta">Flat horizon and a crescent, but the Earth is still too large. SDXL reads only about the first 60 words.</span></figcaption>
+      </figure>
+    </div>
+    <h3 style="margin-top:28px">The encoded document</h3>
+    <div class="jai-line"><code id="earthrise" data-jai-highlight>jai:A wide-angle photograph from the moon's surface, showing a gibbous Earth, blue and white with swirling clouds, appearing as a crescent. The Earth is approximately one-seventh of the frame width, placed just left of the central vertical axis and about two-fifths of the way down from the top, glowing against the absolute blackness of space which fills the upper three-fifths. The lower two-fifths of the frame features the detailed, light grey, rocky lunar terrain, extending from the bottom edge to a sharp, straight horizon line.;prompt/flux=Ensure the Earth is the central subject, clearly distinct from the light grey, gently rolling lunar surface.;aspect=1:1;model=black-forest-labs/flux-schnell;model=stability-ai/sdxl;style=documentary photography</code><button type="button" data-copy="#earthrise">Copy</button></div>
+    <p>The <code>model</code> list is ordered by how well each model reproduced the original. The refinement after <code>prompt/flux=</code> reaches FLUX models only; every other model gets the core description. Download the <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise.jai">.jai file</a> (465 bytes, gzip JSON) or the <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise-report.json">full report</a> with every candidate and score.</p>
+    <p class="muted">The run used Gemini 2.5 Flash to describe, revise and rate, and CLIP embeddings plus a thumbnail colour and layout distance to score. It made 40 renders in about eight minutes for an estimated $0.38. The score blends those measures with the vision model's rating, which is noisy, so the encoder re-rates the current best alongside every new generation. Fidelity is bounded by the decoders: neither model reliably draws a small Earth where it is asked to. The rate, a few hundred bytes, does not change when the decoders get better; the distortion does.</p>
+  </div>
+</section>
+
 <section id="modes">
   <div class="wrap">
-    <div class="eyebrow">5 · Rendering modes</div>
+    <div class="eyebrow">6 · Rendering modes</div>
     <h2>What a reader sees, step by step</h2>
     <p class="lede">A JAI-aware viewer shows the original image (or a tiny placeholder) while a render is on its way, swaps in the render, and keeps the original one click away. Choose a scenario and press Render. This demo plays back saved images; nothing is sent anywhere.</p>
     <div class="mode-demo" style="margin-top:20px">
