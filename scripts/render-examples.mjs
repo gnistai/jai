@@ -113,7 +113,8 @@ for (const entry of showcase.entries) {
   const dims = execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', file]).toString().trim().split(',').map(Number);
   manifest.images[entry.id] = {
     jai: entry.jai, canonical: J.serialize(document), identity: await J.identity(document),
-    renderer: entry.renderer, version: p.version, prediction: p.id, created: p.created_at,
+    // No provider job ids or timestamps: they identify the account and add nothing for readers.
+    renderer: entry.renderer, version: p.version,
     seconds: Math.round((Date.now() - t0) / 100) / 10, width: dims[0], height: dims[1],
     sent: shown, preview: tinyPreview(file), source: entry.source || null,
   };
