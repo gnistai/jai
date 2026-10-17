@@ -33,11 +33,12 @@ reason they lost.
 - **D0.2 Priorities.** Easier to write, then easier to implement correctly,
   then more compact. Readability of the *canonical* form is not a goal above
   those.
-- **D0.3 Small standard.** Eleven standard keys, one delimiter, three escapes,
+- **D0.3 Small standard.** Ten standard keys, one delimiter, three escapes,
   one media type. Additions need a clear semantic a renderer can act on.
   Rejected keys: `text` (literal text; quoted strings in prose are what every
   text-capable model documents), `lang` (`dc.language` covers it), `size`,
-  `steps`, `guidance`, `title`/`author`/`license` (`dc.*`).
+  `steps`, `guidance`, `title`/`author`/`license` (`dc.*`), `animate` (removed
+  in the scope cut, D6g).
 
 ## 1. Data model
 
@@ -57,7 +58,6 @@ reason they lost.
   `str.strip()` and `\s` each remove a different set and must not be used.
   Chosen over Infra's 5 ASCII code points because NBSP (rich-text editors)
   and U+3000 (CJK IMEs) after `;` would otherwise silently defeat assignment.
-  The JSON sniff uses JSON whitespace separately.
 - **D1.5** The key `jai` is reserved: in JSON it is the format marker
   (`"jai": 1`), in text an assignment to it is dropped (`reserved-key`).
 - **D1.6** The marker is identification first, version second. The spec does
@@ -65,14 +65,16 @@ reason they lost.
   parse best-effort; viewers never auto-render a document with an unknown
   value (`unsupported-version`).
 - **D1.7** One document describes one image. Members whose value is an object
-  or an array containing non-strings are reserved for future versions and are
-  dropped with `unsupported-member`.
+  or an array containing non-strings are reserved for future versions. Readers
+  skip an object, and any nested array or object inside an array, with
+  `unsupported-member`; numbers and booleans are converted (`number-value`)
+  and null is skipped (`empty-value`), as in D3.1.
 - **D1.8** Maps keyed by document keys must be real maps (`constructor`,
   `__proto__`).
 
 ## 2. Text form
 
-- **D2.1** `[OWS][jai:][segment(;segment)*][;]`. A segment is an assignment
+- **D2.1** `[OWS][segment(;segment)*][;]`. There is no prefix (D6g). A segment is an assignment
   when the text before its first unescaped `=` is, after trimming, a key;
   otherwise it is prose. The first prose segment is the prompt; later prose
   continues the most recent value with the `;` restored. Empty and
@@ -87,19 +89,18 @@ reason they lost.
   parameter `e` (`first-segment-assignment`); prose after an assignment joins
   that value (`continuation-into-single-valued-key`, `no-prompt`); OWS is
   allowed around `=`.
-- **D2.4** Leading JAI whitespace is skipped before the prefix test; the
-  prefix is removed once; every U+FEFF is removed at the start only.
-- **D2.5 Canonical serialisation.** `jai:` + prompt values (first bare unless
-  it would mis-parse, then `prompt=`), then keys in code point order,
-  repeated keys adjacent. Value escaping is one left-to-right pass:
+- **D2.4** Every U+FEFF is removed at the start only; leading whitespace
+  needs no step of its own, because keys and values are trimmed.
+- **D2.5 Canonical serialisation.** Prompt values (the first bare unless it
+  would mis-parse or begins with U+FEFF, then `prompt=`), then the qualified
+  `prompt/…` keys, then the other keys in code point order, repeated keys
+  adjacent. Value escaping is one left-to-right pass:
   `\` before `;` `=` `\` or at the end → `\\`; `;` at the start, or followed
   by OWS then end / `;` / `key OWS =` → `\;`. `=` never escaped. Two-pass
   implementations escape backslashes first. Fuzzed: 0 failures in 300k
   documents with these rules (round-0 rules failed on a trailing `\` and a
   leading `;`). Rejected: escape-all (hole-free in one sentence, but it
   teaches authors that prose semicolons need escaping).
-- **D2.6** Bare form (no prefix) protects a first prompt beginning with
-  `jai:`, U+FEFF or `{` with `prompt=`.
 
 ## 3. JSON, canonical JSON, identity, file
 
@@ -112,9 +113,9 @@ reason they lost.
   Rejected: dropping all non-string scalars (simpler, but `"strength": 0.6`
   is what hand-written JSON looks like).
 - **D3.2** Canonical JSON: UTF-8, no whitespace, members `jai`, `prompt`,
-  then code point order; strings escaped exactly as RFC 8785 §3.2.2.2; no
-  Unicode normalisation anywhere. Deviation from pure JCS: `jai`/`prompt`
-  first, so every file starts with `{"jai":1` followed by `,` or `}` after
+  the qualified `prompt/…` members, then the rest in code point order; strings
+  escaped exactly as RFC 8785 §3.2.2.2; no Unicode normalisation anywhere.
+  Deviation from pure JCS: `jai`, `prompt` and `prompt/…` first, so every file starts with `{"jai":1` followed by `,` or `}` after
   inflation.
 - **D3.3** Identity = SHA-256 of canonical JSON; syntactic; names the
   document, never a render. A render cache key adds renderer configuration,
@@ -126,15 +127,15 @@ reason they lost.
   Rejected: FEXTRA signature subfield (optional features nobody implements),
   fixed 16-byte header as MUST (`gzip -c` would be non-conforming), brotli/
   zstd/CBOR (not universally decodable in browsers).
-- **D3.5 Decoding is layered and total.** `1F 8B` → gunzip → must be JSON;
-  else strict UTF-8 (ill-formed, or containing the byte 00 → `undecodable`;
-  the 00 rule keeps headerless UTF-16 and other binary from becoming a
-  prompt), skip JSON whitespace; `{`
-  followed by `"` or `}` → JSON (failure → `invalid-json`, never a fallback);
-  otherwise text. Rejected: falling back from JSON to text (renders garbage,
-  splits decoders), text branch accepting any bytes.
-- **D3.6** One media type, `image/jai`, for all three serialisations, matched
-  by essence. Unregistered for now (as `image/webp` was until RFC 9649); the
+- **D3.5 One serialisation per place, total.** A `.jai` file or resource is
+  the file form only: anything that is not exactly one well-formed gzip member
+  is `malformed-container`; content that is not UTF-8 JSON is `invalid-json`.
+  A `data:image/jai` body is the text form only: strict UTF-8 (ill-formed, or
+  containing the byte 00 → `undecodable`; the 00 rule keeps binary from
+  becoming a prompt). Replaced the layered sniffing decoder (gzip, then JSON,
+  then text) in the scope cut (D6g).
+- **D3.6** One media type, `image/jai`, for the file form, and for the text
+  form in a `data:` URL, matched by essence. Unregistered for now (as `image/webp` was until RFC 9649); the
   spec carries an RFC 6838 registration template. Owner question: the
   registrable alternative `image/vnd.gnist.jai` was rejected by default
   because it brands a CC0 standard. Name collisions (JPEG AI `image/jaii`,
@@ -143,15 +144,14 @@ reason they lost.
 ## 4. Standard keys
 
 `prompt`, `style`, `avoid`, `model` (many); `aspect`, `mode`, `strength`,
-`seed`, `source`, `preview`, `animate` (one; last wins at interpretation,
+`seed`, `source`, `preview` (one; last wins at interpretation,
 `repeated-single`; the parser keeps every value).
 
 - **D4.1** Value interpretation is a normative procedure so renderers agree:
   strip one pair of ASCII quotes and one trailing `.`, match ASCII
   case-insensitively; `aspect` accepts `W:H`, `WxH`, `W×H`, `W/H`, decimal
   numbers, `square`/`landscape`/`portrait`; `strength` accepts `0.6` and
-  `60%`, clamped; `seed` 1–20 digits; `animate` true/yes/1/on and the
-  negatives. Decimal comma rejected with a suggestion (no web format accepts
+  `60%`, clamped; `seed` 1–20 digits. Decimal comma rejected with a suggestion (no web format accepts
   it). Interpreters must not use lenient or locale-aware number parsers.
 - **D4.2** `model` is a selector, never a locator (see D8). Matching: exact
   id/alias, then family by contiguous runs of ASCII-alphanumeric words,
@@ -164,11 +164,9 @@ reason they lost.
   `source`: raster `data:` URI or URL; `transform` only; explicit `source`
   wins over the element's image. BlurHash/ThumbHash may come later as
   prefixed values.
-- **D4.5** `animate`: kept (owner default). Requests a looping animated
-  *image*; still frame with `unsupported-parameter` otherwise; viewer motion
-  rules apply.
-- **D4.6** `aspect` in HTML: the element's *governing ratio* (the original's
-  ratio, else an author-sized layout box) governs the render (`ignored-value`
+- **D4.5** `animate`: removed in the scope cut (D6g).
+- **D4.6** `aspect` in HTML: the element's *governing ratio* (an author-sized
+  layout box, else the original's ratio) governs the render (`ignored-value`
   if `aspect` differs by more than 1%); otherwise `aspect`, then `preview`, then
   the renderer default. Renders are never stretched: the page's `object-fit`
   applies, else a centred cover crop. Changed after the owner asked how
@@ -186,37 +184,36 @@ is `generate` unless the user asks for a transformation). Failure = any
 outcome without a usable image; restore the original, never retry with an
 altered description. The viewer always wins over `mode`.
 
-## 6. HTML and URLs
+## 6. HTML
 
-- **D6.1 Carriers**, discovery order: (1) `<picture><source
-  type="image/jai" srcset>` — HTML's own negotiation, preferred; (2)
-  `data-jai` attribute — inline, survives most sanitisers, kept with a note
-  that HTML intends `data-*` for the page's scripts; (3) `src` that is a
-  `data:image/jai` URL — the pure form, requires prose `alt` and a sized box,
-  labelled "for JAI-aware surfaces"; (4) `alt` beginning with `jai:` —
-  deprecated, recognised, never rendered automatically, no `data:` payloads,
-  kept only because it is the sole Markdown/strict-sanitiser carrier.
-- **D6.2 No `jai:` URL scheme.** `jai:` is a text prefix. Rejected after
-  five lenses: no media type, stripped by DOMPurify, OS handler in links,
-  unregistrable, redundant with `data:image/jai`.
+- **D6.1 Carriers**, discovery order: (1) picture: `<picture><source
+  type="image/jai" srcset>`, HTML's own negotiation; (2) attribute: `data-jai`,
+  inline, survives most sanitisers; (3) src: a `data:image/jai` URL or a
+  `.jai` file, the pure form, requiring prose `alt` and recommending a sized
+  box. See 6e, 6f and D6g.
+- **D6.2 No `jai:` URL scheme and no `jai:` prefix.** Rejected after five
+  lenses (no media type, stripped by DOMPurify, OS handler in links,
+  unregistrable, redundant with `data:image/jai`); the text prefix itself went
+  in the scope cut (D6g).
 - **D6.3 One transport decoding per carrier.** `data:` URLs: the Fetch data:
   URL processor (fragment excluded, lenient percent-decode); http(s): the
-  response body regardless of `Content-Type`; attributes: none. Never a second
+  response body regardless of `Content-Type`, except that a `text/html`
+  response carries no document; attributes: none. Never a second
   percent-decoding; never `decodeURIComponent`.
 - **D6.4 URL encoding profile.** In a `data:image/jai,` body encode C0,
-  U+007F, ASCII whitespace, `%`, `#`, and a trailing `,`; everything else may
-  stay literal. Rejected: encoding `,` `"` `'` `<` `>` and non-ASCII (not
-  needed, +17 % size).
-- **D6.5 Query forms.** Whole-query form (`?prompt=…;style=…`): raw query,
-  percent-decoded once, `+` literal, `&` prose, no other parameters.
-  Parameter form (`?jai=…`): read by any form parser (`+` is space), coexists
-  with other parameters; the informative gateway convention.
+  U+007F, ASCII whitespace, `%`, `#`, `"`, `'`, `<`, `>`, `&`, a final `,`
+  and a leading `/`, so that the canonical URL form fits any quoted HTML
+  attribute without further escaping (round 2); everything else may stay
+  literal. Rejected: encoding every `,` and non-ASCII (not needed, +17 %
+  size).
+- **D6.5 No query forms.** The whole-query and parameter forms and the
+  gateway convention were removed in the scope cut (D6g).
 - **D6.6 Replacement** must be effective under HTML source selection (insert
   a viewer `<source>` or set `srcset`; never rely on `src` alone), verified by
   `load`/`currentSrc`, CSP-aware (fall back to a canvas painted from local
   bytes), reversible, once per identity per page load, lazy-loading aware,
-  and accessible (keep human `alt`; name from the prompt only when `alt` was
-  the JAI string or absent; expose the AI-rendered state; no hover-only
+  and accessible (keep human `alt`; name from the prompt only when `alt` is
+  absent; expose the AI-rendered state; no hover-only
   controls; no transitions under reduced motion).
 
 ## 6b. Personalisation
@@ -260,11 +257,11 @@ recommendations so that encoded documents stay hand-editable and portable.
 Lessons from the reference encoder's first runs, recorded because they shaped
 the text:
 
-- CLIP image similarity saturates (0.95 and up for any render of the right
-  subject), so it cannot rank layout. A coarse thumbnail colour distance and a
-  vision model's rating carry the selection.
-- Vision-model ratings drift between calls, so the current best is re-rated
-  in every call with the new candidates.
+- CLIP image similarity saturated (0.95 and up for any render of the right
+  subject), so it could not rank layout; the first encoder fell back on a
+  coarse thumbnail colour distance and a vision model's rating.
+- Vision-model ratings drifted between calls, so the current best had to be
+  re-rated in every call with the new candidates.
 - A plain mean lets the core sacrifice one model; fitness blends the mean with
   the worst model's score.
 - Models with a 77-token text encoder never see refinements appended after a
@@ -285,7 +282,9 @@ the text:
 
 The `alt` carrier was removed before any release: a deprecated carrier on day
 one made no sense, and JAI syntax in `alt` is what screen readers would speak.
-Instead, for `data-jai`, `alt` is the first prompt value. The owner's view,
+Instead, for `data-jai`, `alt` is the prompt unless `data-jai` gives one
+(revised in D6g; it was first defined as the first of several prompt
+values). The owner's view,
 adopted: alt text should describe what an image shows, richly and concretely,
 not only name its occasion ("our team at the offsite" withholds the white-out
 on the ski slope from a blind reader). A JAI description and a good alt are the
@@ -311,6 +310,38 @@ A design review found that the reference viewer fetched `.jai` URLs during
 discovery and that its privileged fallback fetch would request any URL, which
 let a page probe the user's network without a click. Both are fixed and the
 rules are normative in #security-inputs.
+
+## 6g. Scope cut: HTML and files (owner decision, 2026-10-17)
+
+The owner judged that JAI supported too much and narrowed it to HTML and
+files, with no legacy and no bloat. The rule that came out of it: every place
+marks itself as JAI and holds exactly one serialisation, so nothing needs a
+prefix and nothing is sniffed. `data-jai` and `data:image/jai` bodies hold the
+text form; a `.jai` file or resource holds the file form.
+
+- **Attribute carrier.** `alt` is the prompt unless `data-jai` gives one,
+  decided on the parsed document (qualified `prompt/…` keys do not count).
+  Writing the description once in `alt` stays the convenient default; putting
+  the prompt in `data-jai` makes `alt` page text only, like the other
+  carriers. `alt-repeated` went with the old "alt is the first line" rule.
+- **The `jai:` prefix is gone.** It only served text with no marker (chat,
+  email, clipboard, documentation), which JAI no longer addresses; every
+  remaining place already says JAI. The bare serialisation became the
+  canonical text; its `jai:` and `{` rules went, the U+FEFF rule stayed.
+  Removed codes: `prefix-in-prompt`, `jai-scheme-url`.
+- **No sniffing.** Decoding is file form only; `data:` bodies are text only;
+  the JSON reader lost its context flag and "JAI context" disappeared;
+  `;base64` file forms in `data:` URLs and uncompressed JSON or text in `.jai`
+  files are no longer accepted. Removed: `non-canonical-encoding`.
+- **Removed outright:** the query forms and the gateway convention; the
+  "other host formats" list and the carriers-by-context matrix (Markdown's
+  `![alt](castle.jai)` stays, as the src carrier); the appendix on existing
+  formats (A1111/ComfyUI import, PNG `iTXt`/XMP embedding, dialect mappings)
+  and `foreign-syntax`; `animate` and its motion rules; and the validator codes
+  `stray-wrapper`, `url-split` and `colon-assignment`, which no implementation
+  emitted and no fixture tested.
+- Kept: personalisation (an endorsed use case), refinements, model matching,
+  `preview`, `source`, `seed`, the value grammars, the encoding loop.
 
 ## 7. Extensibility
 
@@ -340,8 +371,8 @@ normative; diagnostics are codes; parser codes are exact, validator codes
 advisory, renderer codes mandatory when the condition occurs. Reference
 implementation: `jai.js` + `tests/` in this repository; reference viewer: the
 extension in `jai-tools`. Living document with a pinned date and an
-edition stamp (`1.0-draft`); keys are never removed; fixtures are append-only
-after the first tag. Everything in this repository is CC0-1.0.
+edition stamp (`1.0-draft`); from the first tagged edition, keys are never
+removed and fixtures are append-only. Everything in this repository is CC0-1.0.
 
 ## 9b. Review round 2 (spec-only implementation)
 
@@ -357,9 +388,8 @@ replaced fixtures (454 in total). Decisions taken:
   normatively in the spec.
 - Quotes and a trailing full stop are stripped only from single-valued keys;
   `prompt`, `style`, `avoid` and `model` are used as written.
-- `data-jai` is always the text form; "JAI context" is defined once (files,
-  `image/jai` resources, `data:` bodies).
-- Carrier 1 follows HTML's srcset parsing exactly (an unencoded space drops
+- `data-jai` is always the text form.
+- The picture carrier follows HTML's srcset parsing exactly (an unencoded space drops
   the candidate). Rejected: a private first-URL rule, which would overlay a
   render of the wrong text on the picture the browser shows.
 - Invalid deflate is defined as exactly what zlib rejects, so platform
@@ -370,13 +400,9 @@ replaced fixtures (454 in total). Decisions taken:
   `:version`/`@version` of the last segment (reporting `version-ignored` only
   when that matched), then families by earliest, longest, first-listed run;
   the step-2 default may be ineligible, giving `mode-degraded` in transform.
-- The query forms parse the URL first (null query = no document, empty query =
-  empty document, UTF-8 with replacement).
 - Security prohibitions use BCP 14 keywords. Transform documents describe the
   result, not the edit, because they are rendered as `generate` when the
   original is unreadable.
-- `jai:  ;A castle` emits `empty-segment` like `;A castle` (D2.4; fixture
-  `parse-semicolon-ws-prefix`).
 - Informative one-liners proposed in round 1 for S-16, S-17, S-30, S-43, S-49,
   S-64, S-65 and S-66 that are not in the spec were dropped deliberately to
   keep it short; the website and the skill carry the author-facing parts.
@@ -384,10 +410,7 @@ replaced fixtures (454 in total). Decisions taken:
 ## 10. Open questions for the owner
 
 1. Media type: unregistered `image/jai` (default) or `image/vnd.gnist.jai`.
-2. `animate`: keep with the output contract (default) or reserve.
-3. The name JAI and `.jai`: keep (default) knowing the collisions above; a
+2. The name JAI and `.jai`: keep (default) knowing the collisions above; a
    trademark opinion is advisable before launch.
-4. A `title` carrier for Markdown (`![alt](img "jai:…")`): not in v1
-   (default).
-5. Patent non-assert for the spec text beyond CC0: W3C Document Licence or
+3. Patent non-assert for the spec text beyond CC0: W3C Document Licence or
    OWFa (default: add a short non-assert statement in the README).

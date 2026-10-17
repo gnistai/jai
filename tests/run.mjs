@@ -152,7 +152,6 @@ const runners = {
     const errs = [];
     const text = J.serialize(doc);
     if (text !== c.text) errs.push(`text ${show(text)} != ${show(c.text)}`);
-    if (c.bare !== undefined) { const b = J.serialize(doc, { bare: true }); if (b !== c.bare) errs.push(`bare ${show(b)} != ${show(c.bare)}`); }
     const json = J.canonicalJSON(doc);
     if (json !== c.json) errs.push(`json ${show(json)} != ${show(c.json)}`);
     if (c.url !== undefined) { const u = J.toDataURL(doc); if (u !== c.url) errs.push(`url ${show(u)} != ${show(c.url)}`); }
@@ -166,48 +165,39 @@ const runners = {
     const doc = J.fromObject(c.document);
     const errs = [];
     if (!docEquals(doc, c.document)) return [`fixture document is not normalised: ${show(doc)}`];
-    for (const bare of [false, true]) {
-      const text = J.serialize(doc, { bare });
-      const back = J.parse(text);
-      if (!docEquals(back.document, c.document)) errs.push(`${bare ? 'bare ' : ''}text ${show(text)} parses to ${show(back.document)}`);
-      const again = J.serialize(back.document, { bare });
-      if (again !== text) errs.push(`${bare ? 'bare ' : ''}not a fixed point: ${show(again)}`);
-      const url = J.toDataURL(doc);
-      const fromUrl = J.decodeDataURL(url);
-      if (!fromUrl || !docEquals(fromUrl.document, c.document)) errs.push(`data URL ${show(url)} decodes to ${show(fromUrl && fromUrl.document)}`);
-    }
+    const text = J.serialize(doc);
+    const back = J.parse(text);
+    if (!docEquals(back.document, c.document)) errs.push(`text ${show(text)} parses to ${show(back.document)}`);
+    const again = J.serialize(back.document);
+    if (again !== text) errs.push(`not a fixed point: ${show(again)}`);
+    const url = J.toDataURL(doc);
+    const fromUrl = J.decodeDataURL(url);
+    if (!fromUrl || !docEquals(fromUrl.document, c.document)) errs.push(`data URL ${show(url)} decodes to ${show(fromUrl && fromUrl.document)}`);
     const json = J.canonicalJSON(doc);
     const rj = J.readJSON(json);
     if (!docEquals(rj.document, c.document)) errs.push(`canonical JSON reads back as ${show(rj.document)}`);
     if (J.canonicalJSON(rj.document) !== json) errs.push('canonical JSON is not a fixed point');
     const file = await J.encode(doc);
     const dec = J.decode(file);
-    if (!docEquals(dec.document, c.document) || dec.form !== 'gzip') errs.push(`file form decodes to ${show(dec.document)} (${dec.form}) [${fmtDiags(dec.diagnostics)}]`);
+    if (!docEquals(dec.document, c.document) || dec.diagnostics.length) errs.push(`file form decodes to ${show(dec.document)} [${fmtDiags(dec.diagnostics)}]`);
     return errs;
   },
   json(c) {
-    const r = J.readJSON(c.input, { inContext: c.context !== false });
+    const r = J.readJSON(c.input);
     const errs = [];
     if (!docEquals(r.document, c.document)) errs.push(`document ${show(r.document)} != ${show(c.document)}`);
     if (!diagsEqual(r.diagnostics, c.diagnostics)) errs.push(`diagnostics [${fmtDiags(r.diagnostics)}] != [${c.diagnostics.join(', ')}]`);
     return errs;
   },
   decode(c) {
-    const opts = { inContext: c.context !== false };
-    if (c.bound) opts.maxInflate = c.bound;
-    const r = J.decode(b64(c.bytes), opts);
+    const r = J.decode(b64(c.bytes), c.bound ? { maxInflate: c.bound } : {});
     const errs = [];
     if (!docEquals(r.document, c.document)) errs.push(`document ${show(r.document)} != ${show(c.document)}`);
     if (!diagsEqual(r.diagnostics, c.diagnostics)) errs.push(`diagnostics [${fmtDiags(r.diagnostics)}] != [${c.diagnostics.join(', ')}]`);
-    if (c.advisories || c.no_advisories) {
-      const v = J.validateDelivery({ decoded: r });
-      if (c.advisories && !hasAll(v, c.advisories)) errs.push(`advisories [${fmtDiags(v)}] missing some of [${c.advisories.join(', ')}]`);
-      if (c.no_advisories && !hasNone(v, c.no_advisories)) errs.push(`advisories [${fmtDiags(v)}] include one of [${c.no_advisories.join(', ')}]`);
-    }
     return errs;
   },
   url(c) {
-    const r = c.kind === 'data' ? J.decodeDataURL(c.url) : J.fromQuery(c.url, c.kind);
+    const r = J.decodeDataURL(c.url);
     if (c.discovered === false) return r ? [`expected no document, got ${show(r.document)}`] : [];
     if (!r) return ['no document found'];
     const errs = [];
@@ -301,13 +291,11 @@ if (!flag('--no-fuzz') && (!selected.length || selected.includes('fuzz'))) {
       vals.push(v);
     }
     const doc = J.fromObject(obj);
-    for (const bare of [false, true]) {
-      const t = J.serialize(doc, { bare });
-      const back = J.parse(t).document;
-      if (!J.documentsEqual(back, doc) || J.serialize(back, { bare }) !== t) {
-        fz++;
-        if (fz <= 5) console.log(`FUZZ ${bare ? 'bare ' : ''}${show(doc)} -> ${show(t)} -> ${show(back)}`);
-      }
+    const t = J.serialize(doc);
+    const back = J.parse(t).document;
+    if (!J.documentsEqual(back, doc) || J.serialize(back) !== t) {
+      fz++;
+      if (fz <= 5) console.log(`FUZZ ${show(doc)} -> ${show(t)} -> ${show(back)}`);
     }
     const url = J.toDataURL(doc);
     const u = J.decodeDataURL(url);

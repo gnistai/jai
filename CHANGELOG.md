@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.0-draft, HTML and files — 2026-10-17
+
+JAI now does two things, HTML and files, and every place that holds a document
+says so itself and holds exactly one serialisation.
+
+- **Attribute carrier:** `alt` is the prompt unless `data-jai` gives one. Write
+  the description once in `alt` and the settings in `data-jai`, or start
+  `data-jai` with the description and `alt` stays the page's own text.
+- **No `jai:` prefix.** The text form appears only in `data-jai` and in
+  `data:image/jai` URLs, which both mark it already. The canonical text is
+  the old bare form without its `jai:` and `{` rules (a first prompt that
+  begins with U+FEFF is still written as `prompt=`).
+- **No sniffing.** A `.jai` file or resource is always the file form (one gzip
+  member of canonical JSON); a `data:image/jai` body is always the text form.
+  The JSON reader has no context flag.
+- **Removed:** the query forms and gateways, the other-host-formats list and
+  the carriers-by-context matrix, the appendix on existing formats (prompt
+  import, raster embedding, dialects), the `animate` key, and the codes
+  `alt-repeated`, `prefix-in-prompt`, `jai-scheme-url`,
+  `non-canonical-encoding` and `foreign-syntax`, plus `stray-wrapper`,
+  `url-split` and `colon-assignment`, which nothing emitted.
+- The reference libraries export `validateDataURL`, the validator checks for
+  a `data:image/jai` URL on its own, and judge `keep-in-source` by the
+  interpreted mode.
+- Ten standard keys remain.
+
 ## 1.0-draft, reference implementation fix — 2026-10-17
 
 - The reference implementation no longer takes quadratic time on long runs of

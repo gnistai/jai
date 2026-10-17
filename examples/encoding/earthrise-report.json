@@ -47,7 +47,7 @@
   "medium": "photograph"
  },
  "budgetUSD": 0.35,
- "text": "jai:Photograph of a distant Earthrise over the Moon: one small, horizontally compressed blue-and-white Earth sits slightly right of centre, around one seventh of the frame wide, with its centre just below the middle of the square frame. Vast pure black, starless space fills nearly three quarters of the view. The lunar ground is dark gray-brown and lightly textured, occupying only the lowest quarter; its low curved horizon is very near the bottom edge, higher on the left and descending gently to the right. Even bright sunlight illuminates both Earth and lunar dust without glare.;aspect=1:1;avoid=text;avoid=stars;model=black-forest-labs/flux-schnell;style=Apollo space photography;style=natural realism",
+ "text": "Photograph of a distant Earthrise over the Moon: one small, horizontally compressed blue-and-white Earth sits slightly right of centre, around one seventh of the frame wide, with its centre just below the middle of the square frame. Vast pure black, starless space fills nearly three quarters of the view. The lunar ground is dark gray-brown and lightly textured, occupying only the lowest quarter; its low curved horizon is very near the bottom edge, higher on the left and descending gently to the right. Even bright sunlight illuminates both Earth and lunar dust without glare.;aspect=1:1;avoid=text;avoid=stars;model=black-forest-labs/flux-schnell;style=Apollo space photography;style=natural realism",
  "ranking": [
   {
    "model": "black-forest-labs/flux-schnell",

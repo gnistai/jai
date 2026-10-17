@@ -37,12 +37,12 @@
     <div>
       <div class="eyebrow">Just AI Images</div>
       <h1>Images compressed into words.<br>Any AI is the decoder.</h1>
-      <p class="lede">JAI is an open image format for a world where generating pictures is cheap and local, and moving them is not. A JAI image is a few hundred bytes of description that any generative model turns back into the picture, and that a screen reader or a text-only AI agent can read as it is.</p>
+      <p class="lede">JAI is an open image format for a world where generating pictures is cheap and local, and moving them is not. A JAI image is a few hundred bytes of description that any generative model turns back into the picture, and that a screen reader or an AI agent reads as it is: text all the way down.</p>
       <div class="jai-line">
-        <code id="hero-jai" data-jai-highlight>jai:A magical castle;style=anime</code>
+        <code id="hero-jai" data-jai-highlight>A magical castle;style=anime</code>
         <button type="button" data-copy="#hero-jai" aria-label="Copy the example">Copy</button>
       </div>
-      <p class="muted">Those 32 bytes are a complete JAI image. The picture beside it, 189 KB as WebP, is one way to decode them.</p>
+      <p class="muted">Those 28 bytes are a complete JAI image. The picture beside it, 189 KB as WebP, is one way to decode them.</p>
       <div class="actions">
         <a class="btn" href="playground/">Try the playground</a>
         <a class="btn secondary" href="vision/">Why JAI exists</a>
@@ -50,7 +50,7 @@
     </div>
     <figure class="hero-figure">
       <img src="assets/images/hero-castle.webp" width="1024" height="1024" alt="An anime-style fairytale castle with red-roofed spires above a waterfall, framed by trees under a blue sky.">
-      <figcaption>Rendered from <code>jai:A magical castle;style=anime</code> by FLUX.1 schnell. Another renderer would draw a different castle.</figcaption>
+      <figcaption>Rendered from <code>A magical castle;style=anime</code> by FLUX.1 schnell. Another renderer would draw a different castle.</figcaption>
     </figure>
   </div>
 </section>
@@ -63,11 +63,11 @@
     <div class="grid" style="margin-top:28px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))">
       <div class="card">
         <h3>Readable without seeing</h3>
-        <p>The description is the image. A vision-impaired reader hears the author's own words through a screen reader, and a text-only AI agent reads and writes pictures with no vision model at all.</p>
+        <p>The description is the image. By default it is also the alt, so a screen reader speaks the author's own words, the same words the model draws from, and an AI agent reads and writes pictures as text, with no vision model at all.</p>
       </div>
       <div class="card">
         <h3>Little bandwidth</h3>
-        <p>Ships, satellite links, disaster zones and text-only radio can carry a sentence where they cannot carry a photograph. A receiver with a GPU draws the picture.</p>
+        <p>Ships, satellite links, disaster zones and packet radio can carry a few hundred bytes where they cannot carry a photograph. A receiver with a GPU draws the picture.</p>
       </div>
       <div class="card">
         <h3>Local generation</h3>
@@ -78,33 +78,34 @@
         <p>Your decoder draws the pixels, so you can have them your way: adapted to your culture, softened, adjusted for your eyesight, or just in a mood you enjoy.</p>
       </div>
     </div>
-    <p class="muted" style="margin-top:24px">Today most renders still go to a hosted provider through an API key, which is fine for demos and personal renders, and the reason the reference viewer asks before every render. <a href="vision/">Read the full argument</a>.</p>
+    <p class="muted" style="margin-top:24px">Today most renders still go to a hosted provider through an API key, which is fine for demos and personal renders, and the reason the reference viewer renders only when you ask, unless you allow a site to render automatically. <a href="vision/">Read the full argument</a>.</p>
   </div>
 </section>
 
 <section id="how">
   <div class="wrap">
     <div class="eyebrow">How it works</div>
-    <h2>One document, three spellings</h2>
+    <h2>One document, three places</h2>
+    <p class="lede">A JAI document is a description plus optional settings. HTML and files carry it, and each place says by itself that it holds JAI, in exactly one form.</p>
     <div class="grid grid-3" style="margin-top:20px">
       <div class="card">
-        <span class="badge">Text</span>
-        <h3 style="margin-top:10px">For people</h3>
-        <pre><code>jai:A magical castle;style=anime</code></pre>
-        <p class="muted">Description first, then <code>;key=value</code> settings. Ordinary semicolons inside the description are fine.</p>
+        <span class="badge">Attribute</span>
+        <h3 style="margin-top:10px">On an image you already have</h3>
+        <pre><code>data-jai="style=anime"</code></pre>
+        <p class="muted">The text form: description first, then <code>;key=value</code> settings. The image's <code>alt</code> is the description unless <code>data-jai</code> gives one.</p>
       </div>
       <div class="card">
-        <span class="badge">JSON</span>
-        <h3 style="margin-top:10px">For programs</h3>
-        <pre><code>{"jai":1,"prompt":"A magical castle","style":"anime"}</code></pre>
-        <p class="muted">Every value is a string or a list of strings. One canonical byte sequence per document, so every image has a stable identity.</p>
+        <span class="badge">data: URL</span>
+        <h3 style="margin-top:10px">An image with no pixels, inline</h3>
+        <pre><code>data:image/jai,A%20magical%20castle;style=anime</code></pre>
+        <p class="muted">The same text form, percent-encoded, in <code>src</code> or a <code>&lt;source&gt;</code> <code>srcset</code>. The media type marks it.</p>
       </div>
       <div class="card">
         <span class="badge">File</span>
         <h3 style="margin-top:10px">For files and the web</h3>
         <pre><code>castle.jai      image/jai
-gzip( JSON )</code></pre>
-        <p class="muted">A <code>.jai</code> file is the JSON, gzip-compressed. It can be served, linked and embedded like any other image file.</p>
+gzip( {"jai":1,"prompt":"A magical castle","style":"anime"} )</code></pre>
+        <p class="muted">A <code>.jai</code> file is gzip-compressed canonical JSON: one byte sequence per document, so every image has a stable identity. It is served, linked and embedded like any other image file.</p>
       </div>
     </div>
   </div>
@@ -113,21 +114,20 @@ gzip( JSON )</code></pre>
 <section id="write">
   <div class="wrap">
     <div class="eyebrow">Write one</div>
-    <h2>Five rules cover almost everything</h2>
+    <h2>Four rules cover almost everything</h2>
     <div class="grid grid-2" style="margin-top:20px">
       <ol class="steps">
         <li><strong>Describe the picture first,</strong> as you would to someone on the phone: what is in it, where, the light, the medium.</li>
         <li><strong>Add settings after a semicolon,</strong> each as <code>name=value</code>: <code>;style=watercolor</code>, <code>;aspect=16:9</code>, <code>;avoid=text</code>.</li>
-        <li><strong>Put <code>jai:</code> in front</strong> when the place you write in does not already say it is JAI.</li>
         <li><strong>Repeat a setting for several items:</strong> <code>;style=ink;style=loose</code>. A model preference is only a preference.</li>
         <li><strong>If the description starts with <code>word=</code>,</strong> begin with <code>prompt=</code> instead.</li>
       </ol>
       <div>
         <div class="jai-line"><code id="ex1" data-jai-highlight>A red bicycle leaning against a whitewashed wall, afternoon sun</code><button type="button" data-copy="#ex1">Copy</button></div>
-        <div class="jai-line"><code id="ex2" data-jai-highlight>jai:A lighthouse on a cliff in a storm;style=watercolor;aspect=3:2</code><button type="button" data-copy="#ex2">Copy</button></div>
-        <div class="jai-line"><code id="ex3" data-jai-highlight>jai:A wizard in a doorway; behind him, a dragon sleeps;style=ink;avoid=text</code><button type="button" data-copy="#ex3">Copy</button></div>
-        <div class="jai-line"><code id="ex4" data-jai-highlight>jai:A narrow cobbled street at night, lit by neon signs, wet reflections;mode=transform;strength=0.6</code><button type="button" data-copy="#ex4">Copy</button></div>
-        <p class="muted">The standard settings are <code>style</code>, <code>avoid</code>, <code>aspect</code>, <code>model</code>, <code>mode</code>, <code>strength</code>, <code>seed</code>, <code>source</code>, <code>preview</code> and <code>animate</code>. <a href="spec/#parameters">What each one means</a>.</p>
+        <div class="jai-line"><code id="ex2" data-jai-highlight>A lighthouse on a cliff in a storm;style=watercolor;aspect=3:2</code><button type="button" data-copy="#ex2">Copy</button></div>
+        <div class="jai-line"><code id="ex3" data-jai-highlight>A wizard in a doorway; behind him, a dragon sleeps;style=ink;avoid=text</code><button type="button" data-copy="#ex3">Copy</button></div>
+        <div class="jai-line"><code id="ex4" data-jai-highlight>A narrow cobbled street at night, lit by neon signs, wet reflections;mode=transform;strength=0.6</code><button type="button" data-copy="#ex4">Copy</button></div>
+        <p class="muted">The standard settings are <code>style</code>, <code>avoid</code>, <code>aspect</code>, <code>model</code>, <code>mode</code>, <code>strength</code>, <code>seed</code>, <code>source</code> and <code>preview</code>. <a href="spec/#parameters">What each one means</a>.</p>
       </div>
     </div>
   </div>
@@ -137,27 +137,27 @@ gzip( JSON )</code></pre>
   <div class="wrap">
     <div class="eyebrow">On the web</div>
     <h2>Works in every browser today</h2>
-    <p class="lede">Three forms, chosen by what the page has. Browsers without JAI support keep showing the normal image, or the alt text where there is none. A JAI-aware browser or extension renders the description instead, when the reader chooses.</p>
+    <p class="lede">Three carriers, chosen by what the page has. Browsers without JAI support keep showing the normal image, or the alt text where there is none. A JAI-aware browser or extension renders the description instead, when the reader chooses.</p>
     <div class="grid grid-2" style="margin-top:20px">
       <div>
         <h3>With an image (recommended)</h3>
 <pre><code>&lt;img src="castle.png"
-     alt="A magical castle at dusk, mist in the valley"
-     data-jai="style=anime"&gt;</code></pre>
-        <p class="muted">The alt text is the description, for screen readers and for the model; <code>data-jai</code> marks the image and adds the settings.</p>
+     alt="A magical castle at dusk, seen from below"
+     data-jai="style=anime;prompt/flux=Lit windows glow warm"&gt;</code></pre>
+        <p class="muted"><code>data-jai</code> marks the image and holds the settings. The <code>alt</code> is the description: written once, spoken by screen readers exactly as written, and drawn by the model. Start <code>data-jai</code> with the description instead, and the <code>alt</code> stays your page's own, shorter text.</p>
         <h3>HTML's own format negotiation</h3>
 <pre><code>&lt;picture&gt;
   &lt;source type="image/jai" srcset="castle.jai"&gt;
   &lt;img src="castle.png" alt="A castle at dusk"&gt;
 &lt;/picture&gt;</code></pre>
-        <p class="muted">The path a browser with built-in JAI support takes. The <code>alt</code> stays your page's own, shorter text.</p>
+        <p class="muted">The path a browser with built-in JAI support takes. The <code>alt</code> stays your page's own text.</p>
       </div>
       <div>
         <h3>No pixels at all: the image is JAI</h3>
 <pre><code>&lt;img src="castle.jai" alt="A castle at dusk"
      width="800" height="600"&gt;</code></pre>
 <pre><code>![A castle at dusk](castle.jai)</code></pre>
-        <p class="muted">A <code>.jai</code> file in <code>src</code>, in HTML or Markdown, or the same document inline as a <code>data:image/jai,…</code> URL. Without a viewer readers see the <code>alt</code> text, so it must be real prose.</p>
+        <p class="muted">A <code>.jai</code> file in <code>src</code>, or the same document inline as a <code>data:image/jai,…</code> URL. Markdown's image syntax renders to the same <code>&lt;img&gt;</code> without a size, so the document's <code>aspect</code> sets the shape. Without a viewer readers see the <code>alt</code> text, so it must be real prose.</p>
         <p class="muted">The reader is always in control: nothing is rendered without their chosen provider and their consent, and the original image is always one click away. The <a href="https://github.com/gnistai/jai-tools">reference browser extension</a> shows how.</p>
       </div>
     </div>
@@ -170,7 +170,7 @@ gzip( JSON )</code></pre>
       <div>
         <div class="eyebrow">For AI agents</div>
         <h2>An installable Agent Skill</h2>
-        <p>The JAI skill teaches any coding agent or assistant to write JAI from a request, describe an existing image as JAI, translate Midjourney or Stable Diffusion prompts, shorten long descriptions, embed JAI in HTML and Markdown, and validate the result.</p>
+        <p>An agent reads and writes JAI images as text. The JAI skill teaches any coding agent or assistant to write JAI from a request, describe an existing image as JAI, shorten long descriptions, put JAI on pages and in <code>.jai</code> files, and validate the result.</p>
         <div class="actions">
           <a class="btn" href="SKILL.md">Open SKILL.md</a>
           <a class="btn secondary" href="https://github.com/gnistai/jai/tree/master/skills/jai">Source on GitHub</a>
@@ -194,7 +194,7 @@ curl -o ~/.claude/skills/jai/SKILL.md \
     <h2>An open standard, not a product</h2>
     <div class="grid grid-3" style="margin-top:20px">
       <div class="card"><h3><a href="spec/">Specification</a></h3><p>Precise enough for independent parsers and renderers: a normative parsing algorithm, canonical forms, security requirements.</p></div>
-      <div class="card"><h3><a href="https://github.com/gnistai/jai/tree/master/tests">Conformance tests</a></h3><p>361 machine-readable fixtures. Two implementations that pass them agree on every input, including malformed ones.</p></div>
+      <div class="card"><h3><a href="https://github.com/gnistai/jai/tree/master/tests">Conformance tests</a></h3><p>Machine-readable fixtures for every rule. Two implementations that pass them agree on every input, including malformed ones.</p></div>
       <div class="card"><h3><a href="https://github.com/gnistai/jai/blob/master/docs/assets/js/jai.js">jai.js</a></h3><p>A dependency-free reference implementation for browsers and Node. The playground runs on it.</p></div>
     </div>
     <p class="muted" style="margin-top:20px">Everything is public domain (CC0). No account, registry or hosted service is needed, and no inference goes through anyone's servers but the reader's chosen provider.</p>

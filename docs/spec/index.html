@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="11cc0fcea89505b68ed8d4c3d83c46098562c50c" name="revision">
+  <meta content="b9ab917372e436ed8db7dc2fc32bf3becd6ed7cf" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -2208,7 +2208,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
    <p data-fill-with="logo"></p>
    <h1 class="no-ref p-name" id="title">JAI: Just AI Images</h1>
    <h2 class="heading no-num no-ref no-toc settled" id="profile-and-date"><span class="content">Living Document,
-    <time class="dt-updated" datetime="2026-10-15">15 October 2026</time></span></h2>
+    <time class="dt-updated" datetime="2026-10-17">17 October 2026</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -2221,7 +2221,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
    <p class="copyright" data-fill-with="copyright"><a href="http://creativecommons.org/publicdomain/zero/1.0/" rel="license"><img alt="CC0" height="15" src="https://licensebuttons.net/p/zero/1.0/80x15.png" width="80"></a>
 To the extent possible under law, the editors have waived all copyright
 and related or neighboring rights to this work.
-In addition, as of 15 October 2026,
+In addition, as of 17 October 2026,
 the editors have made this specification available under the
 <a href="https://www.openwebfoundation.org/the-agreements/the-owf-1-0-agreements-granted-claims/owfa-1-0" rel="license">Open Web Foundation Agreement Version 1.0</a>,
 which is available at https://www.openwebfoundation.org/the-agreements/the-owf-1-0-agreements-granted-claims/owfa-1-0.
@@ -2231,7 +2231,7 @@ Parts of this work may be from another specification document.  If so, those par
   </div>
   <div class="p-summary" data-fill-with="abstract">
    <h2 class="heading no-num no-ref no-toc settled" id="abstract"><span class="content">Abstract</span></h2>
-   <p>JAI compresses an image into words: a natural-language description plus optional rendering parameters, from which a generative model reconstructs the picture. It is designed for a world where generating images is cheap and local and moving them is not. This specification defines the data model, the human-readable text form, the JSON form, the gzip-compressed file form (<code>.jai</code>, <code>image/jai</code>), the standard parameters and how renderers interpret them, integration with HTML and URLs, and conformance requirements for parsers, serialisers, validators, renderers and viewers.</p>
+   <p>JAI compresses an image into words: a natural-language description plus optional rendering parameters, from which a generative model reconstructs the picture. It is designed for a world where generating images is cheap and local and moving them is not. This specification defines the data model, the human-readable text form, the JSON form, the gzip-compressed file form (<code>.jai</code>, <code>image/jai</code>), the standard parameters and how renderers interpret them, integration with HTML, and conformance requirements for parsers, serialisers, validators, renderers and viewers.</p>
   </div>
   <div data-fill-with="at-risk"></div>
   <nav data-fill-with="table-of-contents" id="toc">
@@ -2275,11 +2275,7 @@ Parts of this work may be from another specification document.  If so, those par
        </ol>
       <li><a href="#text-escaping"><span class="secno">5.3</span> <span class="content">Escaping arbitrary text</span></a>
       <li><a href="#text-parsing"><span class="secno">5.4</span> <span class="content">Parsing</span></a>
-      <li>
-       <a href="#text-serialising"><span class="secno">5.5</span> <span class="content">Canonical text serialisation</span></a>
-       <ol class="toc">
-        <li><a href="#text-bare"><span class="secno">5.5.1</span> <span class="content">Bare serialisation</span></a>
-       </ol>
+      <li><a href="#text-serialising"><span class="secno">5.5</span> <span class="content">Canonical text serialisation</span></a>
       <li><a href="#text-bidi"><span class="secno">5.6</span> <span class="content">Bidirectional text</span></a>
      </ol>
     <li>
@@ -2314,7 +2310,6 @@ Parts of this work may be from another specification document.  If so, those par
         <li><a href="#key-seed"><span class="secno">8.1.6</span> <span class="content"><code>seed</code></span></a>
         <li><a href="#key-source"><span class="secno">8.1.7</span> <span class="content"><code>source</code></span></a>
         <li><a href="#key-preview"><span class="secno">8.1.8</span> <span class="content"><code>preview</code></span></a>
-        <li><a href="#key-animate"><span class="secno">8.1.9</span> <span class="content"><code>animate</code></span></a>
        </ol>
       <li><a href="#model-matching"><span class="secno">8.2</span> <span class="content">Model matching</span></a>
       <li><a href="#model-refinements"><span class="secno">8.3</span> <span class="content">Per-model refinements</span></a>
@@ -2336,7 +2331,7 @@ Parts of this work may be from another specification document.  If so, those par
       <li><a href="#image-encoding-output"><span class="secno">10.2</span> <span class="content">Output conventions</span></a>
      </ol>
     <li>
-     <a href="#html"><span class="secno">11</span> <span class="content">HTML and URL integration</span></a>
+     <a href="#html"><span class="secno">11</span> <span class="content">HTML integration</span></a>
      <ol class="toc">
       <li>
        <a href="#html-carriers"><span class="secno">11.1</span> <span class="content">Carriers</span></a>
@@ -2347,18 +2342,12 @@ Parts of this work may be from another specification document.  If so, those par
         <li><a href="#html-serving"><span class="secno">11.1.4</span> <span class="content">Serving <code>.jai</code> resources</span></a>
        </ol>
       <li><a href="#html-transport"><span class="secno">11.2</span> <span class="content">Transport decoding</span></a>
-      <li><a href="#url-query"><span class="secno">11.3</span> <span class="content">Query forms</span></a>
       <li>
-       <a href="#html-other"><span class="secno">11.4</span> <span class="content">Other host formats</span></a>
+       <a href="#viewer-requirements"><span class="secno">11.3</span> <span class="content">Viewer requirements</span></a>
        <ol class="toc">
-        <li><a href="#html-context-matrix"><span class="secno">11.4.1</span> <span class="content">Carriers by context</span></a>
-       </ol>
-      <li>
-       <a href="#viewer-requirements"><span class="secno">11.5</span> <span class="content">Viewer requirements</span></a>
-       <ol class="toc">
-        <li><a href="#viewer-replacement"><span class="secno">11.5.1</span> <span class="content">Replacement</span></a>
-        <li><a href="#viewer-accessibility"><span class="secno">11.5.2</span> <span class="content">Accessibility</span></a>
-        <li><a href="#viewer-personalisation"><span class="secno">11.5.3</span> <span class="content">Personalisation</span></a>
+        <li><a href="#viewer-replacement"><span class="secno">11.3.1</span> <span class="content">Replacement</span></a>
+        <li><a href="#viewer-accessibility"><span class="secno">11.3.2</span> <span class="content">Accessibility</span></a>
+        <li><a href="#viewer-personalisation"><span class="secno">11.3.3</span> <span class="content">Personalisation</span></a>
        </ol>
      </ol>
     <li><a href="#extensibility"><span class="secno">12</span> <span class="content">Extensibility</span></a>
@@ -2385,9 +2374,8 @@ Parts of this work may be from another specification document.  If so, those par
     <li><a href="#examples"><span class="secno">16</span> <span class="content">Examples</span></a>
     <li><a href="#iana"><span class="secno"></span> <span class="content">Appendix A. Media type registration template</span></a>
     <li><a href="#families"><span class="secno"></span> <span class="content">Appendix B. Model family names</span></a>
-    <li><a href="#relationships"><span class="secno"></span> <span class="content">Appendix C. Relationship to existing formats</span></a>
-    <li><a href="#server-config"><span class="secno"></span> <span class="content">Appendix D. Serving <code>.jai</code> files</span></a>
-    <li><a href="#stability"><span class="secno"></span> <span class="content">Appendix E. Stability and change policy</span></a>
+    <li><a href="#server-config"><span class="secno"></span> <span class="content">Appendix C. Serving <code>.jai</code> files</span></a>
+    <li><a href="#stability"><span class="secno"></span> <span class="content">Appendix D. Stability and change policy</span></a>
     <li><a href="#acknowledgements"><span class="secno"></span> <span class="content">Acknowledgements</span></a>
     <li>
      <a href="#index"><span class="secno"></span> <span class="content">Index</span></a>
@@ -2403,7 +2391,7 @@ Parts of this work may be from another specification document.  If so, those par
    </ol>
   </nav>
   <main>
-   <p class="edition">Edition 1.0-draft. This is a living document; the edition stamp identifies the vocabulary and fixture set that the Agent Skill <a data-link-type="biblio" href="#biblio-agent-skills" title="Agent Skills specification">[AGENT-SKILLS]</a> and the conformance suite refer to.</p>
+   <p class="edition">Edition 1.0-draft. This is a living document. Until the first tagged edition the draft changes freely and is identified by its date; from then on the edition stamp identifies the vocabulary and fixture set that the Agent Skill <a data-link-type="biblio" href="#biblio-agent-skills" title="Agent Skills specification">[AGENT-SKILLS]</a> and the conformance suite refer to.</p>
    <h2 class="heading settled" data-level="1" id="intro"><span class="secno">1. </span><span class="content">Introduction</span><a class="self-link" href="#intro"></a></h2>
    <p><em>This section is informative.</em></p>
    <p>A JAI document is an image compressed into words: a natural-language
@@ -2423,16 +2411,16 @@ narrows the difference to what the description leaves open.</p>
    <div class="example" id="ex-intro-params">
     <a class="self-link" href="#ex-intro-params"></a>
 
-<pre>jai:A magical castle;style=anime;model=flux
+<pre>A magical castle;style=anime;model=flux
 </pre>
    </div>
    <p>The same document has a JSON form and a compressed file form, and all three
 are the same document:</p>
    <div class="example" id="ex-intro-forms">
     <a class="self-link" href="#ex-intro-forms"></a>
-Text form:
+Text form, as written in a <code>data-jai</code> attribute or the body of a <code>data:image/jai</code> URL:
 
-<pre>jai:A magical castle;model=flux;style=anime
+<pre>A magical castle;model=flux;style=anime
 </pre>
     
 JSON form:
@@ -2440,7 +2428,7 @@ JSON form:
 <pre class="highlight language-json"><c- p>{</c-><c- f>"jai"</c-><c- p>:</c-><c- mi>1</c-><c- p>,</c-><c- f>"prompt"</c-><c- p>:</c-><c- u>"A magical castle"</c-><c- p>,</c-><c- f>"model"</c-><c- p>:</c-><c- u>"flux"</c-><c- p>,</c-><c- f>"style"</c-><c- p>:</c-><c- u>"anime"</c-><c- p>}</c->
 </pre>
     
-File form: the JSON above as a single gzip member, in a file named <code>castle.jai</code>, served as <code>image/jai</code>, or embedded as <code>data:image/jai;base64,…</code>.
+File form: the JSON above as a single gzip member, in a file named <code>castle.jai</code>, served as <code>image/jai</code>.
 
    </div>
    <h3 class="heading settled" data-level="1.1" id="intro-motivation"><span class="secno">1.1. </span><span class="content">Motivation</span><a class="self-link" href="#intro-motivation"></a></h3>
@@ -2477,17 +2465,16 @@ moving one is not.</p>
    <ul>
     <li data-md>
      <p><strong>Readable without seeing.</strong> A JAI image is text first. A vision-impaired
-reader’s screen reader speaks the author’s own description, the same words
-the model draws from, so the text alternative is always present and always
-matches the picture (<a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>). A text-only AI agent
+reader’s screen reader speaks the author’s own description, by default the
+same words the model draws from, so the text alternative is always present
+and describes the picture (<a href="#viewer-accessibility">§ 11.3.2 Accessibility</a>). A text-only AI agent
 reads and writes images directly, with no vision model, and can search,
 translate, diff and edit them in the medium it already uses.</p>
     <li data-md>
      <p><strong>Links with little bandwidth and enough compute.</strong> Ships, aircraft,
-spacecraft crews, satellite connections with data caps, rural networks,
-disaster zones, and text-only channels such as SMS, packet radio and mesh
-networks can carry a sentence where they cannot carry a photograph. A
-receiver with a GPU reconstructs the picture. This suits illustrative and
+spacecraft crews, satellite connections with data caps, rural networks
+and disaster zones can carry a few hundred bytes where they cannot carry a
+photograph. A receiver with a GPU reconstructs the picture. This suits illustrative and
 situational images, not measurements: where the pixels are the data, send
 the pixels (<a href="#intro-scope">§ 1.2 What JAI is and is not</a>).</p>
     <li data-md>
@@ -2496,14 +2483,14 @@ recent phones, in seconds or less with distilled models. If browsers come
 to decode <code>image/jai</code> natively, a browser could choose the JAI source in a
 <code>&lt;picture></code> element and fetch the raster only when rendering fails
 (<a href="#html-carriers">§ 11.1 Carriers</a>), so pages get lighter with no change to their markup.
-Today’s viewers still download the raster (<a href="#viewer-requirements">§ 11.5 Viewer requirements</a>).</p>
+Today’s viewers still download the raster (<a href="#viewer-requirements">§ 11.3 Viewer requirements</a>).</p>
     <li data-md>
      <p><strong>An audience of one.</strong> Because the reader’s own decoder produces the
 pixels, the reader can ask for them differently: adapted to their culture,
 softened for sensitive content, adjusted for their eyesight, in the
 language of the text inside the image, or simply in a mood or style they
 enjoy, while the author’s description stays the same
-(<a href="#viewer-personalisation">§ 11.5.3 Personalisation</a>).</p>
+(<a href="#viewer-personalisation">§ 11.3.3 Personalisation</a>).</p>
     <li data-md>
      <p><strong>Longevity and resolution independence.</strong> A description does not age with
 its codec and has no fixed resolution. Rendered next year by a better
@@ -2547,7 +2534,7 @@ parameters or renderers; browser and extension developers implementing
 discovery, rendering and replacement; and renderer developers turning a JAI
 document into a picture. Sections <a href="#text">§ 5 Text form</a> through <a href="#file">§ 7 File form, media type and decoding</a> are the parts a
 library developer needs; <a href="#parameters">§ 8 Standard parameters</a> and <a href="#rendering">§ 9 Rendering</a> are for renderer
-developers; <a href="#html">§ 11 HTML and URL integration</a> is for browser, extension and web developers; and
+developers; <a href="#html">§ 11 HTML integration</a> is for browser, extension and web developers; and
 <a href="#authoring">§ 15 Writing JAI by hand</a> is a plain-language primer for authors.</p>
    <h2 class="heading settled" data-level="2" id="conformance"><span class="secno">2. </span><span class="content">Conformance</span><a class="self-link" href="#conformance"></a></h2>
    <p>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
@@ -2565,7 +2552,7 @@ implementation may belong to several.</p>
     <dd data-md>
      <p>A JAI document in any of its forms that satisfies every requirement placed
 on documents and authors (<a href="#data-model">§ 4 Data model</a>, <a href="#text">§ 5 Text form</a>, <a href="#json">§ 6 JSON form</a>, <a href="#file">§ 7 File form, media type and decoding</a>,
-<a href="#parameters">§ 8 Standard parameters</a>, <a href="#html">§ 11 HTML and URL integration</a>).</p>
+<a href="#parameters">§ 8 Standard parameters</a>, <a href="#html">§ 11 HTML integration</a>).</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="parser">parser</dfn>
     <dd data-md>
      <p>Converts the text form to a document (<a href="#text-parsing">§ 5.4 Parsing</a>).</p>
@@ -2574,13 +2561,14 @@ on documents and authors (<a href="#data-model">§ 4 Data model</a>, <a href="
      <p>Converts the JSON form to a document (<a href="#json-reading">§ 6.3 Reading</a>).</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="decoder">decoder</dfn>
     <dd data-md>
-     <p>Converts the bytes of a <code>.jai</code> file, an <code>image/jai</code> resource, or the body
-of a <code>data:image/jai</code> URL to a document (<a href="#decoding">§ 7.4 Decoding</a>). A decoder contains
-a parser and a JSON reader.</p>
+     <p>Converts the bytes of a <code>.jai</code> file or an <code>image/jai</code> resource, and the
+body of a <code>data:image/jai</code> URL, to a document (<a href="#decoding">§ 7.4 Decoding</a>,
+<a href="#data-urls">§ 7.5 data: URLs</a>). A decoder contains a parser and a JSON reader.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="serialiser">serialiser</dfn>
     <dd data-md>
-     <p>Produces the canonical text form and the canonical JSON form of a document
-(<a href="#text-serialising">§ 5.5 Canonical text serialisation</a>, <a href="#json-canonical">§ 6.4 Canonical JSON</a>).</p>
+     <p>Produces the canonical text form, the canonical URL form and the canonical
+JSON form of a document (<a href="#text-serialising">§ 5.5 Canonical text serialisation</a>, <a href="#data-urls">§ 7.5 data: URLs</a>,
+<a href="#json-canonical">§ 6.4 Canonical JSON</a>).</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="encoder">encoder</dfn>
     <dd data-md>
      <p>Produces the file form (<a href="#file-encoding">§ 7.2 Encoding</a>). An encoder contains a
@@ -2601,8 +2589,8 @@ an interpreter.</p>
     <dd data-md>
      <p>Software acting for a user that discovers JAI documents in content, decides
 whether and when to render them, and presents the result: a browser, a
-browser extension, a chat client, an image viewer (<a href="#html">§ 11 HTML and URL integration</a>,
-<a href="#viewer-requirements">§ 11.5 Viewer requirements</a>, <a href="#security">§ 13 Security and privacy considerations</a>).</p>
+browser extension, an image viewer (<a href="#html">§ 11 HTML integration</a>,
+<a href="#viewer-requirements">§ 11.3 Viewer requirements</a>, <a href="#security">§ 13 Security and privacy considerations</a>).</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="authoring-tool">authoring tool</dfn>
     <dd data-md>
      <p>Software that produces or edits JAI documents on behalf of an author.</p>
@@ -2642,15 +2630,15 @@ may claim conformance for a class when it passes every fixture of that class
 
      <tr>
       <td>decoder
-      <td><code>parse</code>, <code>json</code>, <code>decode</code>, and the <code>url</code> cases of kind <code>data</code>
+      <td><code>parse</code>, <code>json</code>, <code>decode</code>, <code>url</code>
 
      <tr>
       <td>serialiser
-      <td><code>serialize</code> (<code>text</code>, <code>bare</code>, <code>json</code>, <code>identity</code>), and <code>roundtrip</code> except the file form
+      <td><code>serialize</code> (<code>text</code>, <code>url</code>, <code>json</code>, <code>identity</code>), and <code>roundtrip</code> except the file form
 
      <tr>
       <td>encoder
-      <td>as serialiser, plus <code>serialize</code> <code>url</code> and the file form of <code>roundtrip</code>
+      <td>as serialiser, plus the file form of <code>roundtrip</code>
 
      <tr>
       <td>interpreter
@@ -2658,7 +2646,7 @@ may claim conformance for a class when it passes every fixture of that class
 
      <tr>
       <td>viewer
-      <td><code>html</code>, <code>url</code> (all kinds), and everything required of a decoder and an interpreter
+      <td><code>html</code>, and everything required of a decoder and an interpreter
 
      <tr>
       <td>validator
@@ -2684,7 +2672,7 @@ values, describing one image.</p>
      <p>A key together with its values.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="standard-key">standard key</dfn>
     <dd data-md>
-     <p>One of the eleven keys defined in <a href="#parameters">§ 8 Standard parameters</a>.</p>
+     <p>One of the ten keys defined in <a href="#parameters">§ 8 Standard parameters</a>.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="prompt">prompt</dfn>
     <dd data-md>
      <p>The values of the key <code>prompt</code>: the description of the image.</p>
@@ -2701,11 +2689,13 @@ U+000A LINE FEED (<a href="#model-refinements">§ 8.3 Per-model refinements</a
 equals the description.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="text-form">text form</dfn>
     <dd data-md>
-     <p>The human-readable serialisation of a document (<a href="#text">§ 5 Text form</a>):
-<code>jai:A magical castle;style=anime</code>.</p>
+     <p>The human-readable serialisation of a document, used in <code>data-jai</code>
+attributes and <code>data:image/jai</code> URLs (<a href="#text">§ 5 Text form</a>):
+<code>A magical castle;style=anime</code>.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="json-form">JSON form</dfn>
     <dd data-md>
-     <p>The JSON serialisation of a document (<a href="#json">§ 6 JSON form</a>).</p>
+     <p>The JSON serialisation of a document, the content of the file form
+(<a href="#json">§ 6 JSON form</a>).</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="file-form">file form</dfn>
     <dd data-md>
      <p>The gzip-compressed JSON form (<a href="#file">§ 7 File form, media type and decoding</a>); the content of a <code>.jai</code> file.</p>
@@ -2768,11 +2758,6 @@ image in HTML, or the image named by the <code>source</code> key (<a href="#key-
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="carrier">carrier</dfn>
     <dd data-md>
      <p>A place in a host format where a document is found (<a href="#html-carriers">§ 11.1 Carriers</a>).</p>
-    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="jai-context">JAI context</dfn>
-    <dd data-md>
-     <p>The content of a <code>.jai</code> file, of a resource served as <code>image/jai</code> or
-referenced from a <a data-link-type="dfn" href="#carrier" id="ref-for-carrier">carrier</a>, or the body of a <code>data:image/jai</code> URL.
-Attribute carriers are not JAI contexts: they always hold the text form.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="provider">provider</dfn>
     <dd data-md>
      <p>A service that runs a model for a renderer.</p>
@@ -2834,8 +2819,7 @@ to each candidate value before it enters the document, in this order:</p>
 U+000A.</p>
     <li data-md>
      <p>Replace every U+0000 with U+FFFD. (Other control characters are kept as
-content; validators report them, see <a href="#diagnostics">§ 14 Diagnostics</a>. Byte inputs never
-reach this step with U+0000: <a href="#decoding">§ 7.4 Decoding</a> rejects the byte 00.)</p>
+content; validators report them, see <a href="#diagnostics">§ 14 Diagnostics</a>.)</p>
     <li data-md>
      <p><a data-link-type="dfn" href="#trim" id="ref-for-trim">Trim</a> the string.</p>
     <li data-md>
@@ -2843,7 +2827,7 @@ reach this step with U+0000: <a href="#decoding">§ 7.4 Decoding</a> rejects t
 <code>empty-value</code>; otherwise the result is the value.</p>
    </ol>
    <p>Values are strings and only strings. Numbers, booleans and structured data
-exist only as their spelling (<code>strength=0.6</code>, <code>animate=true</code>); this is what
+exist only as their spelling (<code>strength=0.6</code>, <code>seed=42</code>); this is what
 makes the text form able to represent every document.</p>
    <p>No Unicode normalisation is applied anywhere in this specification. Two
 strings are the same value if and only if they consist of the same sequence
@@ -2854,19 +2838,19 @@ normalise their input.</p>
    <h3 class="heading settled" data-level="4.3" id="data-model-arity"><span class="secno">4.3. </span><span class="content">Standard keys and repetition</span><a class="self-link" href="#data-model-arity"></a></h3>
    <p>A document may assign any number of values to any key; the data model does not
 know which keys are single-valued. The standard keys <code>aspect</code>, <code>mode</code>,
-<code>strength</code>, <code>seed</code>, <code>source</code>, <code>preview</code> and <code>animate</code> are <em>single-valued at
+<code>strength</code>, <code>seed</code>, <code>source</code> and <code>preview</code> are <em>single-valued at
 interpretation</em>: an interpreter uses the last value and reports
 <code>repeated-single</code> (<a href="#parameters-interpretation">§ 8.1 Interpretation</a>). Parsers and serialisers
 keep every value; identity and round-tripping depend on all of them.</p>
    <h2 class="heading settled" data-level="5" id="text"><span class="secno">5. </span><span class="content">Text form</span><a class="self-link" href="#text"></a></h2>
-   <p>The text form is a string. It is used wherever a string fits: HTML
-attributes, the body of a <code>data:image/jai</code> URL, chat messages, clipboards and
-documentation.</p>
+   <p>The text form is a string. It is used in two places: the <code>data-jai</code>
+attribute (<a href="#html-carriers">§ 11.1 Carriers</a>) and the body of a <code>data:image/jai</code> URL
+(<a href="#data-urls">§ 7.5 data: URLs</a>). Both already say that they hold JAI, so the text form has no
+marker of its own.</p>
    <h3 class="heading settled" data-level="5.1" id="text-grammar"><span class="secno">5.1. </span><span class="content">Grammar</span><a class="self-link" href="#text-grammar"></a></h3>
    <p>*This grammar is informative; the algorithm in <a href="#text-parsing">§ 5.4 Parsing</a> is
 normative.*</p>
-<pre class="highlight language-abnf"><c- nc>jai-text</c->   <c- o>=</c-> <c- nc>OWS</c-> <c- p>[</c-> <c- nc>prefix</c-> <c- p>]</c-> <c- p>[</c-> <c- nc>text-segment</c-> <c- o>*</c-><c- p>(</c-> <c- l>";"</c-> <c- nc>text-segment</c-> <c- p>)</c-> <c- p>]</c-> <c- p>[</c-> <c- l>";"</c-> <c- p>]</c->
-<c- nc>prefix</c->     <c- o>=</c-> <c- l>%s"jai:"</c-> <c- nc>OWS</c->                  <c- c1>; "jai:" is ASCII case-insensitive</c->
+<pre class="highlight language-abnf"><c- nc>jai-text</c->   <c- o>=</c-> <c- nc>OWS</c-> <c- p>[</c-> <c- nc>text-segment</c-> <c- o>*</c-><c- p>(</c-> <c- l>";"</c-> <c- nc>text-segment</c-> <c- p>)</c-> <c- p>]</c-> <c- p>[</c-> <c- l>";"</c-> <c- p>]</c->
 <c- nc>text-segment</c-> <c- o>=</c-> <c- nc>assignment</c-> <c- o>/</c-> <c- nc>prose</c->
 <c- nc>assignment</c-> <c- o>=</c-> <c- nc>OWS</c-> <c- nc>key-ci</c-> <c- nc>OWS</c-> <c- l>"="</c-> <c- nc>value</c->   <c- c1>; key-ci: the key grammar, ASCII case-insensitive</c->
 <c- nc>prose</c->      <c- o>=</c-> <c- nc>value</c->
@@ -2879,11 +2863,6 @@ normative.*</p>
 A <code>\</code> that does not begin an <code>escape</code> is an ordinary character.</p>
    <h3 class="heading settled" data-level="5.2" id="text-structure"><span class="secno">5.2. </span><span class="content">Structure</span><a class="self-link" href="#text-structure"></a></h3>
    <ul>
-    <li data-md>
-     <p>The optional prefix <code>jai:</code> marks a string as JAI. It is required where the
-context does not already establish JAI (an <code>alt</code> attribute, a chat
-message); it is optional where the context does (a <code>data-jai</code> attribute,
-the body of a <code>data:image/jai</code> URL, a <code>.jai</code> file).</p>
     <li data-md>
      <p>Segments are separated by unescaped <code>;</code>. A segment whose text before its
 first unescaped <code>=</code> is, after <a data-link-type="dfn" href="#trim" id="ref-for-trim①">trimming</a>, a <a data-link-type="dfn" href="#key" id="ref-for-key①">key</a> is an <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="assignment">assignment</dfn>
@@ -2923,7 +2902,7 @@ whitespace inside values is preserved.</p>
        <td>prompt = <code>A magical castle</code>
 
       <tr>
-       <td><code>jai:A magical castle;style=anime;model=flux;model=sdxl</code>
+       <td><code>A magical castle;style=anime;model=flux;model=sdxl</code>
        <td>prompt = <code>A magical castle</code>; style = <code>anime</code>; model = <code>flux</code>, <code>sdxl</code>
 
       <tr>
@@ -3001,8 +2980,9 @@ every <code>\</code> with <code>\\</code>, then every <code>;</code> with <code>
 string <em>s</em> whose <a data-link-type="dfn" href="#value-normalisation" id="ref-for-value-normalisation">value normalisation</a> is <em>s</em> itself, the segment
 <code>prompt=escape-prose(s)</code> parses as exactly one prompt value equal to <em>s</em>, and
 <code>key=escape-prose(s)</code> as one value of <em>key</em>.</p>
-   <p>The <code>prompt=</code> is part of the recipe: a bare first segment that begins with
-<code>jai:</code> would lose those characters to prefix removal.</p>
+   <p>The <code>prompt=</code> is part of the recipe: without it, text placed after another
+parameter would continue that parameter’s value, and a leading U+FEFF would be
+removed by the parser.</p>
    <div class="note" role="note">
 This escaping is in addition to the host format’s own: HTML attribute
 quoting, JSON string escaping, percent-encoding in URLs. Leading and trailing
@@ -3037,13 +3017,7 @@ algorithm never decodes anything.</p>
      <p>Replace every U+000D U+000A pair in <em>input</em>, then every remaining U+000D,
 with U+000A.</p>
     <li data-md>
-     <p>Skip leading <a data-link-type="dfn" href="#jai-whitespace" id="ref-for-jai-whitespace③">JAI whitespace</a>: let <em>i</em> be the index of the first code
-point of <em>input</em> that is not JAI whitespace, or the length of <em>input</em>.</p>
-    <li data-md>
-     <p>If <em>input</em> from <em>i</em> begins with the four code points <code>jai:</code> compared
-<a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive">ASCII case-insensitively</a>, advance <em>i</em> past them.</p>
-    <li data-md>
-     <p>Split <em>input</em> from <em>i</em> into <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="raw-segments">raw segments</dfn>: scan left to right;
+     <p>Split <em>input</em> into <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="raw-segments">raw segments</dfn>: scan left to right;
 a <code>\</code> followed by any code point consumes both code points as part of the
 current raw segment; an unescaped <code>;</code> ends the current raw segment and
 starts a new one; the end of the input ends the last raw segment. Raw
@@ -3063,7 +3037,7 @@ with a diagnostic.)</p>
       <li data-md>
        <p>Let <em>eq</em> be the index of the first <code>=</code> in <em>raw</em> that is not preceded by
 a <code>\</code> that is part of an escape sequence, determined by the same
-left-to-right scan as step 7.</p>
+left-to-right scan as step 5.</p>
       <li data-md>
        <p>If <em>eq</em> exists and the <a data-link-type="dfn" href="#trim" id="ref-for-trim②">trimmed</a> text of <em>raw</em> before <em>eq</em> matches the
 <a data-link-type="dfn" href="#key-grammar" id="ref-for-key-grammar①">key grammar</a> after <a data-link-type="dfn" href="#ascii-lowercase" id="ref-for-ascii-lowercase②">ASCII lowercase</a> conversion:</p>
@@ -3100,7 +3074,7 @@ diagnostic <code>empty-value</code> has been emitted.</p>
     <li data-md>
      <p>Return <em>doc</em> and <em>diagnostics</em>.</p>
    </ol>
-   <p>Trimming happens once, in step 10, so interior spacing around restored
+   <p>Trimming happens once, in step 8, so interior spacing around restored
 semicolons is preserved exactly as typed (<code>A wizard ; behind</code> stays
 <code>A wizard ; behind</code>), except that an ignored empty or whitespace-only segment
 disappears together with one delimiter (<code>A; ;b</code> becomes <code>A;b</code>; write
@@ -3119,10 +3093,6 @@ linear in the length of the input.</p>
 
      <tbody>
       <tr>
-       <td><code>jai:</code>
-       <td>empty
-       <td>
-      <tr>
        <td><code>;;</code>
        <td>empty
        <td><code>empty-segment</code> ×2
@@ -3137,26 +3107,18 @@ linear in the length of the input.</p>
        <td>k = <code>;a</code> (the empty assignment was continued)
        <td>
       <tr>
-       <td><code>jai:jai=1;prompt=x</code>
+       <td><code>jai=1;prompt=x</code>
        <td>prompt = <code>x</code>
        <td><code>reserved-key</code>
 
       <tr>
-       <td><code>jai:A castle;jai=2;more</code>
+       <td><code>A castle;jai=2;more</code>
        <td>prompt = <code>A castle</code> (<code>more</code> continued the dropped assignment)
        <td><code>reserved-key</code>
 
       <tr>
-       <td><code>  jai:A castle</code>
-       <td>prompt = <code>A castle</code>
-       <td>
-      <tr>
-       <td><code>jai: jai:A castle</code>
-       <td>prompt = <code>jai:A castle</code> (the prefix is removed once)
-       <td>
-      <tr>
-       <td><code>JAİ:A castle</code> (U+0130)
-       <td>prompt = <code>JAİ:A castle</code> (not the prefix)
+       <td><code>jai:A castle</code>
+       <td>prompt = <code>jai:A castle</code>
        <td>
       <tr>
        <td><code>a\=b</code>
@@ -3187,14 +3149,13 @@ and produces one string. Serialisers MUST reject or normalise input that does
 not satisfy the data model (keys not lowercase, values not normalised).</p>
    <ol>
     <li data-md>
-     <p>Let <em>out</em> be <code>jai:</code>.</p>
-    <li data-md>
      <p>Let <em>segments</em> be an empty list.</p>
     <li data-md>
      <p>For each value <em>v</em> of the key <code>prompt</code>, in order: if it is the first prompt
-value and <em>v</em> does not match the <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="assignment-pattern">assignment pattern</dfn> (optional
+value, <em>v</em> does not match the <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="assignment-pattern">assignment pattern</dfn> (optional
 JAI whitespace, a <a data-link-type="dfn" href="#key" id="ref-for-key②">key</a>, optional JAI whitespace, <code>=</code>, matched ASCII
-case-insensitively at the start of <em>v</em>), append <a data-link-type="dfn" href="#escape-value" id="ref-for-escape-value">escape-value</a>(<em>v</em>) to
+case-insensitively at the start of <em>v</em>), and <em>v</em> does not begin with
+U+FEFF (which the parser removes), append <a data-link-type="dfn" href="#escape-value" id="ref-for-escape-value">escape-value</a>(<em>v</em>) to
 <em>segments</em>; otherwise append <code>prompt=</code> followed by escape-value(<em>v</em>).</p>
     <li data-md>
      <p>For each <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key①">qualified key</a> whose name is <code>prompt</code>, in ascending order of
@@ -3205,7 +3166,7 @@ key by code point, for each of its values <em>v</em> in order: append the key,
 of its values <em>v</em> in order: append the key, <code>=</code>, and escape-value(<em>v</em>) to
 <em>segments</em>.</p>
     <li data-md>
-     <p>Join <em>segments</em> with <code>;</code>, append the result to <em>out</em>, and return <em>out</em>.</p>
+     <p>Join <em>segments</em> with <code>;</code> and return the result.</p>
    </ol>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="escape-value">escape-value</dfn>(<em>v</em>) is one left-to-right pass over <em>v</em> that inserts a
 <code>\</code> before:</p>
@@ -3217,11 +3178,11 @@ delimiter after it);</p>
     <li data-md>
      <p>a <code>;</code> that is the first code point of <em>v</em>, or that is followed by optional
 JAI whitespace and then either the end of <em>v</em>, another <code>;</code>, or a <a data-link-type="dfn" href="#key" id="ref-for-key③">key</a>
-(matched <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive①">ASCII case-insensitively</a>) followed by optional JAI whitespace
+(matched <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive">ASCII case-insensitively</a>) followed by optional JAI whitespace
 and <code>=</code>.</p>
    </ul>
    <p>Each decision looks at the original <em>v</em>, never at text already escaped. As an
-ECMAScript regular expression, with <code>WS</code> standing for the <a data-link-type="dfn" href="#jai-whitespace" id="ref-for-jai-whitespace④">JAI whitespace</a>
+ECMAScript regular expression, with <code>WS</code> standing for the <a data-link-type="dfn" href="#jai-whitespace" id="ref-for-jai-whitespace③">JAI whitespace</a>
 class and <code>KEY</code> for the <a data-link-type="dfn" href="#key-grammar" id="ref-for-key-grammar②">key grammar</a> (case-insensitively):</p>
 <pre class="highlight language-js">v<c- p>.</c->replace<c- p>(</c-><c- sr>/\\(?=[;=\\]|$)|^;|;(?=WS*(?:$|;|KEY WS*=))/gi</c-><c- p>,</c-> m <c- p>=></c-> <c- t>'\\'</c-> <c- o>+</c-> m<c- p>)</c->
 </pre>
@@ -3244,62 +3205,48 @@ encoding. The canonical form of ordinary prose stays readable:</p>
      <tbody>
       <tr>
        <td>prompt = <code>A wizard stands; behind him, a dragon</code>; model = <code>flux</code>
-       <td><code>jai:A wizard stands; behind him, a dragon;model=flux</code>
+       <td><code>A wizard stands; behind him, a dragon;model=flux</code>
 
       <tr>
        <td>prompt = <code>E=mc2 explained</code>
-       <td><code>jai:prompt=E=mc2 explained</code>
+       <td><code>prompt=E=mc2 explained</code>
 
       <tr>
        <td>prompt = <code>;-) a smiley</code>
-       <td><code>jai:\;-) a smiley</code>
+       <td><code>\;-) a smiley</code>
 
       <tr>
        <td>prompt = <code>ends with backslash\</code>; style = <code>x</code>
-       <td><code>jai:ends with backslash\\;style=x</code>
+       <td><code>ends with backslash\\;style=x</code>
 
       <tr>
        <td>prompt = <code>a;;b</code>
-       <td><code>jai:a\;;b</code>
+       <td><code>a\;;b</code>
 
       <tr>
        <td>prompt = <code>A list; item=1</code>
-       <td><code>jai:A list\; item=1</code>
+       <td><code>A list\; item=1</code>
 
       <tr>
        <td>prompt = <code>C:\Users\me</code>
-       <td><code>jai:C:\Users\me</code>
+       <td><code>C:\Users\me</code>
 
       <tr>
        <td>style = <code>anime</code>; prompt = <code>A castle</code>; model = <code>flux</code>, <code>sdxl</code>
-       <td><code>jai:A castle;model=flux;model=sdxl;style=anime</code>
+       <td><code>A castle;model=flux;model=sdxl;style=anime</code>
 
     </table>
    </div>
    <p>Parsing the canonical text of a document yields that document, and
 serialising the result yields the same text (the canonical form is a fixed
 point). The conformance suite checks both properties.</p>
-   <h4 class="heading settled" data-level="5.5.1" id="text-bare"><span class="secno">5.5.1. </span><span class="content">Bare serialisation</span><a class="self-link" href="#text-bare"></a></h4>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="bare-serialisation">bare serialisation</dfn> is the canonical text without the <code>jai:</code>
-prefix, for contexts that establish JAI and are not displayed as text (the
-body of a <code>data:image/jai</code> URL, a <code>data-jai</code> attribute). It is produced by the
-same algorithm with one more case in step 3: the first prompt value is also
-written as <code>prompt=…</code> when it begins with <code>jai:</code> (<a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive②">ASCII case-insensitively</a>),
-with U+FEFF, or with <code>{</code>.</p>
-   <div class="note" role="note">
-The <code>{</code> rule keeps the body of a <code>data:image/jai</code> URL from being mistaken for
-the JSON form by a <a data-link-type="dfn" href="#decoder" id="ref-for-decoder">decoder</a> (<a href="#decoding">§ 7.4 Decoding</a>).
-</div>
    <h3 class="heading settled" data-level="5.6" id="text-bidi"><span class="secno">5.6. </span><span class="content">Bidirectional text</span><a class="self-link" href="#text-bidi"></a></h3>
    <p><em>This section is informative.</em></p>
    <p>The structure of the text form is left-to-right: keys and delimiters are
-ASCII. A canonical string always starts with <code>jai:</code>, which pins the base
-direction of the whole string under first-strong detection; an
-Arabic or Hebrew prompt therefore displays correctly in a plain text field.
-The bare form, used only in attributes and URL bodies, is not displayed as
-text. Authoring tools that show a document should display the canonical
-string in a left-to-right container and each value with <code>dir="auto"</code> or
-<code>unicode-bidi: isolate</code>. Trailing punctuation of a right-to-left prompt may
+ASCII. Authoring tools that show a document should display the canonical text
+in a left-to-right container and each value with <code>dir="auto"</code> or
+<code>unicode-bidi: isolate</code>, so that an Arabic or Hebrew prompt does not reorder
+the delimiters around it. Trailing punctuation of a right-to-left prompt may
 display beside the following <code>;key=</code>; parsing is unaffected. Validators report
 explicit bidirectional controls and invisible formatting characters inside
 values (<a href="#diagnostics">§ 14 Diagnostics</a>).</p>
@@ -3350,9 +3297,7 @@ name or media type.</p>
     <li data-md>
      <p>value 1: proceed;</p>
     <li data-md>
-     <p>member absent: in a <a data-link-type="dfn" href="#jai-context" id="ref-for-jai-context">JAI context</a>, proceed with the diagnostic
-<code>missing-marker</code>; in any other context the reader returns the empty document
-with no diagnostics (the object is not a JAI document);</p>
+     <p>member absent: proceed with the diagnostic <code>missing-marker</code>;</p>
     <li data-md>
      <p>any other integer (including 0 and negative integers): proceed best-effort
 with the diagnostic <code>unsupported-version</code>; a viewer MUST NOT render such a
@@ -3361,15 +3306,15 @@ document automatically;</p>
      <p>any other value (<code>"1"</code>, <code>true</code>, <code>null</code>, <code>1.5</code>): proceed as for 1 with the
 diagnostic <code>invalid-marker</code>.</p>
    </ul>
-   <p>The text form carries no marker; its prefix plays that role.</p>
+   <p>The text form carries no marker: it is only found where the carrier already
+says that it holds JAI (<a href="#text">§ 5 Text form</a>).</p>
    <h3 class="heading settled" data-level="6.3" id="json-reading"><span class="secno">6.3. </span><span class="content">Reading</span><a class="self-link" href="#json-reading"></a></h3>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="json-reading-algorithm">JSON reading algorithm</dfn> takes a JSON text and a flag <em>in JAI
-context</em> and returns a document and diagnostics.</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="json-reading-algorithm">JSON reading algorithm</dfn> takes a JSON text and returns a
+document and diagnostics.</p>
    <ol>
     <li data-md>
      <p>Parse the text as JSON <a data-link-type="biblio" href="#biblio-rfc8259" title="The JavaScript Object Notation (JSON) Data Interchange Format">[RFC8259]</a>. A leading U+FEFF is not JSON
-whitespace and is not skipped (decoders remove byte order marks before
-calling the reader, <a href="#decoding">§ 7.4 Decoding</a>). Texts that are not valid RFC 8259 JSON
+whitespace and is not skipped. Texts that are not valid RFC 8259 JSON
 (including <code>NaN</code>, <code>Infinity</code>, comments, trailing commas and a leading
 U+FEFF), and texts
 containing a number whose value, rounded to the nearest IEEE 754 binary64
@@ -3388,9 +3333,7 @@ value in place and keeps the earlier position (this is what ECMAScript
 <code>JSON.parse</code> and Python <code>json.loads</code> do). Readers do not diagnose an exact
 repetition; validators MAY report it as <code>duplicate-member</code>.</p>
     <li data-md>
-     <p>Handle the marker as in <a href="#json-marker">§ 6.2 The jai marker</a>, then remove it from the map. If
-the marker is absent and <em>in JAI context</em> is false, return the empty
-document and no diagnostics.</p>
+     <p>Handle the marker as in <a href="#json-marker">§ 6.2 The jai marker</a>, then remove it from the map.</p>
     <li data-md>
      <p>For each remaining member, in map order:</p>
      <ol>
@@ -3454,8 +3397,8 @@ cases.
        <td><code>duplicate-key</code>
 
       <tr>
-       <td><code>{"jai":1,"strength":0.60,"animate":true}</code>
-       <td>strength = <code>0.6</code>; animate = <code>true</code>
+       <td><code>{"jai":1,"strength":0.60,"acme.hdr":true}</code>
+       <td>strength = <code>0.6</code>; acme.hdr = <code>true</code>
        <td><code>number-value</code> ×2
 
       <tr>
@@ -3479,7 +3422,7 @@ cases.
        <td><code>unsupported-version</code>
 
       <tr>
-       <td><code>{"prompt":"x"}</code> in a <code>.jai</code> file
+       <td><code>{"prompt":"x"}</code>
        <td>prompt = <code>x</code>
        <td><code>missing-marker</code>
 
@@ -3542,7 +3485,7 @@ member, including <code>preview</code>, vendor keys, or the spelling <code>16x9<
 carrier delivered the document, and whatever whitespace, key case or key
 order the author used.</p>
    <p>Identity names a document, not a render. A render cache key MUST include,
-besides the identity, the renderer and its configuration, the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model①">selected model</a>, any personalisation (<a href="#viewer-personalisation">§ 11.5.3 Personalisation</a>), and the identity of
+besides the identity, the renderer and its configuration, the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model①">selected model</a>, any personalisation (<a href="#viewer-personalisation">§ 11.3.3 Personalisation</a>), and the identity of
 every image input the render used (an explicit <code>source</code> or the carrier’s
 <a data-link-type="dfn" href="#original-image" id="ref-for-original-image">original image</a>). See also <a href="#security-cache">§ 13.7 Caches</a>.</p>
    <p>Identity is public information and MUST NOT be used as a capability or as a
@@ -3555,8 +3498,9 @@ content is the <a data-link-type="dfn" href="#canonical-json-form" id="ref-for-c
    <p>Decoders MUST reject, as described in <a href="#decoding">§ 7.4 Decoding</a>:</p>
    <ul>
     <li data-md>
-     <p>a header shorter than 10 bytes, a compression method (CM) other than 8, or
-a member truncated anywhere (header fields, deflate data or trailer);</p>
+     <p>bytes that do not begin with a gzip header (<code>1F 8B</code>), a header shorter
+than 10 bytes, a compression method (CM) other than 8, or a member
+truncated anywhere (header fields, deflate data or trailer);</p>
     <li data-md>
      <p>a member whose reserved FLG bits are set;</p>
     <li data-md>
@@ -3567,9 +3511,6 @@ a member truncated anywhere (header fields, deflate data or trailer);</p>
      <p>decompressed output exceeding the decoder’s bound (<a href="#security-bounds">§ 13.1 Untrusted input and bounds</a>),
 which is enforced on the decompressed byte count during inflation and never
 read from ISIZE;</p>
-    <li data-md>
-     <p>decompressed content that is not a JSON object (including content that is
-itself gzip);</p>
     <li data-md>
      <p>a header with FLG.FHCRC set whose two header-CRC bytes are not the two least
 significant bytes of the CRC32 of all header bytes before them;</p>
@@ -3616,10 +3557,10 @@ embedded <code>preview</code>; and it gives the format one encoding rule instead
 text form in a <code>data:</code> URL instead (<a href="#data-urls">§ 7.5 data: URLs</a>).
 </div>
    <h3 class="heading settled" data-level="7.3" id="media-type"><span class="secno">7.3. </span><span class="content">Media type and file extension</span><a class="self-link" href="#media-type"></a></h3>
-   <p>The media type of a JAI document in any of its three serialisations is
-<dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="image-jai"><code>image/jai</code></dfn>. The file extension is <code>.jai</code>. The <code>type</code> attribute
-value <code>image/jai</code> (<a href="#html-carriers">§ 11.1 Carriers</a>) is matched by its essence, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive③">ASCII case-insensitively</a>, ignoring parameters. A <code>charset</code> parameter has no
-meaning: the text and JSON forms are always UTF-8.</p>
+   <p>The media type of the file form is <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="image-jai"><code>image/jai</code></dfn>, and its file
+extension is <code>.jai</code>. In a <code>data:</code> URL the same media type labels the text form
+(<a href="#data-urls">§ 7.5 data: URLs</a>). Media-type parameters have no meaning. The <code>type</code> attribute
+value <code>image/jai</code> (<a href="#html-carriers">§ 11.1 Carriers</a>) is matched by its essence, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive①">ASCII case-insensitively</a>, ignoring parameters.</p>
    <div class="note" role="note">
 <code>image/jai</code> is used unregistered, as <code>image/webp</code> was for a decade before
 RFC 9649. Appendix <a href="#iana">Appendix A. Media type registration template</a> carries the registration template; registration
@@ -3631,64 +3572,35 @@ different name, viewers will match both. JAI is unrelated to JPEG AI
    <p>Servers SHOULD send <code>Content-Type: image/jai</code> for <code>.jai</code> resources, and, as
 for web fonts, SHOULD send <code>Access-Control-Allow-Origin: *</code> so that scripts on
 other origins can read them; a <code>.jai</code> resource contains no user data. Servers
-need not apply <code>Content-Encoding: gzip</code>; if they do, <code>fetch()</code> removes it and
-the decoder sees JSON. Decoders apply <a href="#decoding">§ 7.4 Decoding</a> to the bytes of any
-resource referenced from a JAI carrier regardless of the served
-<code>Content-Type</code>, because static hosts commonly serve unknown extensions as
-<code>application/octet-stream</code>.</p>
+send the file’s bytes as they are. Compressing them again on the fly with
+<code>Content-Encoding: gzip</code> is harmless, because <code>fetch()</code> removes that coding;
+a server MUST NOT declare the file’s own gzip member as a content coding,
+because the decoder would then receive JSON and reject it. Decoders apply
+<a href="#decoding">§ 7.4 Decoding</a> to the bytes of any resource referenced from a JAI carrier
+regardless of the served <code>Content-Type</code> (a <code>text/html</code> response carries no
+document, <a href="#html-discovery">§ 11.1.2 Discovery</a>), because static hosts commonly serve unknown
+extensions as <code>application/octet-stream</code>.</p>
    <h3 class="heading settled" data-level="7.4" id="decoding"><span class="secno">7.4. </span><span class="content">Decoding</span><a class="self-link" href="#decoding"></a></h3>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="decoding-algorithm">decoding algorithm</dfn> takes a byte sequence <em>bytes</em> and a flag <em>in
-JAI context</em> (true in a <a data-link-type="dfn" href="#jai-context" id="ref-for-jai-context①">JAI context</a>) and returns a document and
-diagnostics. It never falls back from one serialisation to another; each
-layer either succeeds or yields the empty document.</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="decoding-algorithm">decoding algorithm</dfn> takes the bytes of a <code>.jai</code> file or of
+an <code>image/jai</code> resource and returns a document and diagnostics. These bytes are
+always the file form; the algorithm never tries another serialisation.</p>
    <ol>
     <li data-md>
-     <p>If <em>bytes</em> begins with <code>1F 8B</code>:</p>
-     <ol>
-      <li data-md>
-       <p>Decode exactly one gzip member under the output bound. If the member is
-malformed in any way listed in <a href="#file-format">§ 7.1 File form</a>, if bytes follow it, or
-if the bound is exceeded, return the empty document with
-<code>malformed-container</code>, discarding any partial output.</p>
-      <li data-md>
-       <p>Let <em>bytes</em> be the decompressed content, and let <em>from gzip</em> be true.</p>
-     </ol>
+     <p>Decode exactly one gzip member under the decompression bound
+(<a href="#security-bounds">§ 13.1 Untrusted input and bounds</a>). If the bytes are not a gzip member, the member is
+malformed in any way listed in <a href="#file-format">§ 7.1 File form</a>, bytes follow it, or the
+bound is exceeded, return the empty document with <code>malformed-container</code>,
+discarding any partial output.</p>
     <li data-md>
-     <p>If <em>from gzip</em> is false and <em>bytes</em> is longer than the decoder’s text bound
-(<a href="#security-bounds">§ 13.1 Untrusted input and bounds</a>), return the empty document with <code>undecodable</code>.</p>
+     <p>If the decompressed content is not well-formed UTF-8 <a data-link-type="biblio" href="#biblio-encoding" title="Encoding Standard">[ENCODING]</a>, return
+the empty document with <code>invalid-json</code>.</p>
     <li data-md>
-     <p>Decode <em>bytes</em> as UTF-8. If the bytes are not well-formed UTF-8 <a data-link-type="biblio" href="#biblio-encoding" title="Encoding Standard">[ENCODING]</a>
-or contain the byte 00, return the empty document with
-<code>malformed-container</code> if <em>from gzip</em> is true and with <code>undecodable</code>
-otherwise. There is no autodetection of UTF-16 or other encodings and no
-<code>charset</code> handling. (The byte 00 never occurs in text a person or tool
-writes; rejecting it keeps binary data, such as UTF-16 without a byte order
-mark, from becoming a prompt.)</p>
-    <li data-md>
-     <p>Remove every leading U+FEFF.</p>
-    <li data-md>
-     <p>Let <em>i</em> be the index of the first code point that is not JSON whitespace
-(U+0009, U+000A, U+000D, U+0020). If the code point at <em>i</em> is <code>{</code> and the
-next code point after <em>i</em> that is not JSON whitespace is <code>"</code> or <code>}</code>, the
-input is in the JSON form: run the <a data-link-type="dfn" href="#json-reading-algorithm" id="ref-for-json-reading-algorithm">JSON reading algorithm</a> on the
-text with <em>in JAI context</em>. A JSON failure is final: do not try the text
-form.</p>
-    <li data-md>
-     <p>Otherwise, if <em>from gzip</em> is true, return the empty document with
-<code>malformed-container</code> (a gzip member must contain JSON).</p>
-    <li data-md>
-     <p>Otherwise, the input is in the text form: run the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm">text parsing algorithm</a> on the text.</p>
+     <p>Run the <a data-link-type="dfn" href="#json-reading-algorithm" id="ref-for-json-reading-algorithm">JSON reading algorithm</a> on the decoded text and return its
+result.</p>
    </ol>
-   <p>A <code>.jai</code> file whose bytes are not gzip is accepted by this algorithm but is
-not a conforming file; validators report <code>non-canonical-encoding</code>.</p>
-   <div class="note" role="note">
-The three serialisations are distinguishable at the first non-whitespace
-bytes: <code>1F 8B</code>, <code>{</code> followed by <code>"</code> or <code>}</code>, or anything else. A text
-description that begins with <code>{</code> but is not followed by a quote, for example
-<code>{masterpiece}, a castle</code>, is text. The <a data-link-type="dfn" href="#bare-serialisation" id="ref-for-bare-serialisation">bare serialisation</a> writes a
-<code>{</code>-initial prompt as <code>prompt=…</code> so that canonical output never meets the
-JSON test.
-</div>
+   <p>There is no autodetection of UTF-16 or other encodings, no <code>charset</code> handling
+and no byte order mark removal: content that begins with U+FEFF is not JSON
+(<a href="#json-reading">§ 6.3 Reading</a>).</p>
    <div class="example" id="ex-decode">
     <a class="self-link" href="#ex-decode"></a>
 
@@ -3708,61 +3620,60 @@ JSON test.
        <td>empty, <code>malformed-container</code>
 
       <tr>
-       <td>gzip member containing <code>jai:A castle</code>
-       <td>empty, <code>malformed-container</code>
-
-      <tr>
-       <td><code>{"jai":1,"prompt":"A castle"}</code> (uncompressed)
-       <td>prompt = <code>A castle</code>; validator: <code>non-canonical-encoding</code>
-
-      <tr>
-       <td><code>{masterpiece}, a castle</code>
-       <td>prompt = <code>{masterpiece}, a castle</code>
-
-      <tr>
-       <td><code>{"quoted"} prose</code>
+       <td>gzip member containing <code>A castle</code>
        <td>empty, <code>invalid-json</code>
 
       <tr>
-       <td><code>FF FE 6A 00 …</code> (UTF-16)
-       <td>empty, <code>undecodable</code>
+       <td>gzip member containing U+FEFF and then <code>{"jai":1,"prompt":"A castle"}</code>
+       <td>empty, <code>invalid-json</code>
+
+      <tr>
+       <td><code>{"jai":1,"prompt":"A castle"}</code> (uncompressed)
+       <td>empty, <code>malformed-container</code>
+
+      <tr>
+       <td><code>A castle</code> (uncompressed)
+       <td>empty, <code>malformed-container</code>
 
       <tr>
        <td>the bytes of a PNG file
-       <td>empty, <code>undecodable</code>
-
-      <tr>
-       <td><code>jai:A castle</code>
-       <td>prompt = <code>A castle</code>
+       <td>empty, <code>malformed-container</code>
 
     </table>
    </div>
    <h3 class="heading settled" data-level="7.5" id="data-urls"><span class="secno">7.5. </span><span class="content"><code>data:</code> URLs</span><a class="self-link" href="#data-urls"></a></h3>
    <p>A document may be embedded in a <code>data:</code> URL <a data-link-type="biblio" href="#biblio-rfc2397" title="The &quot;data&quot; URL scheme">[RFC2397]</a> with the media type
-<code>image/jai</code>, in any of the three serialisations:</p>
+<code>image/jai</code>. Its body is the text form, percent-encoded:</p>
    <div class="example" id="ex-data-urls">
     <a class="self-link" href="#ex-data-urls"></a>
 
 <pre>data:image/jai,A%20magical%20castle;style=anime
-data:image/jai;base64,H4sIAAAAAAACA6tWykrMVLIy1FEqKMrPLShRslJyVMhNTM9MTsxRSE4sLslJVdJRKi6pBNJWSol5mbmpSrUAq6nXdjUAAAA=
 </pre>
-    
-Both URLs carry the same document.
-
    </div>
-   <p>The body of the URL, after the data: URL processor of the Fetch Standard has
-percent-decoded or base64-decoded it <a data-link-type="biblio" href="#biblio-fetch" title="Fetch Standard">[FETCH]</a>, is decoded with
-<a href="#decoding">§ 7.4 Decoding</a> with <em>in JAI context</em> true (the body is a <a data-link-type="dfn" href="#jai-context" id="ref-for-jai-context②">JAI context</a>). The non-base64 text form is the
-most compact and the only human-readable option; the base64 file form is
-permitted and never required. Media-type parameters other than <code>base64</code> are
-ignored.</p>
-   <p>If the data: URL processor returns failure (no <code>,</code>, or a <code>;base64</code> body that
-forgiving-base64 rejects), or the essence of its MIME type is not <code>image/jai</code>,
-the URL carries no document. The MIME type is parsed, as Fetch does, from the
+   <p>The data: URL processor of the Fetch Standard <a data-link-type="biblio" href="#biblio-fetch" title="Fetch Standard">[FETCH]</a> returns the body as
+bytes, base64-decoding a <code>;base64</code> body first. If it returns failure (no
+<code>,</code>, or a <code>;base64</code> body that forgiving-base64 rejects), or the essence of its
+MIME type is not <code>image/jai</code>, the URL carries no document. Otherwise:</p>
+   <ol>
+    <li data-md>
+     <p>If the bytes are longer than the decoder’s text bound
+(<a href="#security-bounds">§ 13.1 Untrusted input and bounds</a>), return the empty document with <code>undecodable</code>.</p>
+    <li data-md>
+     <p>If they are not well-formed UTF-8 <a data-link-type="biblio" href="#biblio-encoding" title="Encoding Standard">[ENCODING]</a> or contain the byte 00,
+return the empty document with <code>undecodable</code>. (The byte 00 never occurs in
+text a person or tool writes.)</p>
+    <li data-md>
+     <p>Run the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm">text parsing algorithm</a> on the decoded text.</p>
+   </ol>
+   <p>The body is always the text form: a JSON object in it is prose, and a
+<code>;base64</code> body is read as text like any other. Media-type parameters have no
+meaning, and validators report any of them, <code>;base64</code> included
+(<code>data-url-parameter</code>).</p>
+   <p>The MIME type is parsed, as Fetch does, from the
 serialised URL, in which the URL parser has percent-encoded non-ASCII and
 control code points, so <code>data:image/jai</code> followed by U+00A0 is not
 <code>image/jai</code>.</p>
-   <p>When a serialiser or encoder writes the text form or the JSON form into the body of a
+   <p>When a serialiser or encoder writes the text form into the body of a
 <code>data:image/jai,</code> URL it MUST percent-encode every byte of the UTF-8 encoding
 that is a C0 control, U+007F, an ASCII whitespace character (U+0020 as <code>%20</code>,
 U+000A as <code>%0A</code>, U+0009 as <code>%09</code>), <code>%</code> (as <code>%25</code>), <code>#</code> (as <code>%23</code>), <code>"</code> (as <code>%22</code>), <code>'</code> (as <code>%27</code>), <code>&lt;</code> (as <code>%3C</code>),
@@ -3772,7 +3683,7 @@ that would be the last byte of the URL (as <code>%2C</code>); a body beginning w
 is written with <code>%2F</code>. Every other byte, including <code>;</code>, <code>=</code>, <code>,</code>, <code>{</code>, <code>}</code>, <code>?</code>, <code>/</code>,
 <code>+</code> and non-ASCII, MAY remain literal. The
 <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="canonical-url-form">canonical URL form</dfn> of a document is <code>data:image/jai,</code> followed by
-its <a data-link-type="dfn" href="#bare-serialisation" id="ref-for-bare-serialisation①">bare serialisation</a> so encoded, so that the canonical URL form can be
+its canonical text so encoded, so that the canonical URL form can be
 placed in any quoted HTML attribute without further escaping.</p>
    <div class="note" role="note">
 Unencoded whitespace in a <code>srcset</code> attribute silently discards the candidate;
@@ -3784,7 +3695,7 @@ a transport step performed once by the URL processor; <code>%3B</code> and <code
 <code>\=</code> protect prose (<a href="#text-escaping">§ 5.3 Escaping arbitrary text</a>).
 </div>
    <h2 class="heading settled" data-level="8" id="parameters"><span class="secno">8. </span><span class="content">Standard parameters</span><a class="self-link" href="#parameters"></a></h2>
-   <p>This edition defines eleven <a data-link-type="dfn" href="#standard-key" id="ref-for-standard-key">standard keys</a>. Each has a meaning a renderer
+   <p>This edition defines ten <a data-link-type="dfn" href="#standard-key" id="ref-for-standard-key">standard keys</a>. Each has a meaning a renderer
 can act on without knowing anything about a particular model. All of them are
 <a data-link-type="dfn" href="#advisory" id="ref-for-advisory">advisory</a> in the sense of <a href="#terminology">§ 3 Terminology</a>: a renderer honours what it can
 and reports what it cannot (<a href="#rendering-diagnostics">§ 9.4 Renderer diagnostics</a>); none of them can
@@ -3858,12 +3769,6 @@ select, fetch or configure anything the user has not configured.</p>
       <td><code>data:</code> URL of a tiny raster image
       <td>Placeholder shown while rendering. Never an input to generation.
 
-     <tr>
-      <td><code>animate</code>
-      <td>one
-      <td>boolean
-      <td>Requests a looping animated image where supported; otherwise a still frame.
-
    </table>
    <h3 class="heading settled" data-level="8.1" id="parameters-interpretation"><span class="secno">8.1. </span><span class="content">Interpretation</span><a class="self-link" href="#parameters-interpretation"></a></h3>
    <p>An <a data-link-type="dfn" href="#interpreter" id="ref-for-interpreter">interpreter</a> derives the <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="interpreted-parameters">interpreted parameters</dfn> of a
@@ -3871,7 +3776,7 @@ document from its values. Interpretation never modifies the document: the
 serialiser writes values as the author wrote them, and <code>16x9</code> and <code>16:9</code>
 remain different documents with the same interpretation.</p>
    <p>For each single-valued standard key (<code>aspect</code>, <code>mode</code>, <code>strength</code>, <code>seed</code>,
-<code>source</code>, <code>preview</code>, <code>animate</code>) that is present:</p>
+<code>source</code>, <code>preview</code>) that is present:</p>
    <ol>
     <li data-md>
      <p>If the key has several values, let <em>v</em> be the last value and emit
@@ -3886,7 +3791,7 @@ keys out of shared prefixes.</p>
 is at least two code points long, remove both and <a data-link-type="dfn" href="#trim" id="ref-for-trim③">trim</a> the result
 (validators report <code>quoted-value</code>). Then, if <em>v</em> ends with <code>.</code>, remove it.</p>
     <li data-md>
-     <p>Match <em>v</em> against the key’s value grammar below, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive④">ASCII case-insensitively</a> where keywords are involved. On failure emit
+     <p>Match <em>v</em> against the key’s value grammar below, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive②">ASCII case-insensitively</a> where keywords are involved. On failure emit
 <code>invalid-value</code> for the key (for <code>source</code>, <code>invalid-image</code>; for <code>preview</code>,
 <code>unsupported-preview</code>), treat the key as absent, and, where the grammar
 suggests one, offer the corrected spelling in the diagnostic.</p>
@@ -3980,8 +3885,8 @@ decode as one of these types, is not readable (<a href="#security-inputs">§ 1
 present it takes precedence over the carrier’s <a data-link-type="dfn" href="#original-image" id="ref-for-original-image②">original image</a>. A <code>source</code>
 URL is fetched only with the privileges of the document that carries it, and
 only after the consent that the render itself requires (<a href="#security-inputs">§ 13.2 Permitted inputs</a>).
-Documents intended for text channels SHOULD reference a URL rather than embed
-bytes.</p>
+A <code>data:</code> value makes the document as large as the image; a URL keeps it
+small.</p>
    <h4 class="heading settled" data-level="8.1.8" id="key-preview"><span class="secno">8.1.8. </span><span class="content"><code>preview</code></span><a class="self-link" href="#key-preview"></a></h4>
    <p>A <code>data:</code> URL of a raster image of one of the types listed for <code>source</code>,
 RECOMMENDED at most 64 pixels on the long side and at most 1 KiB. A viewer
@@ -3995,14 +3900,6 @@ placeholders such as ThumbHash <a data-link-type="biblio" href="#biblio-thumbhas
 three to four times smaller but need decoder code; a later edition might admit
 them as prefixed values without affecting this edition’s viewers.
 </div>
-   <h4 class="heading settled" data-level="8.1.9" id="key-animate"><span class="secno">8.1.9. </span><span class="content"><code>animate</code></span><a class="self-link" href="#key-animate"></a></h4>
-   <p><code>true</code>, <code>yes</code>, <code>1</code>, <code>on</code> (true) or <code>false</code>, <code>no</code>, <code>0</code>, <code>off</code> (false), matched
-ASCII case-insensitively. True requests a looping animated image resource
-(GIF, APNG, animated WebP or animated AVIF) of renderer-chosen length that is
-displayable wherever a still image is; video containers are not JAI render
-results. Absent or invalid: false. A renderer that cannot produce one renders a still frame and reports
-<code>unsupported-parameter</code>. Viewer obligations for motion are in
-<a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>.</p>
    <h3 class="heading settled" data-level="8.2" id="model-matching"><span class="secno">8.2. </span><span class="content">Model matching</span><a class="self-link" href="#model-matching"></a></h3>
    <p>A renderer, or a viewer choosing among configured renderers, resolves the
 <code>model</code> values as follows. Only models the user has configured and enabled take
@@ -4012,7 +3909,7 @@ part (<a href="#security-selectors">§ 13.3 Selectors, never locators</a>).</p
      <p>For each <code>model</code> value <em>v</em> in document order:</p>
      <ol>
       <li data-md>
-       <p>If <em>v</em> matches, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑤">ASCII case-insensitively</a>, the identifier or an alias
+       <p>If <em>v</em> matches, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive③">ASCII case-insensitively</a>, the identifier or an alias
 of an eligible model, select that model.</p>
       <li data-md>
        <p>Otherwise, unless the renderer pins versions: if the last
@@ -4075,7 +3972,7 @@ refinements for particular models in <a data-link-type="dfn" href="#qualified-ke
    <div class="example" id="ex-refinements">
     <a class="self-link" href="#ex-refinements"></a>
 
-<pre>jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;prompt/imagen=The balloon is glossy;model=flux;model=imagen
+<pre>A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;prompt/imagen=The balloon is glossy;model=flux;model=imagen
 </pre>
    </div>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="selected-model">selected model</dfn> is the model that <a href="#model-matching">§ 8.2 Model matching</a>
@@ -4086,7 +3983,7 @@ run and emits no code, but <code>mode-degraded</code> still applies
 values the model receives for <code>prompt</code>, <code>style</code> and <code>avoid</code>: the core values
 of the key, followed by the values of every qualified key with that name whose
 target matches the <a data-link-type="dfn" href="#selected-model" id="ref-for-selected-model②">selected model</a>, in ascending code point order of the
-key. A target matches when it equals, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑥">ASCII case-insensitively</a>, the
+key. A target matches when it equals, <a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive④">ASCII case-insensitively</a>, the
 model’s family name, its identifier or one of its aliases. The <a data-link-type="dfn" href="#model-description" id="ref-for-model-description①">model description</a> is formed from the <code>prompt</code> values; the <a data-link-type="dfn" href="#description" id="ref-for-description②">description</a> stays
 the core.</p>
    <p>A target is a single key segment, so identifiers containing <code>/</code>, <code>.</code>, <code>:</code> or
@@ -4145,7 +4042,7 @@ it produces pixels is outside this specification.</p>
    <p>The <a data-link-type="dfn" href="#original-image" id="ref-for-original-image④">original image</a> is the carrier’s own image (an <code>&lt;img></code> element’s
 <code>currentSrc</code> at render time) or, when present, the image named by <code>source</code>.
 <code>mode</code> states how the document relates to it; a viewer’s settings always take
-precedence over <code>mode</code> (<a href="#viewer-requirements">§ 11.5 Viewer requirements</a>).</p>
+precedence over <code>mode</code> (<a href="#viewer-requirements">§ 11.3 Viewer requirements</a>).</p>
    <dl>
     <dt data-md><code>generate</code> (default)
     <dd data-md>
@@ -4208,7 +4105,7 @@ model.</p>
    </ul>
    <div class="note" role="note">
 The reference renderer assembles the <a data-link-type="dfn" href="#model-description" id="ref-for-model-description③">model description</a>, then any
-personalisation text (<a href="#viewer-personalisation">§ 11.5.3 Personalisation</a>), then the style values as a comma-separated list, then, only when folding, a
+personalisation text (<a href="#viewer-personalisation">§ 11.3.3 Personalisation</a>), then the style values as a comma-separated list, then, only when folding, a
 final line listing what to avoid. On models with a short token window, style
 terms belong early. Provider-side prompt rewriting is a user setting of the
 renderer, not a document matter.
@@ -4357,9 +4254,9 @@ beside the document instead.</p>
 original; it is not a copy of it, and it does not carry the original’s
 provenance or rights information (<a href="#security-provenance">§ 13.10 Provenance</a>).</p>
    </ul>
-   <h2 class="heading settled" data-level="11" id="html"><span class="secno">11. </span><span class="content">HTML and URL integration</span><a class="self-link" href="#html"></a></h2>
+   <h2 class="heading settled" data-level="11" id="html"><span class="secno">11. </span><span class="content">HTML integration</span><a class="self-link" href="#html"></a></h2>
    <h3 class="heading settled" data-level="11.1" id="html-carriers"><span class="secno">11.1. </span><span class="content">Carriers</span><a class="self-link" href="#html-carriers"></a></h3>
-   <p>A document reaches an <code>&lt;img></code> element through one of three <a data-link-type="dfn" href="#carrier" id="ref-for-carrier①">carriers</a>. The
+   <p>A document reaches an <code>&lt;img></code> element through one of three <a data-link-type="dfn" href="#carrier" id="ref-for-carrier">carriers</a>. The
 order below is the precedence a viewer applies when one element carries more
 than one; it is not a recommendation (<a href="#html-choosing">§ 11.1.1 Choosing a carrier</a> says which to use).
 Each carrier also marks the image as JAI: a plain <code>&lt;img></code> with ordinary
@@ -4383,22 +4280,29 @@ hold a <code>data:image/jai</code> URL. The <code>alt</code> is the page’s own
 equal the description: it is written for readers of the page, often shorter.
 
 
-    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="attribute-carrier">attribute carrier</dfn>: the <code>data-jai</code> attribute, with <code>alt</code> as the first line
+    <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="attribute-carrier">attribute carrier</dfn>: the <code>data-jai</code> attribute, with <code>alt</code> as the prompt unless <code>data-jai</code> gives one
 
     <dd>
 <pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle at dusk, seen from below"</c->
-     <c- e>data-jai</c-><c- o>=</c-><c- s>"Mist fills the valley;style=anime;prompt/flux=Lit windows glow warm"</c-><c- p>></c->
+     <c- e>data-jai</c-><c- o>=</c-><c- s>"style=anime;prompt/flux=Lit windows glow warm"</c-><c- p>></c->
 </pre>
      
-The element’s <code>alt</code> text is the first prompt value, taken literally and never
-parsed; the attribute holds the text form of the rest of the document, with
-the <code>jai:</code> prefix optional. So <code>alt</code> is both what screen readers speak and the
-start of what the model draws, and nothing is written twice. Text that only
-the model needs (camera terms, framing fractions, <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified keys</a>) goes in
-<code>data-jai</code> and is not read aloud. An empty or absent <code>alt</code> adds nothing, and
-an empty <code>data-jai</code> marks an image whose <code>alt</code> is its whole description:
-<code>&lt;img src="castle.png" alt="A rich description…" data-jai></code>. <code>data-jai</code> is
-never read as the JSON form: a JSON object in it is prose.
+The attribute holds the text form. When it gives no <code>prompt</code> value, the
+element’s <code>alt</code> text is the prompt, taken literally and never parsed: <code>alt</code> is
+both what screen readers speak and what the model draws, and nothing is
+written twice. Text that only the model needs (camera terms, framing
+fractions, <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key④">qualified keys</a>) goes in <code>data-jai</code> and is not read aloud. An
+empty <code>data-jai</code> marks an image whose <code>alt</code> is its whole description:
+<code>&lt;img src="castle.png" alt="A rich description…" data-jai></code>.
+
+
+     <p>When the model needs more than readers should hear, the prompt goes at the
+start of <code>data-jai</code>, and <code>alt</code> stays the page’s own text:</p>
+<pre class="highlight language-html"><c- p>&lt;</c-><c- f>img</c-> <c- e>src</c-><c- o>=</c-><c- s>"castle.png"</c-> <c- e>alt</c-><c- o>=</c-><c- s>"A magical castle"</c->
+     <c- e>data-jai</c-><c- o>=</c-><c- s>"A magical castle at dusk, seen from below. Mist fills the valley;style=anime"</c-><c- p>></c->
+</pre>
+     
+<code>data-jai</code> is never read as the JSON form: a JSON object in it is prose.
 
 
     <dt><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="src-carrier">src carrier</dfn>: <code>src</code> is a <code>data:image/jai</code> URL or a <code>.jai</code> file
@@ -4423,12 +4327,6 @@ turns bytes into pixels and never sees the element’s <code>alt</code>, so docu
 those slots are complete on their own and travel as files or URLs. The
 attribute carrier is defined for scripts and extensions acting for a user;
 a native user agent ignores it unless the user enables such a viewer.</p>
-   <p><code>alt</code> is never a carrier by itself. It is the image’s text for people who
-cannot see it, and a screen reader would read JAI syntax in it aloud,
-parameter by parameter: an <code>alt</code> that begins with <code>jai:</code> is ordinary
-alternative text. A <code>jai:</code> string in any URL slot (<code>src</code>, <code>href</code>, <code>srcset</code>,
-CSS <code>url()</code>) is not a carrier: <code>jai:</code> is a text prefix and this specification
-defines no <code>jai:</code> URL scheme (<code>jai-scheme-url</code>).</p>
    <h4 class="heading settled" data-level="11.1.1" id="html-choosing"><span class="secno">11.1.1. </span><span class="content">Choosing a carrier</span><a class="self-link" href="#html-choosing"></a></h4>
    <p><em>This section is informative.</em></p>
    <ul>
@@ -4451,9 +4349,8 @@ documents reused across pages. A <code>.jai</code> file keeps the markup short; 
    <h4 class="heading settled" data-level="11.1.2" id="html-discovery"><span class="secno">11.1.2. </span><span class="content">Discovery</span><a class="self-link" href="#html-discovery"></a></h4>
    <p>A viewer runs <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="discovery">discovery</dfn> over the <code>&lt;img></code> elements of a document in
 tree order, descending into open shadow roots (an open shadow root’s tree is visited immediately after its host element and before the host’s children) and skipping closed ones, and
-re-runs it on the mutations HTML considers relevant for source selection
-(changes to <code>src</code>, <code>srcset</code>, <code>sizes</code>, <code>media</code>, <code>type</code>, and to the children of
-a <code>&lt;picture></code>), as well as on <code>data-jai</code> and <code>alt</code> changes. Discovery MUST NOT
+re-runs it when the page changes <code>src</code>, <code>srcset</code>, <code>media</code>, <code>type</code>,
+<code>data-jai</code> or <code>alt</code>, or the children of a <code>&lt;picture></code>. Discovery MUST NOT
 depend on the image having been fetched or having failed: lazily loaded
 images fire no events until they approach the viewport. Discovery never
 fetches: a <code>.jai</code> resource is fetched only when the user opens the image’s
@@ -4478,9 +4375,10 @@ the <code>&lt;source></code> are layout hints. An implementation that cannot eva
 media queries treats every <code>media</code> value as matching.</p>
     <li data-md>
      <p>Otherwise, for a script or extension viewer: if the element has a
-<code>data-jai</code> attribute, the document is its value parsed with the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm①">text parsing algorithm</a>; then, if the element’s <code>alt</code> attribute, after
-<a data-link-type="dfn" href="#value-normalisation" id="ref-for-value-normalisation④">value normalisation</a>, is not empty, it is inserted as the first
-<code>prompt</code> value (attribute carrier).</p>
+<code>data-jai</code> attribute, the document is its value parsed with the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm①">text parsing algorithm</a>; if that document has no <code>prompt</code> value (qualified
+<code>prompt/…</code> keys do not count) and the element’s <code>alt</code> attribute, after
+<a data-link-type="dfn" href="#value-normalisation" id="ref-for-value-normalisation④">value normalisation</a> (which emits no diagnostic here), is not empty,
+the <code>alt</code> is its single <code>prompt</code> value (attribute carrier).</p>
     <li data-md>
      <p>Otherwise, if the element has no <code>srcset</code> attribute and no <code>&lt;source></code>
 precedes it in a <code>&lt;picture></code> parent (otherwise HTML never uses <code>src</code>;
@@ -4493,7 +4391,7 @@ whose MIME type essence is <code>image/jai</code>, the document is its body
 (<a href="#data-urls">§ 7.5 data: URLs</a>);</p>
       <li data-md>
        <p>otherwise, if <em>url</em> is an <code>http</code> or <code>https</code> URL whose path, as the URL
-parser leaves it, ends in <code>.jai</code> (<a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑦">ASCII case-insensitively</a>; the
+parser leaves it, ends in <code>.jai</code> (<a data-link-type="dfn" href="#ascii-case-insensitive" id="ref-for-ascii-case-insensitive⑤">ASCII case-insensitively</a>; the
 query and fragment play no part), the document is the resource at
 <em>url</em>.</p>
      </ol>
@@ -4508,8 +4406,9 @@ render starts, never during discovery. A fetched resource that is served as
 <code>text/html</code>, or that does not decode as JAI, carries no document; the viewer
 removes its control without reporting a failure.</p>
    <p>A native user agent decides by the response’s media type, whatever the URL;
-a script or extension viewer decides by the <code>.jai</code> path and decodes by
-inspection (<a href="#decoding">§ 7.4 Decoding</a>). Servers SHOULD send <code>Content-Type: image/jai</code>
+a script or extension viewer takes the picture carrier’s resource by its
+<code>type</code> attribute and the src carrier’s by the <code>.jai</code> path, and decodes a
+fetched response as the file form (<a href="#decoding">§ 7.4 Decoding</a>). Servers SHOULD send <code>Content-Type: image/jai</code>
 (<a href="#media-type">§ 7.3 Media type and file extension</a>); many static hosts send <code>application/octet-stream</code>, which
 script viewers accept and native user agents may not.</p>
    <p>A <code>&lt;source></code> without a <code>type</code> attribute is selected by the browser and
@@ -4530,7 +4429,7 @@ the next candidate; the editors intend to raise this with the HTML
 Standard’s maintainers when a native implementation exists.
 </div>
    <h4 class="heading settled" data-level="11.1.3" id="html-carrier-src"><span class="secno">11.1.3. </span><span class="content">Requirements for the src carrier</span><a class="self-link" href="#html-carrier-src"></a></h4>
-   <p><span id="html-carrier-3"></span>An <code>&lt;img></code> whose <code>src</code> is a <code>data:image/jai</code>
+   <p>An <code>&lt;img></code> whose <code>src</code> is a <code>data:image/jai</code>
 URL or a <code>.jai</code> resource:</p>
    <ul>
     <li data-md>
@@ -4540,14 +4439,15 @@ URL or a <code>.jai</code> resource:</p>
      <p>SHOULD have <code>width</code> and <code>height</code> attributes or a CSS <code>aspect-ratio</code>, since
 it has no intrinsic size until a render arrives (<code>missing-size</code>). Images
 written in Markdown have none; a viewer then lays the render out at the
-document’s <code>aspect</code>, or 1:1, at the available width;</p>
+ratio <a href="#rendering-size">§ 9.3 Size and aspect</a> chooses, at the available width;</p>
     <li data-md>
      <p>MUST NOT have a <code>srcset</code>, and SHOULD NOT be the <code>&lt;img></code> of a <code>&lt;picture></code>
 with any <code>&lt;source></code> (<code>src-shadowed</code>).</p>
    </ul>
    <p>Authors are warned that pages without a JAI viewer show an unavailable
 image; that <code>onerror</code> handlers and lazy-loading libraries rewrite a broken
-image’s <code>src</code> (viewers capture the carrier at discovery); that a Content
+image’s <code>src</code>, which ends the src carrier (discovery re-runs on <code>src</code>
+changes); that a Content
 Security Policy must list <code>data:</code> in <code>img-src</code> for the <code>data:</code> form; and that
 the browser requests a <code>.jai</code> file in <code>src</code> itself, with the page’s cookies
 and referrer, before any viewer does, so the src form saves no bandwidth
@@ -4564,7 +4464,7 @@ with a <code>data:</code> URL in <code>srcset</code>:</p>
 requirements. A script on another origin can read a <code>.jai</code> resource only when
 it is served with CORS headers; browser extensions with host permissions
 fetch it from their privileged context but are still bound by
-<a href="#security-inputs">§ 13.2 Permitted inputs</a> for any <em>image</em> input. Appendix <a href="#server-config">Appendix D. Serving .jai files</a> gives server mappings.</p>
+<a href="#security-inputs">§ 13.2 Permitted inputs</a> for any <em>image</em> input. Appendix <a href="#server-config">Appendix C. Serving .jai files</a> gives server mappings.</p>
    <h3 class="heading settled" data-level="11.2" id="html-transport"><span class="secno">11.2. </span><span class="content">Transport decoding</span><a class="self-link" href="#html-transport"></a></h3>
    <p>Exactly one transport decoding is applied per carrier, before the
 <a data-link-type="dfn" href="#decoding-algorithm" id="ref-for-decoding-algorithm">decoding algorithm</a> or the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm②">text parsing algorithm</a> runs:</p>
@@ -4575,7 +4475,7 @@ the attribute value against the document’s base URL and run the data: URL
 processor of the Fetch Standard <a data-link-type="biblio" href="#biblio-fetch" title="Fetch Standard">[FETCH]</a>. The fragment is excluded; the
 percent-decoding is the URL Standard’s byte-level percent-decode <a data-link-type="biblio" href="#biblio-url" title="URL Standard">[URL]</a>,
 which leaves a <code>%</code> not followed by two hexadecimal digits in place and
-never fails. Decode the resulting bytes with <a href="#decoding">§ 7.4 Decoding</a>.</p>
+never fails. Read the resulting bytes as in <a href="#data-urls">§ 7.5 data: URLs</a>.</p>
     <li data-md>
      <p>http(s) URL (picture or src carrier with a <code>.jai</code> resource): the response
 body, decoded with <a href="#decoding">§ 7.4 Decoding</a> regardless of the served <code>Content-Type</code>,
@@ -4583,8 +4483,6 @@ except that a <code>text/html</code> response carries no document.</p>
     <li data-md>
      <p>the <code>data-jai</code> attribute (attribute carrier): no transport decoding;
 the attribute value, as the HTML parser produced it, is the input.</p>
-    <li data-md>
-     <p>Query forms: <a href="#url-query">§ 11.3 Query forms</a>.</p>
    </ul>
    <p>No second percent-decoding is ever applied. Implementations MUST NOT use
 decoders that throw on malformed input (<code>decodeURIComponent</code>) in a transport
@@ -4595,104 +4493,7 @@ Reading the <code>src</code> attribute and reading the element’s <code>src</co
 the same <code>data:</code> body by construction, because the data: URL processor
 starts from the parsed URL either way.
 </div>
-   <h3 class="heading settled" data-level="11.3" id="url-query"><span class="secno">11.3. </span><span class="content">Query forms</span><a class="self-link" href="#url-query"></a></h3>
-   <p>Two conventions carry a document in a URL’s query, for playgrounds, gateways
-and links in text channels.</p>
-   <dl>
-    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="whole-query-form">whole-query form</dfn>
-    <dd data-md>
-     <p><code>https://example.org/play?prompt=A%20magical%20castle;style=anime</code></p>
-     <p>Parse the URL with the URL parser <a data-link-type="biblio" href="#biblio-url" title="URL Standard">[URL]</a>. If its query is null, the URL
-carries no document. Otherwise percent-decode the query once as in
-<a href="#html-transport">§ 11.2 Transport decoding</a>, decode the bytes with <em>UTF-8 decode without BOM</em>
-<a data-link-type="biblio" href="#biblio-encoding" title="Encoding Standard">[ENCODING]</a> (ill-formed sequences become U+FFFD), and run the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm③">text parsing algorithm</a> on the result; an empty query is the empty document.
-The JSON test of <a href="#decoding">§ 7.4 Decoding</a> does not apply. <code>+</code> is a literal plus sign
-and <code>&amp;</code> is ordinary text; the URL carries no other parameters.
-Generators MUST percent-encode space as <code>%20</code> (never <code>+</code>), <code>%</code>, <code>#</code> and
-ASCII whitespace, and MAY leave <code>;</code>, <code>=</code>, <code>+</code>, <code>&amp;</code>, <code>:</code>, <code>/</code> and non-ASCII
-unencoded. Form serialisers and parsers (<code>URLSearchParams</code>, <code>&lt;form     method=get></code>) MUST NOT be used to build or read this form.</p>
-    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="parameter-form">parameter form</dfn>
-    <dd data-md>
-     <p><code>https://example.org/render?jai=A%20magical%20castle%3Bstyle%3Danime&amp;w=800</code></p>
-     <p>A query parameter named <code>jai</code>, in <code>application/x-www-form-urlencoded</code>
-<a data-link-type="biblio" href="#biblio-url" title="URL Standard">[URL]</a>, whose value is a text-form document. Parse the URL with the URL
-parser; if its query is null there is no document. Otherwise parse the
-query with the <code>application/x-www-form-urlencoded</code> parser; the value of
-the first pair named <code>jai</code> is run through the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm④">text parsing algorithm</a>
-(an empty value is the empty document). With no such pair there is no
-document. Raw tabs and newlines have already been removed by the URL
-parser. It is read by any form parser, so <code>+</code> is a space and <code>&amp;</code> separates parameters; generators encode
-<code>;</code>, <code>=</code>, <code>&amp;</code>, <code>+</code>, <code>#</code>, <code>%</code> and whitespace in the value. This form
-coexists with other parameters and is the convention for a <em>gateway</em>: a
-server that renders a document to pixels so that <code>&lt;img src="https://gateway/…?jai=…"></code>
-displays everywhere today. Hosting a gateway is outside this
-specification; a gateway that stores or publishes prompts or watermarks
-output must say so to its users. A JAI-aware viewer MAY, with the user’s
-consent, decode the parameter locally instead of fetching the gateway.</p>
-   </dl>
-   <h3 class="heading settled" data-level="11.4" id="html-other"><span class="secno">11.4. </span><span class="content">Other host formats</span><a class="self-link" href="#html-other"></a></h3>
-   <p><em>This section is informative.</em></p>
-   <ul>
-    <li data-md>
-     <p><strong>Markdown.</strong> CommonMark image syntax exposes only <code>src</code> and <code>alt</code>, which is
-exactly the src carrier: <code>![A castle at dusk](castle.jai)</code>, or inline
-<code>![A castle at dusk](&lt;data:image/jai,A%20magical%20castle%20at%20dusk>)</code>
-where the host keeps <code>data:</code> URLs. Hosts that proxy external images (GitHub
-rewrites them through its image proxy) lose the <code>.jai</code> path; relative
-images in a repository keep it. Where a Markdown host allows raw HTML, the
-attribute or picture carrier gives readers fallback pixels. Bare spaces break Markdown destinations; use
-percent-encoding or angle brackets.</p>
-    <li data-md>
-     <p><strong>CSS.</strong> <code>image-set(url("castle.jai") type("image/jai"), url("castle.png")     type("image/png"))</code> is the CSS twin of the picture carrier; this edition does not
-require viewers to act on CSS images or on SVG <code>&lt;image></code>.</p>
-    <li data-md>
-     <p>**<code>&lt;object type="image/jai" data="castle.jai"></code>** renders its fallback
-content in current browsers but may download the resource and is governed
-by <code>object-src</code>; it is not a carrier.</p>
-    <li data-md>
-     <p><strong>Links.</strong> A link to a <code>.jai</code> file behaves like a link to any file the
-browser cannot display. There is no navigable JAI link form in this
-edition.</p>
-    <li data-md>
-     <p><strong>Service workers.</strong> A site can render <code>&lt;img src="castle.jai"></code> for its own
-visitors in a service worker, over http(s) and not on a first visit; the
-image then has pixels and viewers stand down (<a href="#html-discovery">§ 11.1.2 Discovery</a>).</p>
-    <li data-md>
-     <p><strong>Clipboard.</strong> The interoperable clipboard representation is <code>text/plain</code>
-containing the canonical text form with its <code>jai:</code> prefix.</p>
-   </ul>
-   <h4 class="heading settled" data-level="11.4.1" id="html-context-matrix"><span class="secno">11.4.1. </span><span class="content">Carriers by context</span><a class="self-link" href="#html-context-matrix"></a></h4>
-   <p><em>This section is informative.</em> Sanitisers differ, and the carrier an author
-can use depends on the pipeline:</p>
-   <table class="data">
-    <thead>
-     <tr>
-      <th>Context
-      <th>Usable carriers
-
-    <tbody>
-     <tr>
-      <td>HTML the author controls
-      <td>all; the attribute carrier is the everyday default (<a href="#html-choosing">§ 11.1.1 Choosing a carrier</a>)
-
-     <tr>
-      <td>User content through DOMPurify defaults
-      <td>all three: attribute, src (<code>data:</code> or <code>.jai</code>), and picture with an http(s) or relative <code>.jai</code> URL (<code>data:</code> URLs in <code>srcset</code> are removed)
-
-     <tr>
-      <td>User content through GitHub-style allow-list sanitisers
-      <td>picture as raw HTML (<code>&lt;picture></code>, <code>&lt;source></code>, <code>srcset</code>, <code>type</code> survive; <code>data-*</code> and <code>data:</code> <code>src</code> do not), and src with a relative <code>.jai</code> image
-
-     <tr>
-      <td>CommonMark image syntax
-      <td>src: <code>!<a href="castle.jai">alt</a></code>, or a <code>data:</code> URL where the host keeps it
-
-     <tr>
-      <td>Chat, documentation, email text
-      <td>the text form with its prefix
-
-   </table>
-   <h3 class="heading settled" data-level="11.5" id="viewer-requirements"><span class="secno">11.5. </span><span class="content">Viewer requirements</span><a class="self-link" href="#viewer-requirements"></a></h3>
+   <h3 class="heading settled" data-level="11.3" id="viewer-requirements"><span class="secno">11.3. </span><span class="content">Viewer requirements</span><a class="self-link" href="#viewer-requirements"></a></h3>
    <p>A <a data-link-type="dfn" href="#viewer" id="ref-for-viewer">viewer</a> decides whether, when and how documents are rendered. The user
 always wins: user settings (never render, ask, render on request, render
 automatically for a site) override <code>mode</code> and every other author preference,
@@ -4702,7 +4503,7 @@ except that <code>keep</code> is never rendered without a user request
    <p>A viewer MUST NOT present a render as saving data or bandwidth when the
 original image was fetched, and SHOULD NOT state any saving unless it avoided
 fetching the original.</p>
-   <h4 class="heading settled" data-level="11.5.1" id="viewer-replacement"><span class="secno">11.5.1. </span><span class="content">Replacement</span><a class="self-link" href="#viewer-replacement"></a></h4>
+   <h4 class="heading settled" data-level="11.3.1" id="viewer-replacement"><span class="secno">11.3.1. </span><span class="content">Replacement</span><a class="self-link" href="#viewer-replacement"></a></h4>
    <p>A viewer that replaces an image with a render:</p>
    <ol>
     <li data-md>
@@ -4720,7 +4521,7 @@ previous value.</p>
      <p>MUST NOT alter <code>id</code>, <code>class</code>, event listeners, or link ancestors, and
 MUST keep the element in place where possible; a replacement element
 carries <code>role="img"</code> and the same accessible name and description, plus
-the viewer’s state markings (<a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>).</p>
+the viewer’s state markings (<a href="#viewer-accessibility">§ 11.3.2 Accessibility</a>).</p>
     <li data-md>
      <p>MUST record every state it changes and restore all of it on request and
 on failure, and MUST let the user compare the original and the render.</p>
@@ -4754,7 +4555,7 @@ of the rendered bytes over a <code>blob:</code> URL, which more policies permit.
      <p>Viewer UI injected into a page is subject to the page’s <code>style-src</code> and
 <code>script-src</code>; a shadow root with constructed stylesheets avoids both.</p>
    </ol>
-   <h4 class="heading settled" data-level="11.5.2" id="viewer-accessibility"><span class="secno">11.5.2. </span><span class="content">Accessibility</span><a class="self-link" href="#viewer-accessibility"></a></h4>
+   <h4 class="heading settled" data-level="11.3.2" id="viewer-accessibility"><span class="secno">11.3.2. </span><span class="content">Accessibility</span><a class="self-link" href="#viewer-accessibility"></a></h4>
    <ol>
     <li data-md>
      <p>A viewer MUST keep a human-written <code>alt</code> unchanged, including <code>alt=""</code>. If
@@ -4777,14 +4578,6 @@ referring to an element the viewer owns) carries this; <code>title</code> does n
 Individual replacements are not announced to assistive technology by
 default.</p>
     <li data-md>
-     <p>For <code>animate</code>: under <code>prefers-reduced-motion</code> a viewer shows a still
-frame until the user starts the animation; it shows the first frame until
-the user starts playback unless the user has opted into autoplay for the
-site; it provides a keyboard-operable control to pause, stop or hide
-animation longer than five seconds <a data-link-type="biblio" href="#biblio-wcag22" title="Web Content Accessibility Guidelines (WCAG) 2.2">[WCAG22]</a>; renderers SHOULD instruct
-the model to avoid flashing; viewers MAY refuse to play animation they
-detect as flashing.</p>
-    <li data-md>
      <p>The viewer’s own UI (consent, provider configuration, per-image controls,
 diagnostics) MUST be keyboard-operable and expose names, roles and states.</p>
     <li data-md>
@@ -4798,7 +4591,7 @@ generated in viewer-owned UI and always offer the original.</p>
    <p>The page’s own accessibility conformance is unaffected by what a user’s agent
 does at the user’s request; a conforming viewer is a user agent in the sense
 of the User Agent Accessibility Guidelines.</p>
-   <h4 class="heading settled" data-level="11.5.3" id="viewer-personalisation"><span class="secno">11.5.3. </span><span class="content">Personalisation</span><a class="self-link" href="#viewer-personalisation"></a></h4>
+   <h4 class="heading settled" data-level="11.3.3" id="viewer-personalisation"><span class="secno">11.3.3. </span><span class="content">Personalisation</span><a class="self-link" href="#viewer-personalisation"></a></h4>
    <p>At the user’s request, a viewer MAY render a document with transformations the
 user chose: for example a preferred style, a sensitivity or accessibility
 adjustment, the text inside the image translated into the user’s language, or
@@ -4812,7 +4605,7 @@ be a generic "personalised" state that does not name the personalisation;</p>
      <p>MUST leave the document unchanged, and the viewer MUST let the user request
 a render without personalisation (subject to <a href="#security-consent">§ 13.5 Consent, budgets and cancellation</a>) and
 show it in viewer-owned UI or in place; switching between the two is not a
-new replacement under <a href="#viewer-replacement">§ 11.5.1 Replacement</a> item 5;</p>
+new replacement under <a href="#viewer-replacement">§ 11.3.1 Replacement</a> item 5;</p>
     <li data-md>
      <p>is reported like any render: the text sent to the model includes the
 personalisation, after the <a data-link-type="dfn" href="#model-description" id="ref-for-model-description④">model description</a> (<a href="#rendering-prompt">§ 9.2 Assembling the model input</a>);</p>
@@ -4848,9 +4641,9 @@ viewer that writes document text into a page MAY set <code>lang</code> from
 <code>dc.language</code>.</p>
     <li data-md>
      <p>Members of the JSON form whose value is an object, or an array containing
-non-strings, are reserved for future revisions (<a href="#json-shape">§ 6.1 Shape</a>). Future
-revisions will add keys and member shapes and will never remove a key or
-change the meaning of an existing one; a key may be deprecated with a
+non-strings, are reserved for future revisions (<a href="#json-shape">§ 6.1 Shape</a>). From the
+first tagged edition, revisions will add keys and member shapes and will
+never remove a key or change the meaning of an existing one; a key may be deprecated with a
 diagnostic. Sequences, variants and multi-image documents, if ever defined,
 will use such members or a distinct media type, never additional gzip
 members.</p>
@@ -4872,12 +4665,12 @@ hang, or unbounded resource use.</p>
    <ul>
     <li data-md>
      <p>Decoders MUST bound the decompressed size of a gzip member, enforced during
-inflation, and the size of any text or JSON input that did not come from
-gzip. The bounds MUST be at least 16 MiB and 1 MiB respectively; those
+inflation, and the size of a <code>data:</code> URL body. The bounds MUST be at least
+16 MiB and 1 MiB respectively; those
 values are RECOMMENDED. Exceeding the decompression bound yields the empty
 document with <code>malformed-container</code>; exceeding the text bound yields the
 empty document with <code>undecodable</code>. Viewers MAY apply the text bound to
-attribute carriers.</p>
+attribute carriers, with the same result.</p>
     <li data-md>
      <p>Viewers SHOULD decode a document only when the element is displayed and a
 render may follow, and SHOULD cap the length of values they transmit to a
@@ -4888,7 +4681,8 @@ or preview (RECOMMENDED 16 megapixels) and MUST re-encode input images
 before transmission, which also strips their metadata.</p>
     <li data-md>
      <p>A viewer never interprets a value inside a document as another document,
-never runs discovery on elements it inserted or modified itself, and
+never runs discovery because of its own insertions or modifications
+(only the page’s changes trigger it, <a href="#viewer-replacement">§ 11.3.1 Replacement</a>), and
 displays a <code>preview</code> only through an image decoder, never as markup.</p>
    </ul>
    <h3 class="heading settled" data-level="13.2" id="security-inputs"><span class="secno">13.2. </span><span class="content">Permitted inputs</span><a class="self-link" href="#security-inputs"></a></h3>
@@ -5033,7 +4827,7 @@ select a renderer nor spend beyond the user’s limits.</p>
 <code>trainedAlgorithmicMedia</code> (<code>compositeWithTrainedAlgorithmicMedia</code> for
 <code>transform</code>) <a data-link-type="biblio" href="#biblio-iptc-photometadata" title="IPTC Photo Metadata Standard">[IPTC-PHOTOMETADATA]</a> and MUST NOT strip provider-applied
 provenance such as C2PA manifests <a data-link-type="biblio" href="#biblio-c2pa" title="C2PA Technical Specification">[C2PA]</a> or watermarks when re-encoding.
-Viewers mark rendered images as generated (<a href="#viewer-accessibility">§ 11.5.2 Accessibility</a>).</p>
+Viewers mark rendered images as generated (<a href="#viewer-accessibility">§ 11.3.2 Accessibility</a>).</p>
    <h2 class="heading settled" data-level="14" id="diagnostics"><span class="secno">14. </span><span class="content">Diagnostics</span><a class="self-link" href="#diagnostics"></a></h2>
    <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="diagnostic">diagnostic</dfn> is a code from the table below, optionally with the
 key it concerns, and with any human-readable message the implementation
@@ -5105,7 +4899,7 @@ key.</p>
       <td><code>missing-marker</code>
       <td>parser
       <td>none
-      <td>JSON object without a <code>jai</code> member, read in JAI context.
+      <td>JSON object without a <code>jai</code> member.
 
      <tr>
       <td><code>unsupported-version</code>
@@ -5147,19 +4941,19 @@ key.</p>
       <td><code>invalid-json</code>
       <td>parser
       <td>none
-      <td>The JSON form could not be parsed; the document is empty.
+      <td>The JSON form (the decompressed content of a <code>.jai</code> file or resource) is not well-formed UTF-8 JSON with an object at the top level, within the limits of <a href="#json-reading">§ 6.3 Reading</a>; the document is empty.
 
      <tr>
       <td><code>malformed-container</code>
       <td>parser
       <td>none
-      <td>The gzip member was malformed, followed by bytes, over the bound, or did not contain JSON; the document is empty.
+      <td>The bytes of a <code>.jai</code> file or resource are not exactly one well-formed gzip member within the bound; the document is empty.
 
      <tr>
       <td><code>undecodable</code>
       <td>parser
       <td>none
-      <td>The bytes are not well-formed UTF-8 or exceed the text bound; the document is empty.
+      <td>The body of a <code>data:image/jai</code> URL is not well-formed UTF-8, contains the byte 00, or exceeds the text bound, or a <code>data-jai</code> value exceeds a viewer’s text bound; the document is empty.
 
      <tr>
       <td><code>first-segment-assignment</code>
@@ -5174,12 +4968,6 @@ key.</p>
       <td>A <a data-link-type="dfn" href="#qualified-key" id="ref-for-qualified-key⑥">qualified key</a> whose name is not <code>prompt</code>, <code>style</code> or <code>avoid</code>, vendor names included.
 
      <tr>
-      <td><code>alt-repeated</code>
-      <td>validator
-      <td>none
-      <td>Attribute carrier: the first prompt value in <code>data-jai</code> repeats the element’s <code>alt</code>, so the model receives it twice.
-
-     <tr>
       <td><code>unknown-key</code>
       <td>validator
       <td>the key concerned
@@ -5189,7 +4977,7 @@ key.</p>
       <td><code>continuation-into-single-valued-key</code>
       <td>validator
       <td>the key concerned
-      <td>Prose continued the value of <code>aspect</code>, <code>mode</code>, <code>strength</code>, <code>seed</code> or <code>animate</code> (not <code>source</code> or <code>preview</code>, whose <code>data:</code> URLs contain semicolons; see <code>split-data-uri</code>).
+      <td>Prose continued the value of <code>aspect</code>, <code>mode</code>, <code>strength</code> or <code>seed</code> (not <code>source</code> or <code>preview</code>, whose <code>data:</code> URLs contain semicolons; see <code>split-data-uri</code>).
 
      <tr>
       <td><code>no-prompt</code>
@@ -5201,7 +4989,7 @@ key.</p>
       <td><code>bare-key</code>
       <td>validator
       <td>the key concerned
-      <td>A prose segment is exactly a standard key; <code>key=true</code> was probably intended.
+      <td>A prose segment is exactly a standard key; a <code>key=value</code> assignment was probably intended.
 
      <tr>
       <td><code>newline-assignment</code>
@@ -5210,28 +4998,10 @@ key.</p>
       <td>A value contains a line break followed by <code>key=</code>.
 
      <tr>
-      <td><code>prefix-in-prompt</code>
-      <td>validator
-      <td>the key concerned
-      <td>A prompt value still begins with <code>jai:</code>.
-
-     <tr>
-      <td><code>stray-wrapper</code>
-      <td>validator
-      <td>none
-      <td>The whole document is wrapped in quotes, brackets or a Markdown fence.
-
-     <tr>
       <td><code>split-data-uri</code>
       <td>validator
       <td>the key concerned
       <td>An unknown key such as <code>charset</code> or <code>name</code> follows a <code>source</code> or <code>preview</code> value: an unescaped <code>;</code> inside a data URL.
-
-     <tr>
-      <td><code>url-split</code>
-      <td>validator
-      <td>the key concerned
-      <td>A URL-like value was followed by an unknown-key assignment.
 
      <tr>
       <td><code>confusable-delimiter</code>
@@ -5244,18 +5014,6 @@ key.</p>
       <td>validator
       <td>the key concerned
       <td>A full-width equals sign follows a key.
-
-     <tr>
-      <td><code>foreign-syntax</code>
-      <td>validator
-      <td>none
-      <td>The text looks like another prompt dialect (<code>--ar 16:9</code>, <code>Negative prompt:</code>, <code>&lt;lora:…></code>).
-
-     <tr>
-      <td><code>colon-assignment</code>
-      <td>validator
-      <td>the key concerned
-      <td><code>key: value</code> was written where <code>key=value</code> was probably intended.
 
      <tr>
       <td><code>quoted-value</code>
@@ -5330,16 +5088,10 @@ key.</p>
       <td>A value exceeds 8 KiB or the document exceeds 64 KiB.
 
      <tr>
-      <td><code>non-canonical-encoding</code>
-      <td>validator
-      <td>none
-      <td>A <code>.jai</code> file, or an <code>image/jai</code> resource fetched by URL (not a <code>data:</code> URL), is not in the file form.
-
-     <tr>
       <td><code>unencoded-url-text</code>
       <td>validator
       <td>none
-      <td>A URL-slot value contains whitespace, <code>#</code> or a bare <code>%</code>.
+      <td>The body of a <code>data:image/jai</code> URL contains whitespace, <code>#</code> or a <code>%</code> not followed by two hexadecimal digits.
 
      <tr>
       <td><code>srcset-unparseable</code>
@@ -5348,16 +5100,10 @@ key.</p>
       <td>The <code>srcset</code> of a <code>&lt;source type="image/jai"></code> yields no candidate under HTML’s srcset parsing (for example because of an unencoded space).
 
      <tr>
-      <td><code>jai-scheme-url</code>
-      <td>validator
-      <td>none
-      <td>A <code>jai:</code> string in a URL slot.
-
-     <tr>
       <td><code>missing-size</code>
       <td>validator
       <td>none
-      <td>A src-carrier image without <code>width</code>/<code>height</code> or <code>aspect-ratio</code> (expected for Markdown images).
+      <td>A src-carrier image with neither both <code>width</code> and <code>height</code> attributes nor an <code>aspect-ratio</code> other than <code>auto</code> in its <code>style</code> attribute (expected for Markdown images).
 
      <tr>
       <td><code>attribute-split</code>
@@ -5375,7 +5121,7 @@ key.</p>
       <td><code>data-url-parameter</code>
       <td>validator
       <td>none
-      <td>A <code>data:image/jai</code> URL has a media-type parameter other than <code>base64</code> or <code>charset</code>.
+      <td>A <code>data:image/jai</code> URL has a media-type parameter or <code>;base64</code>.
 
      <tr>
       <td><code>source-missing-type</code>
@@ -5504,30 +5250,26 @@ validator codes that it MUST NOT emit.</p>
     <dt data-md><code>serialize</code>
     <dd data-md>
      <p><code>document</code> → <code>text</code> (canonical text), <code>json</code> (canonical JSON), <code>identity</code>
-(lowercase hex SHA-256); optional <code>bare</code> (bare serialisation) and <code>url</code>
-(canonical URL form, <a href="#data-urls">§ 7.5 data: URLs</a>); each field is compared when present.</p>
+(lowercase hex SHA-256); optional <code>url</code> (canonical URL form,
+<a href="#data-urls">§ 7.5 data: URLs</a>); each field is compared when present.</p>
     <dt data-md><code>roundtrip</code>
     <dd data-md>
      <p><code>document</code> → the document survives, and serialisation is a fixed point of,
-each of: the canonical text parsed with the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm⑤">text parsing algorithm</a>;
-the bare serialisation and the canonical URL form decoded with
-<a href="#decoding">§ 7.4 Decoding</a> in a <a data-link-type="dfn" href="#jai-context" id="ref-for-jai-context③">JAI context</a>; the canonical JSON read with the
-<a data-link-type="dfn" href="#json-reading-algorithm" id="ref-for-json-reading-algorithm①">JSON reading algorithm</a>; the file form decoded with <a href="#decoding">§ 7.4 Decoding</a>.</p>
+each of: the canonical text parsed with the <a data-link-type="dfn" href="#text-parsing-algorithm" id="ref-for-text-parsing-algorithm③">text parsing algorithm</a>;
+the canonical URL form read as in <a href="#data-urls">§ 7.5 data: URLs</a>; the canonical JSON read
+with the <a data-link-type="dfn" href="#json-reading-algorithm" id="ref-for-json-reading-algorithm①">JSON reading algorithm</a>; the file form decoded with
+<a href="#decoding">§ 7.4 Decoding</a>.</p>
     <dt data-md><code>json</code>
     <dd data-md>
-     <p><code>input</code> (JSON text) and <code>context</code> (boolean, default <code>true</code>: whether the
-text is in a <a data-link-type="dfn" href="#jai-context" id="ref-for-jai-context④">JAI context</a>) → <code>document</code>, <code>diagnostics</code>.</p>
+     <p><code>input</code> (JSON text) → <code>document</code>, <code>diagnostics</code>.</p>
     <dt data-md><code>decode</code>
     <dd data-md>
      <p><code>bytes</code> (base64) and optional <code>bound</code> (the decompression bound in bytes,
-default 16 MiB) → <code>document</code>, <code>diagnostics</code>; optional <code>advisories</code>,
-<code>no_advisories</code>.</p>
+default 16 MiB) → <code>document</code>, <code>diagnostics</code>.</p>
     <dt data-md><code>url</code>
     <dd data-md>
-     <p><code>url</code> (string) and <code>kind</code> → <code>document</code> and <code>diagnostics</code>, or
-<code>discovered: false</code> when the URL carries no document. <code>kind</code> <code>data</code>
-applies <a href="#data-urls">§ 7.5 data: URLs</a>; <code>query</code> and <code>param</code> apply the two forms of
-<a href="#url-query">§ 11.3 Query forms</a>.</p>
+     <p><code>url</code> (a <code>data:</code> URL string) → <code>document</code> and <code>diagnostics</code>, read as in
+<a href="#data-urls">§ 7.5 data: URLs</a>, or <code>discovered: false</code> when the URL carries no document.</p>
     <dt data-md><code>html</code>
     <dd data-md>
      <p><code>html</code> (a fragment parsed as HTML’s fragment parsing algorithm does, with
@@ -5560,8 +5302,7 @@ only); <code>style</code> and <code>avoid</code> (arrays of strings: the core va
 <a href="#model-refinements">§ 8.3 Per-model refinements</a>); <code>aspect</code> (W/H as a number, <code>square</code> as 1, or the
 string <code>landscape</code> or <code>portrait</code>); <code>mode</code> (string, the interpreted value of
 the <code>mode</code> key, <code>generate</code> when absent or invalid); <code>strength</code> (number);
-<code>seed</code>, <code>source</code>, <code>preview</code> (string); <code>animate</code> (boolean, <code>false</code> when
-absent or invalid); <code>model</code> (the <code>id</code> of the selected catalog entry);
+<code>seed</code>, <code>source</code>, <code>preview</code> (string); <code>model</code> (the <code>id</code> of the selected catalog entry);
 <code>ratio</code> (the ratio to render at under <a href="#rendering-size">§ 9.3 Size and aspect</a>, W/H as a
 number; <code>null</code> when the <code>preview</code> or the renderer’s default decides).
 Otherwise <code>null</code> means absent or invalid. <code>diagnostics</code> is the exact
@@ -5581,14 +5322,14 @@ the medium. Ordinary punctuation, including semicolons, is fine.</p>
 <code>;aspect=16:9</code>, <code>;avoid=text</code>. Repeat <code>style</code> and <code>avoid</code> for several
 items rather than listing them in one value.</p>
     <li data-md>
-     <p>Put <code>jai:</code> in front when the place you are writing in does not already say
-it is JAI (a chat message, a document). On a web page with an image,
-write the description in the image’s <code>alt</code> and the settings in a
-<code>data-jai</code> attribute (no prefix needed; an empty <code>data-jai</code> is enough to
-mark the image). For an image with no pixels, save the document as a
-<code>.jai</code> file and use <code>&lt;img src="castle.jai" alt="…"></code>, or in Markdown
-<code>![…](castle.jai)</code>. Never put JAI syntax in <code>alt</code>: screen readers read
-it aloud.</p>
+     <p>On a web page with an image, write the description in the image’s <code>alt</code>
+and the settings in a <code>data-jai</code> attribute; an empty <code>data-jai</code> is enough
+to mark the image. When the model needs more than readers should hear,
+start <code>data-jai</code> with the full description instead, and <code>alt</code> stays the
+page’s own text. For an image with no pixels, make a <code>.jai</code> file with a JAI
+tool, or write the text in a <code>data:image/jai,</code> URL, and use
+<code>&lt;img src="castle.jai" alt="…"></code>, or in Markdown <code>![…](castle.jai)</code>.
+Never put JAI syntax in <code>alt</code>: screen readers read it aloud.</p>
     <li data-md>
      <p>Describe what can be seen, concretely, with the essentials in the first
 sentence: a listener can stop once they have heard enough, and models
@@ -5615,7 +5356,7 @@ offers the canonical spelling to copy.</p>
    <p><em>This section is informative.</em></p>
    <div class="example" id="ex-minimal">
     <a class="self-link" href="#ex-minimal"></a>
-A minimal description, equally valid with or without the prefix:
+A minimal description:
 
 <pre>A red bicycle leaning against a whitewashed wall, afternoon sun
 </pre>
@@ -5624,16 +5365,16 @@ A minimal description, equally valid with or without the prefix:
     <a class="self-link" href="#ex-styles"></a>
 One description, three styles:
 
-<pre>jai:A lighthouse on a cliff in a storm;style=watercolor
-jai:A lighthouse on a cliff in a storm;style=anime
-jai:A lighthouse on a cliff in a storm;style=35mm film photo;style=grainy
+<pre>A lighthouse on a cliff in a storm;style=watercolor
+A lighthouse on a cliff in a storm;style=anime
+A lighthouse on a cliff in a storm;style=35mm film photo;style=grainy
 </pre>
    </div>
    <div class="example" id="ex-models">
     <a class="self-link" href="#ex-models"></a>
 Model preferences, in order, advisory:
 
-<pre>jai:A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3
+<pre>A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3
 </pre>
    </div>
    <div class="example" id="ex-transform">
@@ -5666,7 +5407,7 @@ A <code>.jai</code> file’s content, decompressed:
     <a class="self-link" href="#ex-vendor"></a>
 A vendor extension and a Dublin Core title, preserved by every serialiser:
 
-<pre>jai:A brass astrolabe on velvet;comfy.sampler=euler;dc.title=Astrolabe study
+<pre>A brass astrolabe on velvet;comfy.sampler=euler;dc.title=Astrolabe study
 </pre>
    </div>
    <h2 class="heading no-num settled" id="iana"><span class="content">Appendix A. Media type registration template</span><a class="self-link" href="#iana"></a></h2>
@@ -5684,10 +5425,11 @@ form of RFC 6838 §5.6 <a data-link-type="biblio" href="#biblio-rfc6838" title="
      <p>none</p>
     <dt data-md>Optional parameters
     <dd data-md>
-     <p>none (<code>charset</code> has no meaning; content is always UTF-8)</p>
+     <p>none</p>
     <dt data-md>Encoding considerations
     <dd data-md>
-     <p>binary. The file form is a gzip member; the text and JSON forms are UTF-8.</p>
+     <p>binary. A resource is the file form: one gzip member containing UTF-8
+JSON. In a <code>data:</code> URL the body is the text form, UTF-8, percent-encoded.</p>
     <dt data-md>Security considerations
     <dd data-md>
      <p>See <a href="#security">§ 13 Security and privacy considerations</a>. Decoding transmits content to a renderer and is
@@ -5696,9 +5438,9 @@ model references are selectors and are never fetched; documents are
 untrusted input and parsing is total.</p>
     <dt data-md>Interoperability considerations
     <dd data-md>
-     <p>Three serialisations are distinguished by their leading bytes
-(<a href="#decoding">§ 7.4 Decoding</a>). Renderers produce different pixels for the same
-document by design.</p>
+     <p>A resource is always the file form (<a href="#decoding">§ 7.4 Decoding</a>); a <code>data:</code> URL always
+carries the text form (<a href="#data-urls">§ 7.5 data: URLs</a>). Renderers produce different pixels
+for the same document by design.</p>
     <dt data-md>Published specification
     <dd data-md>
      <p>This document.</p>
@@ -5712,8 +5454,7 @@ AI agents.</p>
     <dt data-md>Additional information
     <dd data-md>
      <p>Deprecated alias: none. Magic numbers: <code>1F 8B</code> (gzip), then <code>{"jai":1</code>
-followed by <code>,</code> or <code>}</code> after decompression; or <code>{</code> for the uncompressed JSON form. File
-extension: <code>.jai</code>. Macintosh file type code: none.</p>
+followed by <code>,</code> or <code>}</code> after decompression. File extension: <code>.jai</code>. Macintosh file type code: none.</p>
     <dt data-md>Person and email address to contact for further information
     <dd data-md>
      <p>The editors, via the specification repository.</p>
@@ -5777,30 +5518,7 @@ recognise in <code>model</code> values. The list implies nothing about availabil
       <td><code>midjourney</code>, <code>mj</code>
 
    </table>
-   <h2 class="heading no-num settled" id="relationships"><span class="content">Appendix C. Relationship to existing formats</span><a class="self-link" href="#relationships"></a></h2>
-   <p><em>This appendix is informative.</em></p>
-   <p><strong>Prompt metadata in rasters.</strong> Tools such as AUTOMATIC1111 and ComfyUI write
-their prompt and settings into PNG text chunks. An importer maps them as
-follows: the positive prompt → <code>prompt</code>; "Negative prompt" → one <code>avoid</code>
-value per comma-separated item; "Seed" → <code>seed</code>; "Model" or <code>ckpt_name</code> →
-<code>model</code>; "Denoising strength" → <code>strength</code> with <code>mode=transform</code>; "Size" →
-<code>aspect</code> (lossily). Sampler, steps, CFG scale and other internals go to
-<code>a1111.*</code> or <code>comfy.*</code> vendor keys or are dropped. Weighting syntax such as
-<code>(word:1.3)</code> passes through uninterpreted.</p>
-   <p><strong>JAI inside raster files.</strong> A raster that was rendered from, or described
-by, a JAI document may carry the canonical JSON form in a PNG <code>iTXt</code> chunk
-with keyword <code>jai</code>, an empty language tag and an empty translated keyword
-(compressed or not), or in XMP as the simple property <code>jai:document</code> in the
-namespace <code>https://jai.gnist.ai/ns/xmp/1.0/</code> (preferred prefix <code>jai</code>). This lets the editable source travel with the
-pixels.</p>
-   <p><strong>Placeholders.</strong> BlurHash and ThumbHash serve the same purpose as <code>preview</code>
-with smaller payloads; see <a href="#key-preview">§ 8.1.8 preview</a>.</p>
-   <p><strong>Provenance.</strong> IPTC digital source types and C2PA manifests describe how an
-image was made; JAI describes what it should show. A renderer that writes
-files sets the former (<a href="#security-provenance">§ 13.10 Provenance</a>).</p>
-   <p><strong>Other dialects.</strong> <code>--ar 16:9</code> → <code>aspect=16:9</code>; <code>--no text</code> → <code>avoid=text</code>;
-<code>--seed N</code> → <code>seed=N</code>; <code>--niji</code> → <code>style=anime</code>; <code>--style raw</code> → dropped.</p>
-   <h2 class="heading no-num settled" id="server-config"><span class="content">Appendix D. Serving <code>.jai</code> files</span><a class="self-link" href="#server-config"></a></h2>
+   <h2 class="heading no-num settled" id="server-config"><span class="content">Appendix C. Serving <code>.jai</code> files</span><a class="self-link" href="#server-config"></a></h2>
    <p><em>This appendix is informative.</em></p>
    <p>Apache (<code>.htaccess</code>):</p>
 <pre>AddType image/jai .jai
@@ -5812,21 +5530,21 @@ files sets the former (<a href="#security-provenance">§ 13.10 Provenance</a>)
 <pre>types { image/jai jai; }
 location ~ \.jai$ { add_header Access-Control-Allow-Origin "*"; }
 </pre>
-   <p>GitHub Pages serves <code>.jai</code> as <code>application/octet-stream</code>; decoders inspect
-the bytes regardless (<a href="#media-type">§ 7.3 Media type and file extension</a>).</p>
-   <h2 class="heading no-num settled" id="stability"><span class="content">Appendix E. Stability and change policy</span><a class="self-link" href="#stability"></a></h2>
+   <p>GitHub Pages serves <code>.jai</code> as <code>application/octet-stream</code>; decoders accept
+it regardless (<a href="#media-type">§ 7.3 Media type and file extension</a>).</p>
+   <h2 class="heading no-num settled" id="stability"><span class="content">Appendix D. Stability and change policy</span><a class="self-link" href="#stability"></a></h2>
    <p><em>This appendix is informative.</em></p>
    <ul>
     <li data-md>
-     <p>Frozen in this edition: the data model, the text grammar and parsing
-algorithm, the canonical forms, the JSON shape and the file form.</p>
+     <p>Frozen from the first tagged edition: the data model, the text grammar and
+parsing algorithm, the canonical forms, the JSON shape and the file form.
+Until then the draft changes freely.</p>
     <li data-md>
-     <p>Extensible: the key vocabulary (keys are added by revision and never
-removed; a key may be deprecated with a diagnostic), the reserved member
-shapes, the diagnostics registry.</p>
+     <p>Extensible: the key vocabulary (from the first tagged edition, keys are
+added by revision and never removed; a key may be deprecated with a
+diagnostic), the reserved member shapes, the diagnostics registry.</p>
     <li data-md>
-     <p>Informative and expected to change: model families, the carrier-by-context
-matrix, server mappings.</p>
+     <p>Informative and expected to change: model families and server mappings.</p>
     <li data-md>
      <p>The <code>jai</code> marker stays 1 across editions. Parsers accept every document of
 any 1.x edition. Fixtures are append-only after the first tagged edition.</p>
@@ -5981,7 +5699,6 @@ the repository’s design record.</p>
    <li><a href="#attribute-carrier">attribute carrier</a><span>, in § 11.1</span>
    <li><a href="#author">author</a><span>, in § 3</span>
    <li><a href="#authoring-tool">authoring tool</a><span>, in § 2.1</span>
-   <li><a href="#bare-serialisation">bare serialisation</a><span>, in § 5.5.1</span>
    <li><a href="#canonical-form">canonical form</a><span>, in § 3</span>
    <li><a href="#canonical-json-form">canonical JSON form</a><span>, in § 6.4</span>
    <li><a href="#canonical-url-form">canonical URL form</a><span>, in § 7.5</span>
@@ -6004,7 +5721,6 @@ the repository’s design record.</p>
    <li><a href="#image-jai">image/jai</a><span>, in § 7.3</span>
    <li><a href="#interpreted-parameters">interpreted parameters</a><span>, in § 8.1</span>
    <li><a href="#interpreter">interpreter</a><span>, in § 2.1</span>
-   <li><a href="#jai-context">JAI context</a><span>, in § 3</span>
    <li><a href="#jai-whitespace">JAI whitespace</a><span>, in § 3</span>
    <li><a href="#json-form">JSON form</a><span>, in § 3</span>
    <li><a href="#json-reader">JSON reader</a><span>, in § 2.1</span>
@@ -6015,7 +5731,6 @@ the repository’s design record.</p>
    <li><a href="#model-description">model description</a><span>, in § 3</span>
    <li><a href="#original-image">original image</a><span>, in § 3</span>
    <li><a href="#parameter">parameter</a><span>, in § 3</span>
-   <li><a href="#parameter-form">parameter form</a><span>, in § 11.3</span>
    <li><a href="#parser">parser</a><span>, in § 2.1</span>
    <li><a href="#picture-carrier">picture carrier</a><span>, in § 11.1</span>
    <li><a href="#prompt">prompt</a><span>, in § 3</span>
@@ -6038,7 +5753,6 @@ the repository’s design record.</p>
    <li><a href="#value">value</a><span>, in § 3</span>
    <li><a href="#value-normalisation">value normalisation</a><span>, in § 4.2</span>
    <li><a href="#viewer">viewer</a><span>, in § 2.1</span>
-   <li><a href="#whole-query-form">whole-query form</a><span>, in § 11.3</span>
   </ul>
   <h2 class="heading no-num no-ref settled" id="references"><span class="content">References</span><a class="self-link" href="#references"></a></h2>
   <h3 class="heading no-num no-ref settled" id="normative"><span class="content">Normative References</span><a class="self-link" href="#normative"></a></h3>
@@ -6071,8 +5785,6 @@ the repository’s design record.</p>
    <dd>A. Rundgren; B. Jordan; S. Erdtman. <a href="https://www.rfc-editor.org/info/rfc8785/"><cite>JSON Canonicalization Scheme (JCS)</cite></a>. June 2020. Informational. URL: <a href="https://www.rfc-editor.org/info/rfc8785/">https://www.rfc-editor.org/info/rfc8785/</a>
    <dt id="biblio-url">[URL]
    <dd>Anne van Kesteren. <a href="https://url.spec.whatwg.org/"><cite>URL Standard</cite></a>. Living Standard. URL: <a href="https://url.spec.whatwg.org/">https://url.spec.whatwg.org/</a>
-   <dt id="biblio-wcag22">[WCAG22]
-   <dd>Michael Cooper; et al. <a href="https://w3c.github.io/wcag/guidelines/22/"><cite>Web Content Accessibility Guidelines (WCAG) 2.2</cite></a>. URL: <a href="https://w3c.github.io/wcag/guidelines/22/">https://w3c.github.io/wcag/guidelines/22/</a>
   </dl>
   <h3 class="heading no-num no-ref settled" id="informative"><span class="content">Non-Normative References</span><a class="self-link" href="#informative"></a></h3>
   <dl>
@@ -6292,23 +6004,22 @@ function parseHTML(markup) {
 {
 let dfnPanelData = {
 "advisory": {"dfnID":"advisory","dfnText":"advisory","external":false,"refSections":[{"refs":[{"id":"ref-for-advisory"}],"title":"8. Standard parameters"}],"url":"#advisory"},
-"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"5.5.1. Bare serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2464"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2465"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2466"}],"title":"11.1.2. Discovery"}],"url":"#ascii-case-insensitive"},
+"ascii-case-insensitive": {"dfnID":"ascii-case-insensitive","dfnText":"ASCII case-insensitive","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-case-insensitive"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2460"}],"title":"7.3. Media type and file extension"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2461"}],"title":"8.1. Interpretation"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2462"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2463"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-ascii-case-insensitive\u2464"}],"title":"11.1.2. Discovery"}],"url":"#ascii-case-insensitive"},
 "ascii-lowercase": {"dfnID":"ascii-lowercase","dfnText":"ASCII lowercase","external":false,"refSections":[{"refs":[{"id":"ref-for-ascii-lowercase"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-ascii-lowercase\u2460"}],"title":"4.1. Keys"},{"refs":[{"id":"ref-for-ascii-lowercase\u2461"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-ascii-lowercase\u2462"}],"title":"6.3. Reading"}],"url":"#ascii-lowercase"},
 "assignment": {"dfnID":"assignment","dfnText":"assignment","external":false,"refSections":[],"url":"#assignment"},
 "assignment-pattern": {"dfnID":"assignment-pattern","dfnText":"assignment pattern","external":false,"refSections":[],"url":"#assignment-pattern"},
 "attribute-carrier": {"dfnID":"attribute-carrier","dfnText":"attribute carrier","external":false,"refSections":[],"url":"#attribute-carrier"},
 "author": {"dfnID":"author","dfnText":"author","external":false,"refSections":[],"url":"#author"},
 "authoring-tool": {"dfnID":"authoring-tool","dfnText":"authoring tool","external":false,"refSections":[],"url":"#authoring-tool"},
-"bare-serialisation": {"dfnID":"bare-serialisation","dfnText":"bare serialisation","external":false,"refSections":[{"refs":[{"id":"ref-for-bare-serialisation"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-bare-serialisation\u2460"}],"title":"7.5. data: URLs"}],"url":"#bare-serialisation"},
 "canonical-form": {"dfnID":"canonical-form","dfnText":"canonical form","external":false,"refSections":[],"url":"#canonical-form"},
 "canonical-json-form": {"dfnID":"canonical-json-form","dfnText":"canonical JSON form","external":false,"refSections":[{"refs":[{"id":"ref-for-canonical-json-form"}],"title":"7.1. File form"}],"url":"#canonical-json-form"},
 "canonical-url-form": {"dfnID":"canonical-url-form","dfnText":"canonical URL form","external":false,"refSections":[],"url":"#canonical-url-form"},
-"carrier": {"dfnID":"carrier","dfnText":"carrier","external":false,"refSections":[{"refs":[{"id":"ref-for-carrier"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-carrier\u2460"}],"title":"11.1. Carriers"}],"url":"#carrier"},
+"carrier": {"dfnID":"carrier","dfnText":"carrier","external":false,"refSections":[{"refs":[{"id":"ref-for-carrier"}],"title":"11.1. Carriers"}],"url":"#carrier"},
 "conforming-document": {"dfnID":"conforming-document","dfnText":"conforming document","external":false,"refSections":[],"url":"#conforming-document"},
 "continuation": {"dfnID":"continuation","dfnText":"continuation","external":false,"refSections":[],"url":"#continuation"},
-"decoder": {"dfnID":"decoder","dfnText":"decoder","external":false,"refSections":[{"refs":[{"id":"ref-for-decoder"}],"title":"5.5.1. Bare serialisation"}],"url":"#decoder"},
+"decoder": {"dfnID":"decoder","dfnText":"decoder","external":false,"refSections":[],"url":"#decoder"},
 "decoding-algorithm": {"dfnID":"decoding-algorithm","dfnText":"decoding algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-decoding-algorithm"}],"title":"11.2. Transport decoding"}],"url":"#decoding-algorithm"},
-"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-description\u2462"}],"title":"11.5.2. Accessibility"},{"refs":[{"id":"ref-for-description\u2463"}],"title":"14.1. Conformance fixtures"}],"url":"#description"},
+"description": {"dfnID":"description","dfnText":"description","external":false,"refSections":[{"refs":[{"id":"ref-for-description"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-description\u2460"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-description\u2461"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-description\u2462"}],"title":"11.3.2. Accessibility"},{"refs":[{"id":"ref-for-description\u2463"}],"title":"14.1. Conformance fixtures"}],"url":"#description"},
 "diagnostic": {"dfnID":"diagnostic","dfnText":"diagnostic","external":false,"refSections":[],"url":"#diagnostic"},
 "discovery": {"dfnID":"discovery","dfnText":"discovery","external":false,"refSections":[],"url":"#discovery"},
 "document": {"dfnID":"document","dfnText":"document","external":false,"refSections":[{"refs":[{"id":"ref-for-document"}],"title":"4. Data model"}],"url":"#document"},
@@ -6317,23 +6028,21 @@ let dfnPanelData = {
 "escape-value": {"dfnID":"escape-value","dfnText":"escape-value","external":false,"refSections":[{"refs":[{"id":"ref-for-escape-value"}],"title":"5.5. Canonical text serialisation"}],"url":"#escape-value"},
 "file-form": {"dfnID":"file-form","dfnText":"file form","external":false,"refSections":[{"refs":[{"id":"ref-for-file-form"}],"title":"6.2. The jai marker"},{"refs":[{"id":"ref-for-file-form\u2460"}],"title":"7.1. File form"}],"url":"#file-form"},
 "governing-ratio": {"dfnID":"governing-ratio","dfnText":"governing ratio","external":false,"refSections":[{"refs":[{"id":"ref-for-governing-ratio"}],"title":"14.1. Conformance fixtures"}],"url":"#governing-ratio"},
-"identity": {"dfnID":"identity","dfnText":"identity","external":false,"refSections":[{"refs":[{"id":"ref-for-identity"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-identity\u2460"}],"title":"11.5.1. Replacement"},{"refs":[{"id":"ref-for-identity\u2461"}],"title":"13.7. Caches"}],"url":"#identity"},
+"identity": {"dfnID":"identity","dfnText":"identity","external":false,"refSections":[{"refs":[{"id":"ref-for-identity"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-identity\u2460"}],"title":"11.3.1. Replacement"},{"refs":[{"id":"ref-for-identity\u2461"}],"title":"13.7. Caches"}],"url":"#identity"},
 "image-encoder": {"dfnID":"image-encoder","dfnText":"image encoder","external":false,"refSections":[{"refs":[{"id":"ref-for-image-encoder"}],"title":"1.1.1. A description is compression"},{"refs":[{"id":"ref-for-image-encoder\u2460"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-image-encoder\u2461"}],"title":"11.1.1. Choosing a carrier"}],"url":"#image-encoder"},
 "image-jai": {"dfnID":"image-jai","dfnText":"image/jai","external":false,"refSections":[],"url":"#image-jai"},
 "interpreted-parameters": {"dfnID":"interpreted-parameters","dfnText":"interpreted parameters","external":false,"refSections":[],"url":"#interpreted-parameters"},
 "interpreter": {"dfnID":"interpreter","dfnText":"interpreter","external":false,"refSections":[{"refs":[{"id":"ref-for-interpreter"}],"title":"8.1. Interpretation"}],"url":"#interpreter"},
-"jai-context": {"dfnID":"jai-context","dfnText":"JAI context","external":false,"refSections":[{"refs":[{"id":"ref-for-jai-context"}],"title":"6.2. The jai marker"},{"refs":[{"id":"ref-for-jai-context\u2460"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-jai-context\u2461"}],"title":"7.5. data: URLs"},{"refs":[{"id":"ref-for-jai-context\u2462"},{"id":"ref-for-jai-context\u2463"}],"title":"14.1. Conformance fixtures"}],"url":"#jai-context"},
-"jai-whitespace": {"dfnID":"jai-whitespace","dfnText":"JAI whitespace","external":false,"refSections":[{"refs":[{"id":"ref-for-jai-whitespace"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-jai-whitespace\u2460"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-jai-whitespace\u2461"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-jai-whitespace\u2462"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-jai-whitespace\u2463"}],"title":"5.5. Canonical text serialisation"}],"url":"#jai-whitespace"},
+"jai-whitespace": {"dfnID":"jai-whitespace","dfnText":"JAI whitespace","external":false,"refSections":[{"refs":[{"id":"ref-for-jai-whitespace"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-jai-whitespace\u2460"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-jai-whitespace\u2461"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-jai-whitespace\u2462"}],"title":"5.5. Canonical text serialisation"}],"url":"#jai-whitespace"},
 "json-form": {"dfnID":"json-form","dfnText":"JSON form","external":false,"refSections":[{"refs":[{"id":"ref-for-json-form"}],"title":"4.1. Keys"}],"url":"#json-form"},
 "json-reader": {"dfnID":"json-reader","dfnText":"JSON reader","external":false,"refSections":[],"url":"#json-reader"},
 "json-reading-algorithm": {"dfnID":"json-reading-algorithm","dfnText":"JSON reading algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-json-reading-algorithm"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-json-reading-algorithm\u2460"}],"title":"14.1. Conformance fixtures"}],"url":"#json-reading-algorithm"},
 "key": {"dfnID":"key","dfnText":"key","external":false,"refSections":[{"refs":[{"id":"ref-for-key"}],"title":"4. Data model"},{"refs":[{"id":"ref-for-key\u2460"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-key\u2461"},{"id":"ref-for-key\u2462"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-key\u2463"}],"title":"6.1. Shape"}],"url":"#key"},
 "key-grammar": {"dfnID":"key-grammar","dfnText":"key grammar","external":false,"refSections":[{"refs":[{"id":"ref-for-key-grammar"}],"title":"3. Terminology"},{"refs":[{"id":"ref-for-key-grammar\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-key-grammar\u2461"}],"title":"5.5. Canonical text serialisation"},{"refs":[{"id":"ref-for-key-grammar\u2462"}],"title":"6.3. Reading"}],"url":"#key-grammar"},
 "layout-box": {"dfnID":"layout-box","dfnText":"layout box","external":false,"refSections":[{"refs":[{"id":"ref-for-layout-box"}],"title":"9.3. Size and aspect"}],"url":"#layout-box"},
-"model-description": {"dfnID":"model-description","dfnText":"model description","external":false,"refSections":[{"refs":[{"id":"ref-for-model-description"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-model-description\u2460"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-model-description\u2461"},{"id":"ref-for-model-description\u2462"}],"title":"9.2. Assembling the model input"},{"refs":[{"id":"ref-for-model-description\u2463"}],"title":"11.5.3. Personalisation"},{"refs":[{"id":"ref-for-model-description\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#model-description"},
+"model-description": {"dfnID":"model-description","dfnText":"model description","external":false,"refSections":[{"refs":[{"id":"ref-for-model-description"}],"title":"8.1.1. prompt, style, avoid"},{"refs":[{"id":"ref-for-model-description\u2460"}],"title":"8.3. Per-model refinements"},{"refs":[{"id":"ref-for-model-description\u2461"},{"id":"ref-for-model-description\u2462"}],"title":"9.2. Assembling the model input"},{"refs":[{"id":"ref-for-model-description\u2463"}],"title":"11.3.3. Personalisation"},{"refs":[{"id":"ref-for-model-description\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#model-description"},
 "original-image": {"dfnID":"original-image","dfnText":"original image","external":false,"refSections":[{"refs":[{"id":"ref-for-original-image"}],"title":"6.5. Identity"},{"refs":[{"id":"ref-for-original-image\u2460"}],"title":"8. Standard parameters"},{"refs":[{"id":"ref-for-original-image\u2461"}],"title":"8.1.7. source"},{"refs":[{"id":"ref-for-original-image\u2462"}],"title":"8.2. Model matching"},{"refs":[{"id":"ref-for-original-image\u2463"}],"title":"9.1. Modes and the original image"},{"refs":[{"id":"ref-for-original-image\u2464"}],"title":"9.3. Size and aspect"}],"url":"#original-image"},
 "parameter": {"dfnID":"parameter","dfnText":"parameter","external":false,"refSections":[],"url":"#parameter"},
-"parameter-form": {"dfnID":"parameter-form","dfnText":"parameter form","external":false,"refSections":[],"url":"#parameter-form"},
 "parser": {"dfnID":"parser","dfnText":"parser","external":false,"refSections":[],"url":"#parser"},
 "picture-carrier": {"dfnID":"picture-carrier","dfnText":"picture carrier","external":false,"refSections":[],"url":"#picture-carrier"},
 "prompt": {"dfnID":"prompt","dfnText":"prompt","external":false,"refSections":[],"url":"#prompt"},
@@ -6349,14 +6058,13 @@ let dfnPanelData = {
 "src-carrier": {"dfnID":"src-carrier","dfnText":"src carrier","external":false,"refSections":[],"url":"#src-carrier"},
 "standard-key": {"dfnID":"standard-key","dfnText":"standard key","external":false,"refSections":[{"refs":[{"id":"ref-for-standard-key"}],"title":"8. Standard parameters"}],"url":"#standard-key"},
 "text-form": {"dfnID":"text-form","dfnText":"text form","external":false,"refSections":[{"refs":[{"id":"ref-for-text-form"}],"title":"4.1. Keys"}],"url":"#text-form"},
-"text-parsing-algorithm": {"dfnID":"text-parsing-algorithm","dfnText":"text parsing algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-text-parsing-algorithm"}],"title":"7.4. Decoding"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2460"}],"title":"11.1.2. Discovery"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2461"}],"title":"11.2. Transport decoding"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2462"},{"id":"ref-for-text-parsing-algorithm\u2463"}],"title":"11.3. Query forms"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2464"}],"title":"14.1. Conformance fixtures"}],"url":"#text-parsing-algorithm"},
+"text-parsing-algorithm": {"dfnID":"text-parsing-algorithm","dfnText":"text parsing algorithm","external":false,"refSections":[{"refs":[{"id":"ref-for-text-parsing-algorithm"}],"title":"7.5. data: URLs"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2460"}],"title":"11.1.2. Discovery"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2461"}],"title":"11.2. Transport decoding"},{"refs":[{"id":"ref-for-text-parsing-algorithm\u2462"}],"title":"14.1. Conformance fixtures"}],"url":"#text-parsing-algorithm"},
 "trim": {"dfnID":"trim","dfnText":"trim","external":false,"refSections":[{"refs":[{"id":"ref-for-trim"}],"title":"4.2. Values"},{"refs":[{"id":"ref-for-trim\u2460"}],"title":"5.2. Structure"},{"refs":[{"id":"ref-for-trim\u2461"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-trim\u2462"}],"title":"8.1. Interpretation"}],"url":"#trim"},
 "user": {"dfnID":"user","dfnText":"user","external":false,"refSections":[],"url":"#user"},
 "validator": {"dfnID":"validator","dfnText":"validator","external":false,"refSections":[],"url":"#validator"},
 "value": {"dfnID":"value","dfnText":"value","external":false,"refSections":[{"refs":[{"id":"ref-for-value"}],"title":"4. Data model"},{"refs":[{"id":"ref-for-value\u2460"}],"title":"4.2. Values"}],"url":"#value"},
 "value-normalisation": {"dfnID":"value-normalisation","dfnText":"value normalisation","external":false,"refSections":[{"refs":[{"id":"ref-for-value-normalisation"}],"title":"5.3. Escaping arbitrary text"},{"refs":[{"id":"ref-for-value-normalisation\u2460"}],"title":"5.4. Parsing"},{"refs":[{"id":"ref-for-value-normalisation\u2461"}],"title":"6.1. Shape"},{"refs":[{"id":"ref-for-value-normalisation\u2462"}],"title":"6.3. Reading"},{"refs":[{"id":"ref-for-value-normalisation\u2463"}],"title":"11.1.2. Discovery"}],"url":"#value-normalisation"},
-"viewer": {"dfnID":"viewer","dfnText":"viewer","external":false,"refSections":[{"refs":[{"id":"ref-for-viewer"}],"title":"11.5. Viewer requirements"}],"url":"#viewer"},
-"whole-query-form": {"dfnID":"whole-query-form","dfnText":"whole-query form","external":false,"refSections":[],"url":"#whole-query-form"},
+"viewer": {"dfnID":"viewer","dfnText":"viewer","external":false,"refSections":[{"refs":[{"id":"ref-for-viewer"}],"title":"11.3. Viewer requirements"}],"url":"#viewer"},
 };
 
 document.addEventListener("DOMContentLoaded", ()=>{
@@ -6748,10 +6456,8 @@ let refsData = {
 "#advisory": {"displayText":"advisory","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"advisory","type":"dfn","url":"#advisory"},
 "#ascii-case-insensitive": {"displayText":"ascii case-insensitive","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"ascii case-insensitive","type":"dfn","url":"#ascii-case-insensitive"},
 "#ascii-lowercase": {"displayText":"ascii lowercase","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"ascii lowercase","type":"dfn","url":"#ascii-lowercase"},
-"#bare-serialisation": {"displayText":"bare serialisation","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"bare serialisation","type":"dfn","url":"#bare-serialisation"},
 "#canonical-json-form": {"displayText":"canonical json form","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"canonical json form","type":"dfn","url":"#canonical-json-form"},
 "#carrier": {"displayText":"carrier","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"carrier","type":"dfn","url":"#carrier"},
-"#decoder": {"displayText":"decoder","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"decoder","type":"dfn","url":"#decoder"},
 "#decoding-algorithm": {"displayText":"decoding algorithm","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"decoding algorithm","type":"dfn","url":"#decoding-algorithm"},
 "#description": {"displayText":"description","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"description","type":"dfn","url":"#description"},
 "#document": {"displayText":"document","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"document","type":"dfn","url":"#document"},
@@ -6762,7 +6468,6 @@ let refsData = {
 "#identity": {"displayText":"identity","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"identity","type":"dfn","url":"#identity"},
 "#image-encoder": {"displayText":"image encoder","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"image encoder","type":"dfn","url":"#image-encoder"},
 "#interpreter": {"displayText":"interpreter","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"interpreter","type":"dfn","url":"#interpreter"},
-"#jai-context": {"displayText":"jai context","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"jai context","type":"dfn","url":"#jai-context"},
 "#jai-whitespace": {"displayText":"jai whitespace","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"jai whitespace","type":"dfn","url":"#jai-whitespace"},
 "#json-form": {"displayText":"json form","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"json form","type":"dfn","url":"#json-form"},
 "#json-reading-algorithm": {"displayText":"json reading algorithm","export":true,"for_":[],"level":"","normative":true,"shortname":"jai","spec":"jai","status":"local","text":"json reading algorithm","type":"dfn","url":"#json-reading-algorithm"},

@@ -6,26 +6,31 @@ typical JAI image is 50 to 500 bytes at any resolution. It is designed for a
 world where generating images is cheap and local and moving them is not:
 links with little bandwidth, local GPUs that draw a picture in seconds or less,
 and renders personalised for an audience of one. Because the image is its
-description, it is readable out of the box by vision-impaired readers, through
-their screen readers, and by text-only AI agents. Read the
+description, it is text all the way down: vision-impaired readers hear it
+through their screen readers, and AI agents read and write it with no vision
+model. Read the
 [vision](https://jai.gnist.ai/vision/).
 
 ```
-jai:A magical castle at dusk;style=storybook illustration;aspect=16:9
+A magical castle at dusk;style=storybook illustration;aspect=16:9
 ```
 
-The simplest JAI document is a sentence. The same document also has a JSON
-form and a compressed file form (`.jai`, media type `image/jai`), and can be
-embedded in HTML so that browsers without JAI support show ordinary pixels.
-The everyday form puts the description in `alt`, where screen readers and
-models both read it, and the settings in `data-jai`:
+That is the text form: a description, then optional settings. JAI lives in
+HTML and in files, and each place holds exactly one form. A `data-jai`
+attribute and the body of a `data:image/jai,` URL hold the text form; a `.jai`
+file (media type `image/jai`) holds the document's canonical JSON,
+gzip-compressed. On a page with an ordinary image, `data-jai` marks the image,
+and the `alt` is the description unless `data-jai` gives one; by default,
+screen readers and models read the same words:
 
 ```html
-<img src="castle.png" alt="A magical castle at dusk, mist in the valley" data-jai="style=anime">
+<img src="castle.png" alt="A magical castle at dusk, seen from below" data-jai="style=anime;prompt/flux=Lit windows glow warm">
 ```
 
-Images with no pixels can be JAI themselves: `<img src="castle.jai" alt="A castle at dusk">`,
-or in Markdown `![A castle at dusk](castle.jai)`.
+Browsers without JAI support show the ordinary pixels. Images with no pixels
+are JAI themselves: `<img src="castle.jai" alt="A castle at dusk">`, the same
+document inline as a `data:image/jai,` URL, or in Markdown
+`![A castle at dusk](castle.jai)`.
 
 - **Specification:** [`spec/index.bs`](spec/index.bs), published at <https://jai.gnist.ai/spec/>
 - **Conformance fixtures:** [`tests/`](tests/) (normative)

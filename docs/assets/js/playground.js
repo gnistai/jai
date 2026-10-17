@@ -9,60 +9,87 @@ const $ = id => document.getElementById(id);
 const input = $('input');
 const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch { /* ignore */ } } };
 
+// [label, how to read the input, input]
 const EXAMPLES = [
-  ['A sentence is enough', 'A red bicycle leaning against a whitewashed wall, afternoon sun'],
-  ['Settings after the description', 'jai:A lighthouse on a cliff in a storm;style=watercolor;aspect=3:2;avoid=text'],
-  ['Semicolons inside the description', 'jai:A wizard stands in a doorway; behind him, a dragon sleeps;model=flux'],
-  ['Restyle the page image', 'jai:The same harbour scene as a pencil sketch on cream paper;mode=transform;strength=70%'],
-  ['Core prompt plus per-model tweaks', 'jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;style/sdxl=35mm film photo;model=flux;model=sdxl'],
-  ['Sharp edge: starts with word=', 'E=mc2 written on a chalkboard'],
-  ['Sharp edge: text after a setting', 'jai:A castle;style=anime;with a moat and a drawbridge'],
-  ['Habits from other tools', 'a cyberpunk city at night, neon rain --ar 16:9 --no people --v 6'],
-  ['Full-width delimiters', '魔法の城；style＝anime'],
-  ['Template text, escaped', 'prompt=Red mug\\; model\\=XZ-200\\; colour\\=red;style=product photo;aspect=1:1'],
-  ['JSON form', '{"jai":1,"prompt":["A magical castle on a hill at dusk","Mist in the valley below"],"aspect":"16:9","style":"storybook illustration","strength":0.6}'],
-  ['data: URL', 'data:image/jai,A%20magical%20castle;style=anime'],
-  ['HTML with carriers', '<picture>\n  <source type="image/jai" srcset="data:image/jai,A%20magical%20castle;style=anime">\n  <img src="castle.png" alt="A magical castle">\n</picture>\n<img src="team.jpg" alt="The team" data-jai="Four people in front of a brick office;mode=keep">\n<img src="lighthouse.png" alt="jai:A lighthouse at night">\n<img src="harbour.jai" alt="A harbour at dawn" width="800" height="600">'],
+  ['A sentence is enough', 'text', 'A red bicycle leaning against a whitewashed wall, afternoon sun'],
+  ['Settings after the description', 'text', 'A lighthouse on a cliff in a storm;style=watercolor;aspect=3:2;avoid=text'],
+  ['Semicolons inside the description', 'text', 'A wizard stands in a doorway; behind him, a dragon sleeps;model=flux'],
+  ['Restyle the page image', 'text', 'Fishing boats in a small harbour at dawn, mist on the water, as a pencil sketch on cream paper;mode=transform;strength=70%'],
+  ['Core prompt plus per-model tweaks', 'text', 'A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;style/sdxl=35mm film photo;model=flux;model=sdxl'],
+  ['Sharp edge: starts with word=', 'text', 'E=mc2 written on a chalkboard'],
+  ['Sharp edge: text after a setting', 'text', 'A castle;style=anime;with a moat and a drawbridge'],
+  ['Full-width delimiters', 'text', '魔法の城；style＝anime'],
+  ['Template text, escaped', 'text', 'prompt=Red mug\\; model\\=XZ-200\\; colour\\=red;style=product photo;aspect=1:1'],
+  ['data: URL', 'data', 'data:image/jai,A%20magical%20castle;style=anime'],
+  ['HTML: alt is the description', 'html', '<img src="castle.png" alt="A magical castle at dusk, seen from below"\n     data-jai="style=anime;prompt/flux=Lit windows glow warm">'],
+  ['HTML: every carrier', 'html', '<img src="castle.png" alt="A magical castle at dusk, seen from below" data-jai="style=anime">\n<img src="team.jpg" alt="The team" data-jai="Four people in front of a brick office;mode=keep">\n<picture>\n  <source type="image/jai" srcset="data:image/jai,A%20lighthouse%20at%20night;style=oil%20painting">\n  <img src="lighthouse.png" alt="A lighthouse at night">\n</picture>\n<img src="harbour.jai" alt="A harbour at dawn" width="800" height="600">'],
 ];
+
+const MODE_NOTES = {
+  text: 'The text form, exactly as it goes in a data-jai attribute: the description first, then ;key=value settings.',
+  data: 'A data:image/jai, URL, as it goes in src or in the srcset of a <source type="image/jai">. Its body is the percent-encoded text form.',
+  html: 'A piece of HTML. Every JAI carrier in it is found without loading images or running scripts.',
+};
+const MODE_LABELS = { data: 'a data: URL', html: 'HTML' };
 
 const sel = $('examples');
 sel.append(new Option('Choose…', ''));
 EXAMPLES.forEach(([label], i) => sel.append(new Option(label, String(i))));
-sel.addEventListener('change', () => { if (sel.value !== '') { input.value = EXAMPLES[+sel.value][1]; update(); sel.value = ''; } });
+sel.addEventListener('change', () => {
+  if (sel.value === '') return;
+  const [, mode, text] = EXAMPLES[+sel.value];
+  fileNote = null; setMode(mode); input.value = text; update(); sel.value = '';
+});
 
-let current = null; // { document, ... }
-let htmlMode = 'datajai';
+let current = null; // the latest analysis
+let mode = 'text';
+let htmlMode = 'alt';
+let fileNote = null; // { name, diagnostics, text } after opening a .jai file, until the input changes
 
-function detect(text) {
-  const t = text.replace(/^[\s﻿]+/, '');
-  if (t.startsWith('<')) return 'html';
-  if (/^data:/i.test(t)) return 'data';
-  if (/^\{\s*["}]/.test(t)) return 'json';
-  return 'text';
+function setMode(m) {
+  mode = m;
+  for (const r of document.querySelectorAll('input[name=read-as]')) r.checked = r.value === m;
+  $('mode-note').textContent = MODE_NOTES[m];
+  store.set('jai-playground-mode', m);
+}
+for (const r of document.querySelectorAll('input[name=read-as]')) r.addEventListener('change', () => { fileNote = null; setMode(r.value); update(); });
+
+/** An <img> in an inert document, for checks on how a data: URL is written. */
+function inertImage(src) {
+  const img = new DOMParser().parseFromString('<img width="1" height="1">', 'text/html').body.firstElementChild;
+  img.setAttribute('src', src);
+  return img;
 }
 
 function analyse(text) {
-  const kind = detect(text);
-  let r, info = null, carriers = null, delivery = [];
-  if (kind === 'html') {
+  let r, info = null, carriers = null, noDocument = null;
+  const delivery = [];
+  if (mode === 'html') {
     const doc = new DOMParser().parseFromString(text, 'text/html');
     carriers = J.discoverAll(doc.body, { baseURL: location.href });
     const first = carriers.find(c => c.document);
     r = first ? { document: first.document, diagnostics: first.diagnostics || [] } : { document: J.createDocument(), diagnostics: [] };
     info = first?.info || null;
     for (const c of carriers) delivery.push(...J.validateDelivery({ carrier: c.carrier, element: c.element, decoded: c.document ? { document: c.document } : null }));
-  } else if (kind === 'data') {
-    r = J.decodeDataURL(text.trim()) || { document: J.createDocument(), diagnostics: [], notJai: true };
+    // Images that carry nothing still get the delivery advisories (a JAI src that HTML never uses, a <source> without a type).
+    for (const el of doc.body.querySelectorAll('img')) if (!carriers.some(c => c.element === el)) delivery.push(...J.validateDelivery({ element: el }));
+  } else if (mode === 'data') {
+    const url = text.trim();
+    r = J.decodeDataURL(url);
+    delivery.push(...J.validateDelivery({ carrier: 'src', element: inertImage(url), decoded: r }));
+    if (!r) {
+      r = { document: J.createDocument(), diagnostics: [] };
+      // A data:image/jai URL whose data: URL processor failed is still one (data-url-missing-comma says so when the comma is missing).
+      if (!/^data:image\/jai(?=[;,#]|$)/i.test(url)) noDocument = 'This is not a data:image/jai URL, so it carries no JAI document.';
+      else if (!delivery.some(d => d.code === 'data-url-missing-comma')) noDocument = 'This data:image/jai URL carries no JAI document.';
+    }
     info = r.info || null;
-    if (/[\s#]/.test(text.trim().replace(/#.*$/, '')) || /%(?![0-9a-f]{2})/i.test(text)) delivery.push({ code: 'unencoded-url-text' });
-  } else if (kind === 'json') {
-    r = J.readJSON(text, { inContext: true });
   } else {
     r = J.parse(text); info = r.info;
   }
   const interp = J.interpret(r.document);
   const advisories = J.validate(r.document, info);
-  return { kind, ...r, info, carriers, interp, advisories, delivery };
+  return { mode, document: r.document, diagnostics: r.diagnostics, info, carriers, interp, advisories, delivery, noDocument };
 }
 
 function dedupe(list) {
@@ -72,12 +99,13 @@ function dedupe(list) {
 
 function renderDiagnostics(a) {
   const ul = $('diags'); ul.textContent = '';
-  const all = dedupe([...a.diagnostics, ...a.delivery, ...a.advisories, ...a.interp.diagnostics]);
-  if (a.notJai) all.unshift({ code: 'not-jai' });
+  const fromFile = fileNote ? fileNote.diagnostics : [];
+  const all = dedupe([...fromFile, ...a.diagnostics, ...a.delivery, ...a.advisories, ...a.interp.diagnostics]);
+  if (a.noDocument) all.unshift({ code: 'no-document' });
   if (!all.length) { const li = document.createElement('li'); li.className = 'empty-ok'; li.style.border = '0'; li.style.background = 'none'; li.textContent = 'No problems found.'; ul.append(li); return; }
   for (const d of all) {
     const li = document.createElement('li');
-    if (d.code === 'not-jai') { li.className = 'parser'; li.textContent = 'This is a data: URL, but not of type image/jai.'; ul.append(li); continue; }
+    if (d.code === 'no-document') { li.className = 'parser'; li.textContent = a.noDocument; ul.append(li); continue; }
     li.className = classOf(d.code);
     const { message, fix } = describe(d);
     const p = document.createElement('div'); p.textContent = message;
@@ -120,7 +148,6 @@ function renderPlain(a) {
     img.src = it.preview; img.alt = 'Preview placeholder'; img.width = 96; img.style.cssText = 'image-rendering:auto;filter:blur(3px);border-radius:6px;border:1px solid var(--border)';
     row('Preview', '', { node: img });
   }
-  if (a.document.has('animate')) row('Animated', it.animate ? 'yes' : 'no');
   // Per-model refinements: grouped by target; a renderer adds them only for a matching model.
   const isRefinement = k => k.includes('/') && J.QUALIFIABLE.has(k.split('/')[0]);
   const byTarget = new Map();
@@ -136,20 +163,17 @@ function renderPlain(a) {
 }
 
 function escAttr(s) { return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-function altText(doc) {
-  const p = (doc.get('prompt') || [])[0];
-  if (!p) return 'Image';
-  // The description is the alt text, in full: JAI sets no length limit on it.
-  return p.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
-}
+/** data-jai with a value, or the valueless attribute when the value is empty. */
+function dataJai(text) { return text ? `data-jai="${escAttr(text)}"` : 'data-jai'; }
+function oneLine(s) { return s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim(); }
 /**
- * A placeholder alt for the forms where alt is the page's own text (picture, src, Markdown):
- * the description's first sentence or clause, to show that alt need not repeat the description.
+ * A placeholder alt for the forms where alt is the page's own text: the description's
+ * first sentence or clause, to show that this alt need not repeat the description.
  */
 function shortAlt(doc) {
-  const full = altText(doc);
-  if (full === 'Image') return 'Describe the image here';
-  let s = full.split(/(?<=[.!?])\s/)[0];
+  const p = (doc.get('prompt') || [])[0];
+  if (!p) return 'Describe the image here';
+  let s = oneLine(p).split(/(?<=[.!?])\s/)[0];
   if (s.length > 90 && s.includes(',')) s = s.slice(0, s.indexOf(','));
   if (s.length > 120) s = s.slice(0, 120).replace(/\s+\S*$/, '') + '…';
   return s.replace(/[.,;:]+$/, '');
@@ -162,32 +186,40 @@ function boxSize(it) {
 function renderHTML() {
   if (!current) return;
   const doc = current.document, url = J.toDataURL(doc), alt = escAttr(shortAlt(doc));
-  const bare = J.serialize(doc, { bare: true });
+  const prompts = doc.get('prompt') || [];
   const [w, h] = boxSize(current.interp.interpreted);
   let code = '', note = '';
-  if (htmlMode === 'picture') {
-    code = `<picture>\n  <source type="image/jai" srcset="${escAttr(url)}">\n  <img src="your-image.png" alt="${alt}" width="${w}" height="${h}">\n</picture>`;
-    note = 'The path a browser with built-in JAI support would take, and the form for hosts that strip data-* attributes. Browsers without JAI show your-image.png and never fetch the JAI source. The alt is your page\'s own text and need not repeat the description.';
-  } else if (htmlMode === 'datajai') {
-    // The first prompt value goes in alt (spoken by screen readers, first line for the model); the rest in data-jai.
-    const prompts = doc.get('prompt') || [];
-    const rest = new Map(doc);
-    if (prompts.length > 1) rest.set('prompt', prompts.slice(1)); else rest.delete('prompt');
-    const altExact = prompts.length ? escAttr(prompts[0]) : '';
-    code = `<img src="your-image.png" alt="${altExact}"\n     data-jai="${escAttr(J.serialize(rest, { bare: true }))}">`;
+  if (htmlMode === 'alt') {
+    if (prompts.length === 1) {
+      // The description goes in alt; data-jai holds everything else and gives no description of its own.
+      const rest = new Map(doc); rest.delete('prompt');
+      code = `<img src="your-image.png" alt="${escAttr(prompts[0])}"\n     ${dataJai(J.serialize(rest))}>`;
+      note = 'The convenient default when you have an image. data-jai marks the image and holds the settings; it gives no description, so the alt is the description: written once, spoken by screen readers exactly as written, and drawn by the model. Per-model refinements stay in data-jai, where screen readers do not hear them.';
+    } else if (prompts.length > 1) {
+      code = `<img src="your-image.png" alt="${alt}"\n     ${dataJai(J.serialize(doc))}>`;
+      note = 'This description has several paragraphs and an alt holds one, so the whole document goes in data-jai and the alt is your page\'s own text. Join the paragraphs into one to write the description in alt.';
+    } else {
+      code = `<img src="your-image.png" alt="${alt}"\n     ${dataJai(J.serialize(doc))}>`;
+      note = 'This document has no description, so the alt you write becomes the description.';
+    }
+  } else if (htmlMode === 'inside') {
+    code = `<img src="your-image.png" alt="${alt}"\n     ${dataJai(J.serialize(doc))}>`;
     note = prompts.length
-      ? 'Recommended when you have an image. The alt text is the description: screen readers speak it, and it is the first line the model receives. data-jai holds the rest and is not read aloud (an empty data-jai is enough to mark the image). Survives most HTML sanitisers.'
-      : 'No description: the image needs an alt that describes it, which becomes the first prompt line.';
+      ? 'data-jai starts with the description, so the alt plays no part in the document. It stays your page\'s own text for screen readers and can be shorter.'
+      : 'This document has no description, so the alt you write becomes the description.';
+  } else if (htmlMode === 'picture') {
+    code = `<picture>\n  <source type="image/jai" srcset="${escAttr(url)}">\n  <img src="your-image.png" alt="${alt}" width="${w}" height="${h}">\n</picture>`;
+    note = 'The path a browser with built-in JAI support takes, and the form for hosts that strip data-* attributes. Browsers without JAI show your-image.png. The alt is your page\'s own text and need not repeat the description. A .jai file works in srcset too.';
   } else if (htmlMode === 'srcfile') {
     code = `<img src="castle.jai"\n     alt="${alt}" width="${w}" height="${h}">`;
-    note = 'For images with no pixels: save this document with Download .jai below and serve it as castle.jai (ideally as image/jai). Without a JAI viewer readers see only the alt text, so it must be real prose; it need not repeat the description. Set the size.';
+    note = 'For images with no pixels: save this document with Download .jai below and serve it as castle.jai, as it is (ideally with the media type image/jai). Without a JAI viewer readers see only the alt text, so it must be real prose; it need not repeat the description. Set the size.';
   } else if (htmlMode === 'src') {
     code = `<img src="${escAttr(url)}"\n     alt="${alt}" width="${w}" height="${h}">`;
-    note = 'The same pure form with the document inline: no file, no fallback pixels. The alt is your own text, and the size must be set.';
+    note = 'The same image with no pixels, with the document inline: no file to serve. The alt is your own text. Set the size.';
   } else {
-    const altMd = shortAlt(doc).replace(/\s+/g, ' ').replace(/[[\]\\*_]/g, '');
+    const altMd = shortAlt(doc).replace(/[[\]\\*_]/g, '');
     code = `![${altMd}](castle.jai)`;
-    note = `Markdown image syntax is the src form: save the document as castle.jai next to the page. Where the host keeps data: URLs, the inline variant is ![${altMd}](<${url}>). JAI never goes in the alt text.`;
+    note = `Markdown's image syntax renders to an <img> with the file in src and no size, so the document's aspect sets the shape: save the document as castle.jai next to the page. Where the host keeps data: URLs, ![${altMd}](<${url}>) works the same way.`;
   }
   $('out-html').textContent = code;
   $('html-note').textContent = note;
@@ -201,36 +233,53 @@ for (const tab of document.querySelectorAll('[data-html]')) {
   });
 }
 
+function carrierLabel(c) {
+  if (c.carrier === 'picture') return 'picture: <source type="image/jai">';
+  if (c.carrier === 'src') return 'src: the image itself is JAI';
+  if (J.parse(c.element.getAttribute('data-jai')).document.has('prompt')) return 'attribute: data-jai gives the description; the alt is page text';
+  return c.document && c.document.has('prompt') ? 'attribute: the alt is the description; data-jai marks the image' : 'attribute: no description in data-jai or alt';
+}
+
+/** A hint when the input looks like something other than what it is read as. */
+function renderHint(text) {
+  const t = text.trimStart();
+  const other = mode !== 'data' && /^data:/i.test(t) ? 'data' : mode !== 'html' && t.startsWith('<') ? 'html' : null;
+  $('mode-hint').hidden = !other;
+  if (other) { $('mode-switch').textContent = `Read it as ${MODE_LABELS[other]}`; $('mode-switch').dataset.mode = other; }
+}
+$('mode-switch').addEventListener('click', e => { fileNote = null; setMode(e.currentTarget.dataset.mode); update(); });
+
 async function update() {
   const text = input.value;
   store.set('jai-playground', text);
+  if (fileNote && fileNote.text !== text) fileNote = null;
   const a = analyse(text);
   current = a;
-  const labels = { text: 'text form', json: 'JSON form', data: 'data: URL', html: 'HTML' };
-  $('detected').textContent = 'Read as ' + labels[a.kind] + (a.kind === 'html' ? ` · ${a.carriers.length} carrier${a.carriers.length === 1 ? '' : 's'}` : '');
+  renderHint(text);
+  const found = a.mode === 'html' ? `${a.carriers.length} carrier${a.carriers.length === 1 ? '' : 's'} found` : '';
+  $('detected').textContent = fileNote ? `Read ${fileNote.name} as a .jai file` : found;
   renderPlain(a);
   renderDiagnostics(a);
-  highlightInto($('out-text'), J.serialize(a.document));
-  $('out-json').textContent = J.canonicalJSON(a.document);
-  $('out-url').textContent = J.toDataURL(a.document);
+  const textForm = J.serialize(a.document), url = J.toDataURL(a.document), json = J.canonicalJSON(a.document);
+  highlightInto($('out-text'), textForm);
+  $('out-url').textContent = url;
+  $('out-json').textContent = json;
   renderHTML();
   const cw = $('carriers-wrap'), ol = $('carriers');
   ol.textContent = '';
-  cw.hidden = a.kind !== 'html';
-  if (a.kind === 'html') {
-    const names = { picture: 'picture: <source type="image/jai">', attribute: 'attribute: alt + data-jai', src: 'src: the image itself is JAI' };
-    if (!a.carriers.length) { const li = document.createElement('li'); li.textContent = 'No JAI carrier found. A plain alt is never JAI, even when it begins with jai:.'; ol.append(li); }
+  cw.hidden = a.mode !== 'html';
+  if (a.mode === 'html') {
+    if (!a.carriers.length) { const li = document.createElement('li'); li.textContent = 'No JAI carrier found. An image carries JAI through a data-jai attribute, a <source type="image/jai">, or a .jai file or data:image/jai URL in its src.'; ol.append(li); }
     for (const c of a.carriers) {
       const li = document.createElement('li');
-      li.textContent = `${names[c.carrier]} — ` + (c.document ? J.serialize(c.document) : `reads ${c.url} when the reader chooses to render`);
+      li.textContent = `${carrierLabel(c)} — ` + (c.document ? J.serialize(c.document) : `reads ${c.url} when the reader chooses to render`);
       ol.append(li);
     }
   }
-  const textBytes = new TextEncoder().encode(J.serialize(a.document, { bare: true })).length;
-  const jsonBytes = new TextEncoder().encode(J.canonicalJSON(a.document)).length;
+  const enc = new TextEncoder();
   const file = await J.encode(a.document);
   if (current !== a) return;
-  $('sizes').textContent = `${textBytes} bytes as text · ${jsonBytes} bytes as JSON · ${file.length} bytes as a .jai file`;
+  $('sizes').textContent = `${enc.encode(textForm).length} bytes as text · ${enc.encode(url).length} bytes as a data: URL · ${file.length} bytes as a .jai file`;
   $('out-id').textContent = await J.identity(a.document);
 }
 
@@ -248,31 +297,38 @@ $('download').addEventListener('click', async () => {
   toast('Saved ' + name);
 });
 
-function encodeQuery(s) {
-  return Array.from(s).map(ch => { const c = ch.codePointAt(0); return c < 0x21 || c === 0x7f || ch === '%' || ch === '#' ? '%' + c.toString(16).toUpperCase().padStart(2, '0') : ch; }).join('');
-}
+// A link to this page with the canonical text in the fragment: a convenience of the playground.
 $('share').addEventListener('click', () => {
   if (!current) return;
-  copyText(location.origin + location.pathname + '?' + encodeQuery(J.serialize(current.document, { bare: true })));
+  copyText(location.origin + location.pathname + '#' + encodeURIComponent(J.serialize(current.document)));
 });
 
 async function loadFile(f) {
-  const bytes = new Uint8Array(await f.arrayBuffer());
-  const r = J.decode(bytes, { inContext: true });
-  input.value = r.document.size ? J.serialize(r.document) : '';
+  const r = J.decode(new Uint8Array(await f.arrayBuffer()));
+  setMode('text');
+  input.value = J.serialize(r.document);
+  fileNote = { name: f.name, diagnostics: r.diagnostics, text: input.value };
   await update();
-  const extra = r.diagnostics.map(d => d.code).join(', ');
-  $('detected').textContent = `Read ${f.name} as ${r.form === 'gzip' ? 'a .jai file (gzip JSON)' : r.form || 'unreadable bytes'}${extra ? ' · ' + extra : ''}`;
-  if (r.form && r.form !== 'gzip') toast('Not gzip: accepted, but not a canonical .jai file');
+  if (r.diagnostics.some(d => d.code === 'malformed-container' || d.code === 'invalid-json')) toast('Not a .jai file: a .jai file is gzip-compressed canonical JSON');
 }
-$('file').addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+$('file').addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ''; });
 const drop = $('drop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) loadFile(f); });
 
-// Initial content: the whole-query form (?A%20castle;style=anime), else the last session, else an example.
-const q = location.search.slice(1);
-if (q) input.value = new TextDecoder().decode(J.percentDecode(q));
-else input.value = store.get('jai-playground') || EXAMPLES[1][1];
+// Initial content: a playground link (#<percent-encoded text>), else the last session, else an example.
+function fromFragment() {
+  if (location.hash.length < 2) return null;
+  try { return decodeURIComponent(location.hash.slice(1)); } catch { return null; }
+}
+const linked = fromFragment();
+if (linked !== null) { setMode('text'); input.value = linked; }
+else {
+  const saved = store.get('jai-playground');
+  const savedMode = store.get('jai-playground-mode');
+  if (saved !== null) { setMode(MODE_NOTES[savedMode] ? savedMode : 'text'); input.value = saved; }
+  else { setMode(EXAMPLES[1][1]); input.value = EXAMPLES[1][2]; }
+}
+window.addEventListener('hashchange', () => { const v = fromFragment(); if (v !== null) { fileNote = null; setMode('text'); input.value = v; update(); } });
 update();

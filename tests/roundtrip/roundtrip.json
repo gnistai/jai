@@ -1,7 +1,7 @@
 {
  "class": "roundtrip",
  "edition": "1.0-draft",
- "note": "parse(serialize(doc)) == doc, serialize is a fixed point; same for canonical JSON.",
+ "note": "document -> the document survives, and serialisation is a fixed point of, the canonical text (parse), the canonical data: URL (decodeDataURL), canonical JSON (readJSON) and the file form (decode).",
  "cases": [
   {
    "id": "rt-fuzz-class-a",
@@ -79,8 +79,8 @@
    "since": "1.0-draft"
   },
   {
-   "id": "rt-prefix-like",
-   "rationale": "jai:-initial values.",
+   "id": "rt-jai-colon",
+   "rationale": "Values beginning with jai: are ordinary text.",
    "document": {
     "prompt": [
      "jai:x",
@@ -176,8 +176,11 @@
      "anime",
      "watercolor"
     ],
-    "animate": [
-     "true"
+    "source": [
+     "https://example.org/a.jpg"
+    ],
+    "preview": [
+     "data:image/webp;base64,UklGRkI="
     ]
    },
    "since": "1.0-draft"

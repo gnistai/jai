@@ -51,7 +51,6 @@ const report = (id, ok, msg) => { console.log(`${ok ? 'OK  ' : 'BAD '} ${id}: ${
 
 for (const r of rows(examples['ex-text-structure'])) {
   const input = code(r[0]); const want = docOf(r[1]); const got = J.toObject(J.parse(input).document);
-  if (r[1].startsWith('prose')) { report('ex-text-structure', true, `${show(input)} -> ${show(got)} [prose row, no doc given: ${r[1]}]`); continue; }
   report('ex-text-structure', eq(got, want), `${show(input)} -> ${show(got)} want ${show(want)}`);
 }
 for (const r of rows(examples['ex-parse-edge'])) {
@@ -65,8 +64,8 @@ for (const r of rows(examples['ex-canonical'])) {
   report('ex-canonical', got === want, `${show(doc)} -> ${show(got)} want ${show(want)}; parsing the spec's text gives ${show(back)}`);
 }
 for (const r of rows(examples['ex-json-reading'])) {
-  const input = code(r[0]); const want = docOf(r[1]); const inCtx = true;
-  const p = J.readJSON(input, { inContext: inCtx }); const got = J.toObject(p.document);
+  const input = code(r[0]); const want = docOf(r[1]);
+  const p = J.readJSON(input); const got = J.toObject(p.document);
   const wc = codesOf(r[2]).sort().join(','); const gc = p.diagnostics.map(d => d.code).sort().join(',');
   report('ex-json-reading', eq(got, want) && wc === gc, `${input} -> ${show(got)} [${fmt(p.diagnostics)}] want ${show(want)} [${wc}]`);
 }
@@ -78,17 +77,21 @@ const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0
 const decodeRows = [
   ['gzip {"jai":1,"prompt":"A castle"}', gz('{"jai":1,"prompt":"A castle"}'), { prompt: ['A castle'] }, ''],
   ['two gzip members', cat(gz('{"jai":1,"prompt":"A castle"}'), gz('{"jai":1,"prompt":"A castle"}')), {}, 'malformed-container'],
-  ['gzip jai:A castle', gz('jai:A castle'), {}, 'malformed-container'],
-  ['uncompressed JSON', enc('{"jai":1,"prompt":"A castle"}'), { prompt: ['A castle'] }, ''],
-  ['{masterpiece}, a castle', enc('{masterpiece}, a castle'), { prompt: ['{masterpiece}, a castle'] }, ''],
-  ['{"quoted"} prose', enc('{"quoted"} prose'), {}, 'invalid-json'],
-  ['UTF-16LE BOM jai', new Uint8Array([0xff, 0xfe, 0x6a, 0x00, 0x61, 0x00]), {}, 'undecodable'],
-  ['PNG bytes', png, {}, 'undecodable'],
-  ['jai:A castle', enc('jai:A castle'), { prompt: ['A castle'] }, ''],
+  ['gzip A castle', gz('A castle'), {}, 'invalid-json'],
+  ['gzip BOM + JSON', gz('\ufeff{"jai":1,"prompt":"A castle"}'), {}, 'invalid-json'],
+  ['uncompressed JSON', enc('{"jai":1,"prompt":"A castle"}'), {}, 'malformed-container'],
+  ['uncompressed text', enc('A castle'), {}, 'malformed-container'],
+  ['PNG bytes', png, {}, 'malformed-container'],
 ];
 for (const [label, bytes, want, wc] of decodeRows) {
   const r = J.decode(bytes); const got = J.toObject(r.document); const gc = r.diagnostics.map(d => d.code).join(',');
-  report('ex-decode', eq(got, want) && gc === wc, `${label} -> ${show(got)} [${gc}] form=${r.form} want ${show(want)} [${wc}]` + (label.startsWith('uncompressed') ? ` validateDelivery=[${fmt(J.validateDelivery({ decoded: r }))}]` : ''));
+  report('ex-decode', eq(got, want) && gc === wc, `${label} -> ${show(got)} [${gc}] want ${show(want)} [${wc}]`);
+}
+// data: URL example
+for (const m of (examples['ex-data-urls'] || '').matchAll(/^data:image\/jai,\S+$/gm)) {
+  const r = J.decodeDataURL(m[0]); const got = r && J.toObject(r.document);
+  const want = { prompt: ['A magical castle'], style: ['anime'] };
+  report('ex-data-urls', !!r && eq(got, want) && J.toDataURL(J.fromObject(want)) === m[0], `${m[0]} -> ${show(got)}`);
 }
 console.log(`\n${bad} bad`);
 process.exitCode = bad ? 1 : 0;

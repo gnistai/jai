@@ -1,7 +1,7 @@
 {
  "class": "serialize",
  "edition": "1.0-draft",
- "note": "document -> canonical text, bare text, canonical JSON, identity.",
+ "note": "document -> canonical text, canonical JSON, identity (and the canonical data: URL where given).",
  "cases": [
   {
    "id": "ser-simple",
@@ -11,10 +11,9 @@
      "A magical castle"
     ]
    },
-   "text": "jai:A magical castle",
+   "text": "A magical castle",
    "json": "{\"jai\":1,\"prompt\":\"A magical castle\"}",
    "identity": "444e47cb00f5fbf14f8e3d6c90e23e28d7e6012bf6ac714f0a5e7171869e364b",
-   "bare": "A magical castle",
    "since": "1.0-draft"
   },
   {
@@ -32,7 +31,7 @@
      "sdxl"
     ]
    },
-   "text": "jai:A castle;model=flux;model=sdxl;style=anime",
+   "text": "A castle;model=flux;model=sdxl;style=anime",
    "json": "{\"jai\":1,\"prompt\":\"A castle\",\"model\":[\"flux\",\"sdxl\"],\"style\":\"anime\"}",
    "identity": "eb7181bb0c7dd2e1a2e23993b92bb7e46c2781f98a1ef8eb87677b15917635e9",
    "since": "1.0-draft"
@@ -49,7 +48,7 @@
      "flux"
     ]
    },
-   "text": "jai:A castle;prompt=with a moat;model=flux",
+   "text": "A castle;prompt=with a moat;model=flux",
    "json": "{\"jai\":1,\"prompt\":[\"A castle\",\"with a moat\"],\"model\":\"flux\"}",
    "identity": "62b8f3987004754e4ac2e933b3222d2c328d6aa8fe7a91cb60f56cf828ba1310",
    "since": "1.0-draft"
@@ -65,7 +64,7 @@
      "flux"
     ]
    },
-   "text": "jai:A wizard stands; behind him, a dragon;model=flux",
+   "text": "A wizard stands; behind him, a dragon;model=flux",
    "json": "{\"jai\":1,\"prompt\":\"A wizard stands; behind him, a dragon\",\"model\":\"flux\"}",
    "identity": "dc3657d2e97402c4cdaba90281eff686314e04b35ba06df511d9d374920f95f7",
    "since": "1.0-draft"
@@ -78,10 +77,9 @@
      "E=mc2 explained"
     ]
    },
-   "text": "jai:prompt=E=mc2 explained",
+   "text": "prompt=E=mc2 explained",
    "json": "{\"jai\":1,\"prompt\":\"E=mc2 explained\"}",
    "identity": "4ac54a18ba981c5940c985f4eb9f53882e66d6a6611b24a36a85ffc67c6699e8",
-   "bare": "prompt=E=mc2 explained",
    "since": "1.0-draft"
   },
   {
@@ -92,7 +90,7 @@
      ";-) a smiley"
     ]
    },
-   "text": "jai:\\;-) a smiley",
+   "text": "\\;-) a smiley",
    "json": "{\"jai\":1,\"prompt\":\";-) a smiley\"}",
    "identity": "dac83a169af9250f090819b6a6f00567f38ac28d5fa1c43244cbd99fc3854509",
    "since": "1.0-draft"
@@ -108,7 +106,7 @@
      "x"
     ]
    },
-   "text": "jai:ends with backslash\\\\;style=x",
+   "text": "ends with backslash\\\\;style=x",
    "json": "{\"jai\":1,\"prompt\":\"ends with backslash\\\\\",\"style\":\"x\"}",
    "identity": "03350ba92b1333ef612c888ff3cbf29e135a7d380926e5e34ec95247941b621b",
    "since": "1.0-draft"
@@ -124,7 +122,7 @@
      "C:\\dir\\"
     ]
    },
-   "text": "jai:x;style=C:\\dir\\\\",
+   "text": "x;style=C:\\dir\\\\",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"C:\\\\dir\\\\\"}",
    "identity": "253523aa0122dcf90910ace568033736a84583a27ee1b4b4d6e3354a8bba4ecf",
    "since": "1.0-draft"
@@ -137,7 +135,7 @@
      "a;;b"
     ]
    },
-   "text": "jai:a\\;;b",
+   "text": "a\\;;b",
    "json": "{\"jai\":1,\"prompt\":\"a;;b\"}",
    "identity": "76fe5004806fefbb4fd47170c80fdb4070ba849a9e373b9362430b7a86943d8e",
    "since": "1.0-draft"
@@ -150,7 +148,7 @@
      "a; ;b"
     ]
    },
-   "text": "jai:a\\; ;b",
+   "text": "a\\; ;b",
    "json": "{\"jai\":1,\"prompt\":\"a; ;b\"}",
    "identity": "1903195e5ac89dd39c6e67a0399b8fe0d58d495a78c68081b255fbe91676fbba",
    "since": "1.0-draft"
@@ -166,7 +164,7 @@
      "x"
     ]
    },
-   "text": "jai:a\\;;style=x",
+   "text": "a\\;;style=x",
    "json": "{\"jai\":1,\"prompt\":\"a;\",\"style\":\"x\"}",
    "identity": "17a4eea8f35083669eeff08137cea991076e8e73bfd42f5c5745b9c9d3c54baf",
    "since": "1.0-draft"
@@ -179,7 +177,7 @@
      "A list; item=1"
     ]
    },
-   "text": "jai:A list\\; item=1",
+   "text": "A list\\; item=1",
    "json": "{\"jai\":1,\"prompt\":\"A list; item=1\"}",
    "identity": "1a2ef29cedd395687a08e928e0b6ebda5bb17a5fbdd105c5e27baf6deaf960be",
    "since": "1.0-draft"
@@ -192,7 +190,7 @@
      "A list; Item = 1"
     ]
    },
-   "text": "jai:A list\\; Item = 1",
+   "text": "A list\\; Item = 1",
    "json": "{\"jai\":1,\"prompt\":\"A list; Item = 1\"}",
    "identity": "671dfe6bf25a14650c4acdb54d529c80ed24148cdf71670bf7a18a3a17be85ff",
    "since": "1.0-draft"
@@ -205,7 +203,7 @@
      "a; b=c"
     ]
    },
-   "text": "jai:a\\; b=c",
+   "text": "a\\; b=c",
    "json": "{\"jai\":1,\"prompt\":\"a; b=c\"}",
    "identity": "06348f3d5063a1bda3678856a25db2a792ab5cf25f99c170164946036fa39606",
    "since": "1.0-draft"
@@ -218,7 +216,7 @@
      "C:\\Users\\me"
     ]
    },
-   "text": "jai:C:\\Users\\me",
+   "text": "C:\\Users\\me",
    "json": "{\"jai\":1,\"prompt\":\"C:\\\\Users\\\\me\"}",
    "identity": "aab498db5219807ea383bc611dbd1363b00ade1eb5066fc351e3f782b5b5f4be",
    "since": "1.0-draft"
@@ -231,7 +229,7 @@
      "a\\;b"
     ]
    },
-   "text": "jai:a\\\\;b",
+   "text": "a\\\\;b",
    "json": "{\"jai\":1,\"prompt\":\"a\\\\;b\"}",
    "identity": "2c6d560dfa9cc2e25622ca838719b086716f27360d36e53830dece840b974c49",
    "since": "1.0-draft"
@@ -247,7 +245,7 @@
      "a\\=b"
     ]
    },
-   "text": "jai:x;acme.v=a\\\\=b",
+   "text": "x;acme.v=a\\\\=b",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"acme.v\":\"a\\\\=b\"}",
    "identity": "e8403ed6d4179a8b2d156cdf04e47b3544d9f4f5603b993ea26c6dd3b58e162e",
    "since": "1.0-draft"
@@ -260,7 +258,7 @@
      "a\\\\b"
     ]
    },
-   "text": "jai:a\\\\\\b",
+   "text": "a\\\\\\b",
    "json": "{\"jai\":1,\"prompt\":\"a\\\\\\\\b\"}",
    "identity": "78551737ce66b3e6e9c53843f77c9b63adfb03c139f64ce58b610d0b0313fba7",
    "since": "1.0-draft"
@@ -276,7 +274,7 @@
      "E=mc2"
     ]
    },
-   "text": "jai:x;acme.formula=E=mc2",
+   "text": "x;acme.formula=E=mc2",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"acme.formula\":\"E=mc2\"}",
    "identity": "2ee08eba57f2ffd259e8ae53f31247a34c31b01b65ac59ee39283d13510ca9e5",
    "since": "1.0-draft"
@@ -292,61 +290,57 @@
      "anime"
     ]
    },
-   "text": "jai:mode=transform;style=anime",
+   "text": "mode=transform;style=anime",
    "json": "{\"jai\":1,\"mode\":\"transform\",\"style\":\"anime\"}",
    "identity": "0122136f683c8f4afd535719e8ea847c7fd56fab95eed3a1f2ee7f436350e7e7",
    "since": "1.0-draft"
   },
   {
    "id": "ser-empty",
-   "rationale": "Empty document.",
+   "rationale": "The empty document is the empty string.",
    "document": {},
-   "text": "jai:",
+   "text": "",
    "json": "{\"jai\":1}",
    "identity": "57699e5ff95f81eb648f43a8cb88957dd10454d59669956f8e3c13350759a428",
-   "bare": "",
    "since": "1.0-draft"
   },
   {
-   "id": "ser-prompt-jai-prefix",
-   "rationale": "Prefixed form protects a jai:-initial prompt by the prefix.",
+   "id": "ser-prompt-jai-colon",
+   "rationale": "A jai:-initial prompt needs no protection: the text form has no prefix.",
    "document": {
     "prompt": [
      "jai:x"
     ]
    },
-   "text": "jai:jai:x",
+   "text": "jai:x",
    "json": "{\"jai\":1,\"prompt\":\"jai:x\"}",
    "identity": "83d940a18499bb4f360478b93a4f5fbc1f27ef6d3f70c27766b7df14db2a84e1",
-   "bare": "prompt=jai:x",
    "since": "1.0-draft"
   },
   {
    "id": "ser-prompt-bom",
-   "rationale": "Bare form protects a U+FEFF-initial prompt.",
+   "rationale": "A U+FEFF-initial first prompt is written with prompt=, because the parser removes leading U+FEFF.",
    "document": {
     "prompt": [
      "﻿x"
     ]
    },
-   "text": "jai:﻿x",
+   "text": "prompt=﻿x",
    "json": "{\"jai\":1,\"prompt\":\"﻿x\"}",
    "identity": "f1671ee9f2a393ebeff87e3a27c5bef6e0e6dfc64cbaabde69f950c59f136f76",
-   "bare": "prompt=﻿x",
    "since": "1.0-draft"
   },
   {
    "id": "ser-prompt-brace",
-   "rationale": "Bare form protects a {-initial prompt.",
+   "rationale": "A {-initial prompt needs no protection: nothing is sniffed for JSON.",
    "document": {
     "prompt": [
      "{x}"
     ]
    },
-   "text": "jai:{x}",
+   "text": "{x}",
    "json": "{\"jai\":1,\"prompt\":\"{x}\"}",
    "identity": "8f7315b2802629b213dd895b25012410d3f3a7b15aa60afed9798d3f4fc54afc",
-   "bare": "prompt={x}",
    "since": "1.0-draft"
   },
   {
@@ -360,7 +354,7 @@
      "data:image/svg+xml;charset=utf-8,<svg/>"
     ]
    },
-   "text": "jai:x;source=data:image/svg+xml\\;charset=utf-8,<svg/>",
+   "text": "x;source=data:image/svg+xml\\;charset=utf-8,<svg/>",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"source\":\"data:image/svg+xml;charset=utf-8,<svg/>\"}",
    "identity": "a783f4da579c2c58c86affbebf1c082d48b9ff73af91ab9597b84c50011e0e6a",
    "since": "1.0-draft"
@@ -373,7 +367,7 @@
      "tab\there\u001fend é/"
     ]
    },
-   "text": "jai:tab\there\u001fend é/",
+   "text": "tab\there\u001fend é/",
    "json": "{\"jai\":1,\"prompt\":\"tab\\there\\u001fend é/\"}",
    "identity": "7f170039a9e0cf58f3e51331f65d9c47c6c95381e9601811ae9b617c8a7eee1d",
    "since": "1.0-draft"
@@ -389,7 +383,7 @@
      "anime"
     ]
    },
-   "text": "jai:قلعة سحرية;style=anime",
+   "text": "قلعة سحرية;style=anime",
    "json": "{\"jai\":1,\"prompt\":\"قلعة سحرية\",\"style\":\"anime\"}",
    "identity": "3aeae837e0be3d8d046b6e53131f709cf16502e2b4e8fb10f55b752c5695e422",
    "since": "1.0-draft"
@@ -402,7 +396,7 @@
      "Café"
     ]
    },
-   "text": "jai:Café",
+   "text": "Café",
    "json": "{\"jai\":1,\"prompt\":\"Café\"}",
    "identity": "18642ae6081cfd884913ef6132dbd8e3a7e31fb1ef30e06420541e86e0742c1e",
    "since": "1.0-draft"
@@ -415,7 +409,7 @@
      "Café"
     ]
    },
-   "text": "jai:Café",
+   "text": "Café",
    "json": "{\"jai\":1,\"prompt\":\"Café\"}",
    "identity": "037a879fb35c38d096cbe35402c7aef5952e350e893e4b0ca9472e7d9d537661",
    "since": "1.0-draft"
@@ -431,7 +425,7 @@
      "data:image/webp;base64,UklGRkI="
     ]
    },
-   "text": "jai:x;preview=data:image/webp;base64,UklGRkI=",
+   "text": "x;preview=data:image/webp;base64,UklGRkI=",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"preview\":\"data:image/webp;base64,UklGRkI=\"}",
    "identity": "8704944bbd6223131e291f48fa2f7df2ff899d50d22c6c4f262265adf1a295ce",
    "since": "1.0-draft"
@@ -450,7 +444,7 @@
      "Astrolabe study"
     ]
    },
-   "text": "jai:A brass astrolabe on velvet;comfy.sampler=euler;dc.title=Astrolabe study",
+   "text": "A brass astrolabe on velvet;comfy.sampler=euler;dc.title=Astrolabe study",
    "json": "{\"jai\":1,\"prompt\":\"A brass astrolabe on velvet\",\"comfy.sampler\":\"euler\",\"dc.title\":\"Astrolabe study\"}",
    "identity": "a98608b3b5f0f0661a03158f623769436dc51e7da158a284f529d83fd718c368",
    "since": "1.0-draft"
@@ -478,7 +472,7 @@
      "5"
     ]
    },
-   "text": "jai:x;a=5;a-b=3;a.z=2;a_b=4;b=1",
+   "text": "x;a=5;a-b=3;a.z=2;a_b=4;b=1",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"a\":\"5\",\"a-b\":\"3\",\"a.z\":\"2\",\"a_b\":\"4\",\"b\":\"1\"}",
    "identity": "383a357267aca65ec920108e7d37a50bdf865f6dfe1a5b6be34fe0dc4a6720f7",
    "since": "1.0-draft"
@@ -491,7 +485,7 @@
      "A castle\n\nMist below"
     ]
    },
-   "text": "jai:A castle\n\nMist below",
+   "text": "A castle\n\nMist below",
    "json": "{\"jai\":1,\"prompt\":\"A castle\\n\\nMist below\"}",
    "identity": "9bb368acdfb9e81eae73225cdfeef5f9fcb77de9d195d3d942cc085ef284366c",
    "since": "1.0-draft"
@@ -504,7 +498,7 @@
      "a;\nb=c"
     ]
    },
-   "text": "jai:a\\;\nb=c",
+   "text": "a\\;\nb=c",
    "json": "{\"jai\":1,\"prompt\":\"a;\\nb=c\"}",
    "identity": "273679f75f917ecb202928bbbe1e1bccf6ada8b6588cb34b9d84dc5bf4d31226",
    "since": "1.0-draft"
@@ -520,8 +514,7 @@
      "photo"
     ]
    },
-   "text": "jai:A sign reading \"OPEN\";style=photo",
-   "bare": "A sign reading \"OPEN\";style=photo",
+   "text": "A sign reading \"OPEN\";style=photo",
    "json": "{\"jai\":1,\"prompt\":\"A sign reading \\\"OPEN\\\"\",\"style\":\"photo\"}",
    "identity": "e67e98d1aab955450fd276889171747719763469b54733a0fd239d472bbbe37c",
    "url": "data:image/jai,A%20sign%20reading%20%22OPEN%22;style=photo",
@@ -538,8 +531,7 @@
      "it's"
     ]
    },
-   "text": "jai:x < y > z;style=it's",
-   "bare": "x < y > z;style=it's",
+   "text": "x < y > z;style=it's",
    "json": "{\"jai\":1,\"prompt\":\"x < y > z\",\"style\":\"it's\"}",
    "identity": "f9ea6e11cb808f0b270b567f75d4d4eba20141723e00a912197589476c437b96",
    "url": "data:image/jai,x%20%3C%20y%20%3E%20z;style=it%27s",
@@ -553,8 +545,7 @@
      "a,"
     ]
    },
-   "text": "jai:a,",
-   "bare": "a,",
+   "text": "a,",
    "json": "{\"jai\":1,\"prompt\":\"a,\"}",
    "identity": "96cac5c6f7a4030200a123243a13e86a17c7310945f5b5a7cbae80c2adb8ab75",
    "url": "data:image/jai,a%2C",
@@ -568,8 +559,7 @@
      "/imagine a cat"
     ]
    },
-   "text": "jai:/imagine a cat",
-   "bare": "/imagine a cat",
+   "text": "/imagine a cat",
    "json": "{\"jai\":1,\"prompt\":\"/imagine a cat\"}",
    "identity": "0330d6f514d6eadf67b1d076bb70b67f8c3e294abf1f108975768c6dd6c0f2a7",
    "url": "data:image/jai,%2Fimagine%20a%20cat",
@@ -599,7 +589,7 @@
      "watercolor"
     ]
    },
-   "text": "jai:A girl holding a red balloon;prompt/flux=soft rim light;prompt/sdxl=35mm photo;model=flux;model=sdxl;style=watercolor;style/sdxl=film grain",
+   "text": "A girl holding a red balloon;prompt/flux=soft rim light;prompt/sdxl=35mm photo;model=flux;model=sdxl;style=watercolor;style/sdxl=film grain",
    "json": "{\"jai\":1,\"prompt\":\"A girl holding a red balloon\",\"prompt/flux\":\"soft rim light\",\"prompt/sdxl\":\"35mm photo\",\"model\":[\"flux\",\"sdxl\"],\"style\":\"watercolor\",\"style/sdxl\":\"film grain\"}",
    "identity": "c02f09891d466f1bf58eb675d2324ffc01ad175bdcbd85a15c067e8b87fb737a",
    "since": "1.0-draft"
@@ -615,7 +605,7 @@
      "anime"
     ]
    },
-   "text": "jai:prompt/flux=soft rim light;style=anime",
+   "text": "prompt/flux=soft rim light;style=anime",
    "json": "{\"jai\":1,\"prompt/flux\":\"soft rim light\",\"style\":\"anime\"}",
    "identity": "3efbc3a5b6c57e2f1f2c4fd4c685978ff2e99e370415d724b26007e15880777a",
    "since": "1.0-draft"
@@ -640,7 +630,7 @@
      "d"
     ]
    },
-   "text": "jai:x;style=a;style-x=b;style.x=d;style/a=c",
+   "text": "x;style=a;style-x=b;style.x=d;style/a=c",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"a\",\"style-x\":\"b\",\"style.x\":\"d\",\"style/a\":\"c\"}",
    "identity": "c189d45ccf8cd9445b7d4e8af0163679aec04584d60dabd40c8e44784ab2dec7",
    "since": "1.0-draft"
@@ -653,10 +643,9 @@
      "A ratio; a/b=c"
     ]
    },
-   "text": "jai:A ratio\\; a/b=c",
+   "text": "A ratio\\; a/b=c",
    "json": "{\"jai\":1,\"prompt\":\"A ratio; a/b=c\"}",
    "identity": "660c552c0129d1783a5a6649d1bcdaf5b61c7dbe2f81fbe42c6659114a356042",
-   "bare": "A ratio\\; a/b=c",
    "since": "1.0-draft"
   },
   {
@@ -667,10 +656,9 @@
      "1/2=half on a chalkboard"
     ]
    },
-   "text": "jai:prompt=1/2=half on a chalkboard",
+   "text": "prompt=1/2=half on a chalkboard",
    "json": "{\"jai\":1,\"prompt\":\"1/2=half on a chalkboard\"}",
    "identity": "04feb0bb79abf6f55dc03106303e5ca1b57f6d28201ca5f6b19d73f9ed5e41fa",
-   "bare": "prompt=1/2=half on a chalkboard",
    "since": "1.0-draft"
   },
   {
@@ -681,7 +669,7 @@
      "x; Prompt/FLUX = y"
     ]
    },
-   "text": "jai:x\\; Prompt/FLUX = y",
+   "text": "x\\; Prompt/FLUX = y",
    "json": "{\"jai\":1,\"prompt\":\"x; Prompt/FLUX = y\"}",
    "identity": "9b0605a0e719899ce9f82605da25c9f5ba32b6024db725f78a7ac8712afe2576",
    "since": "1.0-draft"
@@ -697,7 +685,7 @@
      "a;acme.x/flux=b"
     ]
    },
-   "text": "jai:x;style=a\\;acme.x/flux=b",
+   "text": "x;style=a\\;acme.x/flux=b",
    "json": "{\"jai\":1,\"prompt\":\"x\",\"style\":\"a;acme.x/flux=b\"}",
    "identity": "735b5789111c959c35090a9757f48d9963f7280ccf7177591ee965067c8abaac",
    "since": "1.0-draft"
@@ -710,7 +698,7 @@
      "Tom &amp; Jerry"
     ]
    },
-   "text": "jai:Tom &amp; Jerry",
+   "text": "Tom &amp; Jerry",
    "json": "{\"jai\":1,\"prompt\":\"Tom &amp; Jerry\"}",
    "identity": "22d92a16a991b4679ba15bcf29e1478d6448b725154230746ad1cfe7fe7b8fd1",
    "url": "data:image/jai,Tom%20%26amp;%20Jerry",

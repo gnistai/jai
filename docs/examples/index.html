@@ -32,7 +32,7 @@
   <div class="wrap">
     <div class="eyebrow">Examples</div>
     <h1>Real renders, real documents</h1>
-    <p class="lede">Every image on this page was rendered once from the JAI document shown beside it and saved, so viewing the page needs no API key. Open "How this was rendered" under any image to see the exact text sent to the model.</p>
+    <p class="lede">Every image in sections 1 to 4 was rendered once from the JAI document shown with it and saved, so viewing the page needs no API key. Open "How this was rendered" under any of them to see the exact text sent to the model. Section 5 sets original photographs beside the encoder's renders and links each run's <code>.jai</code> file and full report.</p>
   </div>
 </section>
 
@@ -40,7 +40,7 @@
   <div class="wrap">
     <div class="eyebrow">1 · Minimal description</div>
     <h2>A sentence is a complete image</h2>
-    <p class="lede">No prefix, no settings. In a context that already says "this is JAI", such as a <code>.jai</code> file or a <code>data-jai</code> attribute, plain prose is a valid document.</p>
+    <p class="lede">No settings at all. A description alone is a complete document in every place JAI lives: as the text of a marked image or a <code>data:image/jai,</code> URL, and as the canonical JSON inside a <code>.jai</code> file.</p>
     <div class="grid grid-2" style="margin-top:20px;align-items:center">
       <figure class="shot">
         <img src="../assets/images/minimal-bicycle.webp" width="1024" height="1024" loading="lazy" alt="A red bicycle leaning against a sunlit whitewashed wall, with leaf shadows on the wall and cobblestones underneath.">
@@ -52,10 +52,10 @@
       </figure>
       <div>
         <p>The renderer filled in everything the sentence left open: the cobblestones, the leaf shadows, the shutter. That is the trade JAI makes. You decide what matters and say it; the decoder invents the rest.</p>
-        <p>The same document, in the three forms a program can exchange:</p>
-<pre><code>A red bicycle leaning against a whitewashed wall, afternoon sun
-{"jai":1,"prompt":"A red bicycle leaning against a whitewashed wall, afternoon sun"}
-data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%20afternoon%20sun</code></pre>
+        <p>The same document in each of its three places: as the <code>alt</code> of a marked image, as a <code>data:</code> URL, and as the canonical JSON that a <code>.jai</code> file holds gzip-compressed.</p>
+<pre><code>&lt;img src="bicycle.webp" alt="A red bicycle leaning against a whitewashed wall, afternoon sun" data-jai&gt;
+data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%20afternoon%20sun
+{"jai":1,"prompt":"A red bicycle leaning against a whitewashed wall, afternoon sun"}</code></pre>
       </div>
     </div>
   </div>
@@ -69,15 +69,15 @@ data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%2
     <div class="gallery" style="margin-top:20px">
       <figure class="shot">
         <img src="../assets/images/style-watercolor.webp" width="1024" height="1024" loading="lazy" alt="Watercolor painting of a white lighthouse on a mossy rocky cliff, its beam cutting through dark storm clouds above crashing waves.">
-        <figcaption><code data-jai-highlight>jai:A lighthouse on a cliff in a storm;style=watercolor</code><details class="sent" data-image="style-watercolor"><summary>How this was rendered</summary></details></figcaption>
+        <figcaption><code data-jai-highlight>A lighthouse on a cliff in a storm;style=watercolor</code><details class="sent" data-image="style-watercolor"><summary>How this was rendered</summary></details></figcaption>
       </figure>
       <figure class="shot">
         <img src="../assets/images/style-anime.webp" width="1024" height="1024" loading="lazy" alt="Anime-style illustration of a lighthouse on a green rocky island at night, its beam shining over a dark stormy sea.">
-        <figcaption><code data-jai-highlight>jai:A lighthouse on a cliff in a storm;style=anime</code><details class="sent" data-image="style-anime"><summary>How this was rendered</summary></details></figcaption>
+        <figcaption><code data-jai-highlight>A lighthouse on a cliff in a storm;style=anime</code><details class="sent" data-image="style-anime"><summary>How this was rendered</summary></details></figcaption>
       </figure>
       <figure class="shot">
         <img src="../assets/images/style-film.webp" width="1024" height="1024" loading="lazy" alt="Grainy film photograph of a small lighthouse on a green clifftop with a wave breaking against the rocks under a teal overcast sky.">
-        <figcaption><code data-jai-highlight>jai:A lighthouse on a cliff in a storm;style=35mm film photo;style=grainy</code><details class="sent" data-image="style-film"><summary>How this was rendered</summary></details></figcaption>
+        <figcaption><code data-jai-highlight>A lighthouse on a cliff in a storm;style=35mm film photo;style=grainy</code><details class="sent" data-image="style-film"><summary>How this was rendered</summary></details></figcaption>
       </figure>
     </div>
   </div>
@@ -88,7 +88,7 @@ data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%2
     <div class="eyebrow">3 · Model preferences</div>
     <h2>One document, three renderers</h2>
     <p class="lede">The document says it prefers a FLUX model, then SDXL. Preferences are advisory: the reader's viewer chooses among the renderers its user has configured. Here the same document went to three of them.</p>
-    <div class="jai-line"><code id="pears" data-jai-highlight>jai:A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3</code><button type="button" data-copy="#pears">Copy</button></div>
+    <div class="jai-line"><code id="pears" data-jai-highlight>A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3</code><button type="button" data-copy="#pears">Copy</button></div>
     <div class="gallery">
       <figure class="shot">
         <img src="../assets/images/model-flux-schnell.webp" width="1152" height="896" loading="lazy" alt="Glossy yellow pears piled on an ornate pewter dish against a black background.">
@@ -115,21 +115,21 @@ data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%2
     <div class="gallery" style="margin-top:20px">
       <figure class="shot">
         <img src="../assets/images/harbour-original.webp" width="1216" height="832" loading="lazy" alt="Photograph of fishing boats moored in a misty harbour at dawn, the low sun glowing through the haze.">
-        <figcaption><strong>The original on the page</strong><code data-jai-highlight>jai:Photograph of fishing boats in a small harbour at dawn, mist on the water, warm low sun;aspect=3:2</code><details class="sent" data-image="harbour-original"><summary>How this was rendered</summary></details></figcaption>
+        <figcaption><strong>The original on the page</strong><code data-jai-highlight>Photograph of fishing boats in a small harbour at dawn, mist on the water, warm low sun;aspect=3:2</code><details class="sent" data-image="harbour-original"><summary>How this was rendered</summary></details></figcaption>
       </figure>
       <figure class="shot">
-        <img src="../assets/images/harbour-sketch.webp" width="1248" height="832" loading="lazy" alt="Pencil sketch on cream paper of the same harbour, the same boats in the same positions drawn in fine grey lines.">
-        <figcaption><code data-jai-highlight>jai:The same harbour scene as a pencil sketch on cream paper;mode=transform;strength=0.7</code><details class="sent" data-image="harbour-sketch"><summary>How this was rendered</summary></details></figcaption>
+        <img src="../assets/images/harbour-sketch.webp" width="1248" height="832" loading="lazy" alt="Pencil sketch with a pale wash on cream paper of the same misty harbour, the boats in the same places, reflected in still water.">
+        <figcaption><code data-jai-highlight>Fishing boats in a small harbour at dawn, mist on the water, as a pencil sketch on cream paper;mode=transform;strength=0.7</code><details class="sent" data-image="harbour-sketch"><summary>How this was rendered</summary></details></figcaption>
       </figure>
       <figure class="shot">
         <img src="../assets/images/harbour-woodblock.webp" width="1248" height="832" loading="lazy" alt="Japanese woodblock print of the same harbour, with flat blue water, coloured boats, distant hills and a pale sun.">
-        <figcaption><code data-jai-highlight>jai:The same harbour scene as a Japanese ukiyo-e woodblock print;mode=transform;strength=0.8</code><details class="sent" data-image="harbour-woodblock"><summary>How this was rendered</summary></details></figcaption>
+        <figcaption><code data-jai-highlight>Fishing boats in a small harbour at dawn, mist on the water, as a Japanese ukiyo-e woodblock print;mode=transform;strength=0.8</code><details class="sent" data-image="harbour-woodblock"><summary>How this was rendered</summary></details></figcaption>
       </figure>
     </div>
     <h3 style="margin-top:28px">The markup</h3>
 <pre><code>&lt;picture&gt;
   &lt;source type="image/jai"
-          srcset="data:image/jai,The%20same%20harbour%20scene%20as%20a%20pencil%20sketch%20on%20cream%20paper;mode=transform;strength=0.7"&gt;
+          srcset="data:image/jai,Fishing%20boats%20in%20a%20small%20harbour%20at%20dawn,%20mist%20on%20the%20water,%20as%20a%20pencil%20sketch%20on%20cream%20paper;mode=transform;strength=0.7"&gt;
   &lt;img src="harbour.webp" alt="Fishing boats moored in a misty harbour at dawn" crossorigin="anonymous"&gt;
 &lt;/picture&gt;</code></pre>
     <p class="muted">A viewer may only send pixels the page itself could read: same-origin images, or images served with CORS (hence <code>crossorigin</code>). It never uses the reader's cookies to fetch someone else's picture and send it to a provider.</p>
@@ -161,7 +161,7 @@ data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%2
         <figcaption><strong>Encoded, seed 2</strong><span class="meta">The same document with another seed: the layout holds.</span></figcaption>
       </figure>
     </div>
-    <div class="jai-line" style="margin-top:16px"><code id="earthrise" data-jai-highlight>jai:Photograph of a distant Earthrise over the Moon: one small, horizontally compressed blue-and-white Earth sits slightly right of centre, around one seventh of the frame wide, with its centre just below the middle of the square frame. Vast pure black, starless space fills nearly three quarters of the view. The lunar ground is dark gray-brown and lightly textured, occupying only the lowest quarter; its low curved horizon is very near the bottom edge, higher on the left and descending gently to the right. Even bright sunlight illuminates both Earth and lunar dust without glare.;aspect=1:1;avoid=text;avoid=stars;model=black-forest-labs/flux-schnell;style=Apollo space photography;style=natural realism</code><button type="button" data-copy="#earthrise">Copy</button></div>
+    <div class="jai-line" style="margin-top:16px"><code id="earthrise" data-jai-highlight>Photograph of a distant Earthrise over the Moon: one small, horizontally compressed blue-and-white Earth sits slightly right of centre, around one seventh of the frame wide, with its centre just below the middle of the square frame. Vast pure black, starless space fills nearly three quarters of the view. The lunar ground is dark gray-brown and lightly textured, occupying only the lowest quarter; its low curved horizon is very near the bottom edge, higher on the left and descending gently to the right. Even bright sunlight illuminates both Earth and lunar dust without glare.;aspect=1:1;avoid=text;avoid=stars;model=black-forest-labs/flux-schnell;style=Apollo space photography;style=natural realism</code><button type="button" data-copy="#earthrise">Copy</button></div>
     <p class="muted">Seven generations, 29 candidates, 58 renders, about five minutes and $0.24 on Replicate. A second independent run of the same encoder reached the same fitness, 0.73. <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise.jai">.jai file</a> · <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/earthrise-report.json">full report</a> with every candidate, measurement and cost.</p>
 
     <h3 style="margin-top:32px">Buzz Aldrin on the Moon: 280,403 bytes to 585</h3>
@@ -183,7 +183,7 @@ data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%2
         <figcaption><strong>Encoded, seed 2</strong><span class="meta">The same document with another seed.</span></figcaption>
       </figure>
     </div>
-    <div class="jai-line" style="margin-top:16px"><code id="aldrin" data-jai-highlight>jai:Photograph of a lone moon astronaut, near full height and slightly right of centre, standing at medium distance with helmet at the top and boots just below the middle. Bulky white Apollo suit, life-support backpack, chest controls, gray gloves, flag shoulder patch, and a large curved visor reflecting the sunlit terrain. The lunar horizon is a high shallow curve near the upper edge, with black empty sky above it. Gray dusty ground stretches from horizon to camera and visibly contains abundant overlapping bootprints, crisp sole patterns, pits and scattered rocks. Strong sunlight from upper right produces a massive dark shadow attached to the boots and stretching far toward the lower-left and bottom edge. A small gold foil-covered object is cropped along the lower-right edge.;aspect=1:1;avoid=stars;avoid=additional astronauts;model=black-forest-labs/flux-schnell;style=35mm archival space photograph;style=hard directional sunlight</code><button type="button" data-copy="#aldrin">Copy</button></div>
+    <div class="jai-line" style="margin-top:16px"><code id="aldrin" data-jai-highlight>Photograph of a lone moon astronaut, near full height and slightly right of centre, standing at medium distance with helmet at the top and boots just below the middle. Bulky white Apollo suit, life-support backpack, chest controls, gray gloves, flag shoulder patch, and a large curved visor reflecting the sunlit terrain. The lunar horizon is a high shallow curve near the upper edge, with black empty sky above it. Gray dusty ground stretches from horizon to camera and visibly contains abundant overlapping bootprints, crisp sole patterns, pits and scattered rocks. Strong sunlight from upper right produces a massive dark shadow attached to the boots and stretching far toward the lower-left and bottom edge. A small gold foil-covered object is cropped along the lower-right edge.;aspect=1:1;avoid=stars;avoid=additional astronauts;model=black-forest-labs/flux-schnell;style=35mm archival space photograph;style=hard directional sunlight</code><button type="button" data-copy="#aldrin">Copy</button></div>
     <p class="muted">Six generations, 30 candidates, 60 renders, about seven minutes and $0.26. <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/aldrin.jai">.jai file</a> · <a href="https://github.com/gnistai/jai/blob/master/examples/encoding/aldrin-report.json">full report</a>.</p>
   </div>
 </section>
@@ -240,15 +240,15 @@ const img = id => `../assets/images/${id}.webp`;
 const manifest = await fetch('../assets/images/manifest.json').then(r => r.json()).catch(() => ({ images: {} }));
 const preview = id => manifest.images[id]?.preview || '';
 const SC = {
-  generate: { original: 'style-film', render: 'style-watercolor', ratio: '1 / 1', jai: 'jai:A lighthouse on a cliff in a storm;style=watercolor',
+  generate: { original: 'style-film', render: 'style-watercolor', ratio: '1 / 1', doc: 'A lighthouse on a cliff in a storm;style=watercolor',
     text: 'The default. The publisher’s photo stays visible while the viewer renders from the description alone, then the render replaces it. The original is kept and can be restored at any time.' },
-  transform: { original: 'harbour-original', render: 'harbour-sketch', ratio: '3 / 2', jai: 'jai:The same harbour scene as a pencil sketch on cream paper;mode=transform;strength=0.7',
+  transform: { original: 'harbour-original', render: 'harbour-sketch', ratio: '3 / 2', doc: 'Fishing boats in a small harbour at dawn, mist on the water, as a pencil sketch on cream paper;mode=transform;strength=0.7',
     text: 'The original is an input to the render. The viewer sends only pixels the page itself is allowed to read, after the reader agreed to render.' },
-  keep: { original: 'harbour-original', render: 'harbour-woodblock', ratio: '3 / 2', jai: 'jai:Fishing boats in a small harbour at dawn, mist on the water;mode=keep',
-    text: 'The original is the intended image and the description is information about it. Nothing renders automatically; a reader can still ask for a render.' },
-  pure: { original: null, render: 'hero-castle', ratio: '1 / 1', jai: 'jai:A magical castle;style=anime',
-    text: 'JAI in src with no fallback pixels. A tiny preview (here 8×8 pixels, a few hundred bytes) is shown blurred while rendering; without a viewer, readers see the alt text.' },
-  fail: { original: 'style-film', render: null, ratio: '1 / 1', jai: 'jai:A lighthouse on a cliff in a storm;style=watercolor',
+  keep: { original: 'harbour-original', render: 'harbour-keep', ratio: '3 / 2', doc: 'Fishing boats in a small harbour at dawn, mist on the water;aspect=3:2;mode=keep',
+    text: 'The original is the intended image and the description is information about it. Nothing renders automatically; a reader can still ask for a render, which is drawn from the description alone.' },
+  pure: { original: null, render: 'hero-castle', ratio: '1 / 1', doc: 'A magical castle;style=anime',
+    text: 'JAI in src with no fallback pixels. A tiny preview (here 8×8 pixels, about 90 bytes) is shown blurred while rendering; without a viewer, readers see the alt text.' },
+  fail: { original: 'style-film', render: null, ratio: '1 / 1', doc: 'A lighthouse on a cliff in a storm;style=watercolor',
     text: 'The provider refuses, times out or the reader cancels. The viewer puts the original back. It never retries with a reworded description.' },
 };
 const $ = id => document.getElementById(id);
@@ -269,7 +269,7 @@ function setup(name) {
   $('btn-toggle').disabled = true; $('btn-toggle').textContent = 'Show original';
   $('btn-render').disabled = false;
   $('btn-render').textContent = name === 'keep' ? 'Render on request' : 'Render';
-  highlightInto($('sc-jai'), cur.jai);
+  highlightInto($('sc-jai'), cur.doc);
   $('sc-text').textContent = cur.text;
 }
 $('btn-render').addEventListener('click', () => {

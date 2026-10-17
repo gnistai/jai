@@ -1,16 +1,17 @@
 {
   "note": "Pre-rendered examples for the website. Each entry is rendered once by scripts/render-examples.mjs and the result is committed; viewing the site needs no API key. 'jai' is the document as shown on the site; 'renderer' is the configured model that rendered it.",
   "entries": [
-    { "id": "hero-castle", "group": "minimal", "jai": "jai:A magical castle;style=anime", "renderer": "black-forest-labs/flux-schnell", "seed": 7 },
+    { "id": "hero-castle", "group": "minimal", "jai": "A magical castle;style=anime", "renderer": "black-forest-labs/flux-schnell", "seed": 7 },
     { "id": "minimal-bicycle", "group": "minimal", "jai": "A red bicycle leaning against a whitewashed wall, afternoon sun", "renderer": "black-forest-labs/flux-schnell", "seed": 11 },
-    { "id": "style-watercolor", "group": "styles", "jai": "jai:A lighthouse on a cliff in a storm;style=watercolor", "renderer": "black-forest-labs/flux-schnell", "seed": 21 },
-    { "id": "style-anime", "group": "styles", "jai": "jai:A lighthouse on a cliff in a storm;style=anime", "renderer": "black-forest-labs/flux-schnell", "seed": 21 },
-    { "id": "style-film", "group": "styles", "jai": "jai:A lighthouse on a cliff in a storm;style=35mm film photo;style=grainy", "renderer": "black-forest-labs/flux-schnell", "seed": 21 },
-    { "id": "model-flux-schnell", "group": "models", "jai": "jai:A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3", "renderer": "black-forest-labs/flux-schnell", "seed": 31 },
-    { "id": "model-flux-dev", "group": "models", "jai": "jai:A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3", "renderer": "black-forest-labs/flux-dev", "seed": 31 },
-    { "id": "model-sdxl", "group": "models", "jai": "jai:A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3", "renderer": "stability-ai/sdxl", "seed": 31 },
-    { "id": "harbour-original", "group": "transform", "jai": "jai:Photograph of fishing boats in a small harbour at dawn, mist on the water, warm low sun;aspect=3:2", "renderer": "black-forest-labs/flux-schnell", "seed": 41 },
-    { "id": "harbour-sketch", "group": "transform", "jai": "jai:The same harbour scene as a pencil sketch on cream paper;mode=transform;strength=0.7", "renderer": "black-forest-labs/flux-kontext-pro", "source": "harbour-original", "seed": 42 },
-    { "id": "harbour-woodblock", "group": "transform", "jai": "jai:The same harbour scene as a Japanese ukiyo-e woodblock print;mode=transform;strength=0.8", "renderer": "black-forest-labs/flux-kontext-pro", "source": "harbour-original", "seed": 43 }
+    { "id": "style-watercolor", "group": "styles", "jai": "A lighthouse on a cliff in a storm;style=watercolor", "renderer": "black-forest-labs/flux-schnell", "seed": 21 },
+    { "id": "style-anime", "group": "styles", "jai": "A lighthouse on a cliff in a storm;style=anime", "renderer": "black-forest-labs/flux-schnell", "seed": 21 },
+    { "id": "style-film", "group": "styles", "jai": "A lighthouse on a cliff in a storm;style=35mm film photo;style=grainy", "renderer": "black-forest-labs/flux-schnell", "seed": 21 },
+    { "id": "model-flux-schnell", "group": "models", "jai": "A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3", "renderer": "black-forest-labs/flux-schnell", "seed": 31 },
+    { "id": "model-flux-dev", "group": "models", "jai": "A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3", "renderer": "black-forest-labs/flux-dev", "seed": 31 },
+    { "id": "model-sdxl", "group": "models", "jai": "A still life of pears on pewter, Dutch golden age;model=flux;model=sdxl;aspect=4:3", "renderer": "stability-ai/sdxl", "seed": 31 },
+    { "id": "harbour-original", "group": "transform", "jai": "Photograph of fishing boats in a small harbour at dawn, mist on the water, warm low sun;aspect=3:2", "renderer": "black-forest-labs/flux-schnell", "seed": 41 },
+    { "id": "harbour-sketch", "group": "transform", "jai": "Fishing boats in a small harbour at dawn, mist on the water, as a pencil sketch on cream paper;mode=transform;strength=0.7", "renderer": "black-forest-labs/flux-kontext-pro", "source": "harbour-original", "seed": 42 },
+    { "id": "harbour-woodblock", "group": "transform", "jai": "Fishing boats in a small harbour at dawn, mist on the water, as a Japanese ukiyo-e woodblock print;mode=transform;strength=0.8", "renderer": "black-forest-labs/flux-kontext-pro", "source": "harbour-original", "seed": 43 },
+    { "id": "harbour-keep", "group": "modes", "jai": "Fishing boats in a small harbour at dawn, mist on the water;aspect=3:2;mode=keep", "renderer": "black-forest-labs/flux-schnell", "seed": 44 }
   ]
 }

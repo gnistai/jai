@@ -1,6 +1,6 @@
 ---
 name: jai
-description: Write, convert, shorten, validate and embed JAI (Just AI Images) documents — images represented as a natural-language description plus optional parameters such as style, aspect, avoid and model, which any AI image generator can render. Use when asked to write a JAI or ".jai" image, describe or convert an existing image or prompt into JAI, compress a long image description, translate Midjourney, Stable Diffusion or A1111 prompts into JAI, embed JAI in HTML or Markdown (picture/source type="image/jai", data-jai, data:image/jai), or check and normalise JAI text.
+description: Write, describe, shorten, validate and embed JAI (Just AI Images) documents — images represented as a natural-language description plus optional parameters such as style, aspect, avoid and model, which any AI image generator can render. Use when asked to write a JAI image or a ".jai" file, describe an existing image as JAI, compress a long image description, put JAI on a web page or in Markdown (data-jai, picture/source type="image/jai", data:image/jai URLs, .jai files), or check and normalise JAI text.
 license: CC0-1.0
 metadata:
   edition: "1.0-draft"
@@ -13,7 +13,9 @@ metadata:
 A JAI document is an image stored as what is needed to regenerate it: a
 description, plus a few optional parameters. An AI image model is the
 decoder, so different renderers produce different pixels with the same
-intent. This skill teaches the JAI edition 1.0-draft syntax and how to write
+intent. Because the image is its description, it is text all the way down: a
+screen reader speaks it, and you read and write images as text, with no vision
+model. This skill teaches the JAI edition 1.0-draft syntax and how to write
 documents that decode into the picture the user means.
 
 Web copy of this file: <https://jai.gnist.ai/SKILL.md>. Full specification:
@@ -41,19 +43,31 @@ Web copy of this file: <https://jai.gnist.ai/SKILL.md>. Full specification:
   black lines") over naming a living artist or a studio; many renderers refuse
   or rewrite such names.
 
+## Where JAI lives
+
+JAI lives in HTML and in files. Each place says by itself that it holds JAI,
+and holds exactly one form:
+
+| Place | Holds |
+|---|---|
+| a `data-jai` attribute on an `<img>` | the text form |
+| the body of a `data:image/jai,` URL, in `src` or in the `srcset` of `<source type="image/jai">` | the text form, percent-encoded |
+| a `.jai` file, in `src` or `srcset` or on its own | the document's canonical JSON, gzip-compressed |
+
+Write the text form with nothing in front of it. A `.jai` file always holds
+gzip-compressed JSON, never plain JSON or text; `data-jai` and `data:` URLs
+always hold the text form, never JSON.
+
 ## The syntax on one screen
 
 ```
-jai:<description>;key=value;key=value
+<description>;key=value;key=value
 ```
 
-- The description comes first. `jai:` in front marks the text as JAI; use it
-  everywhere except inside a `data-jai` attribute or a `data:image/jai` URL,
-  where it is optional.
-- Parameters follow, each as `;key=value`. Write keys in lowercase; the parser
-  matches them in any case.
+- The description comes first. Parameters follow, each as `;key=value`.
+  Write keys in lowercase; the parser matches them in any case.
 - Ordinary semicolons inside the description are fine:
-  `jai:A wizard in a doorway; behind him, a dragon sleeps;style=ink`.
+  `A wizard in a doorway; behind him, a dragon sleeps;style=ink`.
 - After every unescaped `;`, the text up to the next `=` is checked. If,
   ignoring the spaces around it and letter case, it is a single word of
   letters, digits, `_`, `-` and `.`, optionally followed by `/` and another
@@ -63,12 +77,12 @@ jai:<description>;key=value;key=value
 - Quotation marks protect nothing: `"x=1; y=2"` still splits at the `;`.
 - When text you must keep has `;` followed by such a word and `=` (equations,
   code, URLs), write that semicolon as `\;`:
-  `jai:prompt=x=1\; y=2 on a whiteboard`.
+  `prompt=x=1\; y=2 on a whiteboard`.
 - Repeat a key for several values: `;style=watercolor;style=loose ink`.
 - Escapes, only when needed: `\;` literal semicolon, `\=` literal equals,
   `\\` literal backslash. Other backslashes are literal (`C:\Users` is fine).
 - If the description itself starts with `word=` (for example `E=mc2 on a
-  chalkboard`), start with `prompt=`: `jai:prompt=E=mc2 on a chalkboard`.
+  chalkboard`), start with `prompt=`: `prompt=E=mc2 on a chalkboard`.
 
 | Key | Values | Use for |
 |---|---|---|
@@ -80,9 +94,8 @@ jai:<description>;key=value;key=value
 | `mode` | `generate` (default), `transform`, `keep` | `transform`: restyle an existing image. `keep`: the original photo is the image; the description is information. |
 | `strength` | `0`–`1` | With `mode=transform`: how far to depart from the original (0.3 subtle, 0.7 strong). |
 | `seed` | digits | Only when the user gives one. |
-| `source` | URL or raster `data:` URL | With `mode=transform`, when the image to restyle is not the page's own image. On a page, the `<img>` must be same-origin or served with CORS and carry `crossorigin="anonymous"`, or the viewer renders from the description alone. Prefer a URL; embed a `data:` image only in files and HTML you control, never in `alt` or chat text. |
+| `source` | URL or raster `data:` URL | With `mode=transform`, when the image to restyle is not the page's own image. On a page, the `<img>` must be same-origin or served with CORS and carry `crossorigin="anonymous"`, or the viewer renders from the description alone. Prefer a URL; embed a `data:` image only in files and HTML you control, never in `alt`. |
 | `preview` | tiny raster `data:` URL | Placeholder shown while rendering. Rarely written by hand. |
-| `animate` | `true` / `false` | Request a looping animated image where supported. |
 
 With `mode=transform`, describe the finished picture, including what stays the
 same, not the change ("Same …", "make it …"). If the original cannot be read,
@@ -100,7 +113,7 @@ them. A refinement describes the picture, like the core; it never instructs
 ("Ensure…", "Make…"):
 
 ```
-jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;model=flux;model=sdxl
+A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;model=flux;model=sdxl
 ```
 
 Targets never choose the model; `model=` does. Other keys take no target.
@@ -115,12 +128,14 @@ as `comfy.sampler=euler`.
 
 ## Output contract
 
-When the user asks for a JAI document, the first character of your answer is
-the document (or the code block containing it), unless they asked for
-discussion too.
+When the user asks for a JAI image, lead with the deliverable they need: the
+HTML for a page, a `.jai` file, or the text form for a `data-jai` attribute.
+If they did not say, give the text form in a code block, then the `<img>` that
+carries it.
 
-- Write `;key=value`, never `key: value`, never `--ar 16:9`.
-- Never put quotes around values. Never wrap the document in quotes.
+- Write `;key=value`, never `key: value`.
+- Never put quotes around values. Never wrap the document in quotes or
+  brackets.
 - Use ASCII `;` and `=`, not full-width `；＝` or Arabic `؛`, even for
   CJK or Arabic descriptions.
 - One `style=` or `avoid=` per item; a semicolon inside a value never starts a
@@ -128,19 +143,19 @@ discussion too.
 - No raw line breaks in anything that goes into a URL (`src`, `srcset`,
   Markdown links); use repeated `prompt=` values or `%0A` there.
 - Do not add `model`, `seed` or vendor keys the user did not ask for.
-- Keep a document on one line. If you break lines for readability (chat and
-  files, never URLs), end each line before a parameter with `;`. A line break
+- Keep a document on one line. If you break a `data-jai` value across lines
+  for readability, end each line before a parameter with `;`. A line break
   alone does not start a parameter.
-- Prefer `jai:` plus a description with zero to three parameters. A good JAI
-  document is usually one to four sentences.
+- Prefer a description with zero to three parameters. A good JAI document is
+  usually one to four sentences.
 
 ## Writing JAI from a request
 
-The description is also the image's text for vision-impaired readers and for
-text-only agents: a viewer uses it as the accessible name when there is no
-human-written `alt`. Write it so it reads well aloud, as plain sentences.
-Model-specific tweaks belong in `prompt/<family>=` refinements, which screen
-readers do not hear.
+The description is the image's text for vision-impaired readers and for
+agents. In the default attribute form it is the `alt` itself, and a viewer
+uses it as the accessible name wherever there is no human-written `alt`. Write
+it so it reads well aloud, as plain sentences. Model-specific tweaks belong in
+`prompt/<family>=` refinements in `data-jai`, which screen readers do not hear.
 
 1. Decide the medium first (photograph, oil painting, 3D render, pixel art,
    vector icon). It goes at the start of the description and, as a short
@@ -168,7 +183,14 @@ readers do not hear.
 Example. Request: "a cosy hero image for a coffee blog, no text on it".
 
 ```
-jai:Photograph of a ceramic cup of cappuccino with latte art on a worn oak table, close-up from slightly above; a window on the left lets in soft morning light, steam rising, warm brown and cream palette, shallow depth of field;style=food photography;aspect=16:9;avoid=text
+Photograph of a ceramic cup of cappuccino with latte art on a worn oak table, close-up from slightly above; a window on the left lets in soft morning light, steam rising, warm brown and cream palette, shallow depth of field;style=food photography;aspect=16:9;avoid=text
+```
+
+On the blog's page, with the description as the `alt`:
+
+```html
+<img src="cappuccino.jpg" alt="Photograph of a ceramic cup of cappuccino with latte art on a worn oak table, close-up from slightly above; a window on the left lets in soft morning light, steam rising, warm brown and cream palette, shallow depth of field"
+     data-jai="style=food photography;aspect=16:9;avoid=text" width="1600" height="900">
 ```
 
 ## Describing an existing image (image to JAI)
@@ -187,10 +209,13 @@ recognisably similar picture:
    `16:9`; 1080×1350 → `4:5`). If you cannot see the pixel dimensions,
    estimate the shape or leave `aspect` out.
 7. If the description will sit next to the real image (an About page, an
-   archive, a catalogue), add `;mode=keep` and put it in `data-jai` on the
-   `<img>`, not in a `<source type="image/jai">`. The photo stays the image and
-   the JAI is a record of it. Leave `mode` out only when the user wants viewers
-   to regenerate the picture.
+   archive, a catalogue), mark the `<img>` with `mode=keep` in `data-jai`,
+   not with a `<source type="image/jai">`. The photo stays the image and the
+   JAI is a record of it. When the image has no good `alt` yet, the
+   description becomes the `alt` and `data-jai="mode=keep"` marks it; when the
+   page's own `alt` should stay, start `data-jai` with the description:
+   `data-jai="Photograph of …;mode=keep"`. Leave `mode` out only when the user
+   wants viewers to regenerate the picture.
 
 Describe what is visible, not what you infer. For a diagram or screenshot,
 describe the layout and transcribe the essential labels; accept that layouts
@@ -198,8 +223,9 @@ with many exact strings decode poorly and say so.
 
 ## Shortening a description
 
-When a document must fit a budget (an `alt`-like context, a tweet, a URL),
-cut in this order, keeping everything above the cut:
+When a document must fit a budget (an `alt` that screen readers speak in
+full, a short `data:` URL), cut in this order, keeping everything above the
+cut:
 
 1. Drop adjectives that repeat the medium or mood.
 2. Drop background details that do not change the composition.
@@ -208,93 +234,125 @@ cut in this order, keeping everything above the cut:
 5. Never drop the medium, the main subject, counts, or the composition
    sentence.
 
-Rough budgets: about 300 characters for chat and Markdown, up to about 2,000
-characters for a full description; budgets count the whole document, `jai:` and
-parameters included. Beyond that, write a `.jai` file (gzip-compressed JSON)
-instead of inline text. To make one with Python's standard library:
+A full description rarely needs more than about 2,000 characters, parameters
+included. A long document is smaller and tidier as a `.jai` file than as a
+`data:` URL.
+
+## Making a .jai file
+
+A `.jai` file is exactly one gzip member containing the document's canonical
+JSON. Nothing else is a `.jai` file: not plain JSON, not the text form.
+
+1. Write the canonical JSON:
+   - `{"jai":1`, then `"prompt"`, then any `"prompt/<target>"` keys, then every
+     other key; each group in code point (plain ASCII) order.
+   - A key with one value takes a string; a key with several takes an array of
+     strings, in order. Every value is a string: `"seed":"1234"`,
+     `"strength":"0.6"`.
+   - No spaces or line breaks between tokens. UTF-8, with every character
+     written as itself except these: `"` as `\"`, `\` as `\\`, U+0008,
+     U+0009, U+000A, U+000C and U+000D as `\b`, `\t`, `\n`, `\f` and `\r`, and
+     the rest of U+0000 to U+001F as `\u` plus four lowercase hex digits
+     (`\u001f`). U+007F and everything above it, non-ASCII included, are
+     written literally.
+2. Compress it with `gzip -n` (no file name, no timestamp):
 
 ```sh
-python3 -c "import gzip,json; d={'jai':1,'prompt':'A magical castle at dusk','aspect':'16:9','style':'watercolor'}; open('castle.jai','wb').write(gzip.compress(json.dumps(d,ensure_ascii=False,separators=(',',':')).encode(),mtime=0))"
+printf '%s' '{"jai":1,"prompt":"A magical castle at dusk","aspect":"16:9","style":"watercolor"}' | gzip -n > castle.jai
+gzip -dc castle.jai   # prints the JSON back
 ```
 
-Key order: `jai`, `prompt`, then the other keys alphabetically. A key with one
-value takes a string; a key with several takes an array.
+When the text contains `'`, which the shell quoting above cannot hold, use
+Python's standard library. Build the dictionary in canonical key order (never
+`sort_keys`, which moves `jai` and `prompt`):
 
-## Converting other prompt dialects
+```sh
+python3 - <<'EOF'
+import gzip, json
+doc = {"jai": 1, "prompt": "A magical castle at dusk", "aspect": "16:9", "style": "watercolor"}
+data = json.dumps(doc, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+open("castle.jai", "wb").write(gzip.compress(data, mtime=0))
+EOF
+```
 
-| Seen | Write |
-|---|---|
-| `--ar 16:9` | `;aspect=16:9` |
-| `--no text, people` | `;avoid=text;avoid=people` |
-| `--seed 1234` | `;seed=1234` |
-| `--niji` | `;style=anime` |
-| `--style raw`, `--v 6`, `--q 2`, `--chaos 20`, `--stylize 250` | drop |
-| `Negative prompt: blurry, extra fingers` | `;avoid=blurry;avoid=extra fingers` |
-| `(castle:1.3)`, `[castle]` weights | plain words: `castle` |
-| `<lora:name:0.8>` | drop. If the user insists on keeping it as a note, `;comfy.lora=name`; tell them renderers will not load it |
-| `a castle::2 fog::0.5` | describe the weighted part more prominently; drop the numbers |
-| `--niji 6` | `;style=anime` |
-| `--sref URL`, `--cref URL`, `--iw`, leading image URLs, `--tile` | drop, and tell the user; an image to restyle is `;mode=transform;source=URL` |
-| `BREAK`, `{a\|b}`, `[a:b:0.5]`, `((word))` | drop the syntax; pick one option and say which |
-| `Size: 832x1216` | `;aspect=13:19` |
-| `Model: name` / `ckpt_name` | `;model=name` (the user supplied it), without a file extension |
-| `Denoising strength: 0.5` | `;mode=transform;strength=0.5` only if there was a source image; otherwise drop |
-| `Negative prompt: (worst quality, low quality:1.4)` | drop quality tags; keep concrete items |
-| `masterpiece, best quality, 8k, trending on artstation` | drop; describe the actual look instead |
-| `Steps: 30, Sampler: Euler a, CFG scale: 7` | drop (renderer settings, not image intent) |
+Serve the file as it is, ideally as `Content-Type: image/jai`. Never declare
+its gzip as a `Content-Encoding`; a server's own on-the-fly compression on top
+of it is harmless.
 
 ## Embedding JAI
 
-There are three forms. Pick by what the page has:
+There are three carriers. Pick by what the page has:
 
-| Destination | Use |
+| The page has | Use |
 |---|---|
-| A page with a real image (HTML you control, most CMSs) | the attribute form (1) |
-| A host that strips `data-*` (GitHub READMEs and issues) | the picture form (2) with a committed `.jai` file, or the src form (3) with a relative `.jai` image |
-| An image with no pixels at all, or Markdown | the src form (3): `<img src="castle.jai" alt="…">` or `![…](castle.jai)` |
-| Chat, docs, email | the text form with `jai:` |
+| A real image (HTML you control, most CMSs) | the attribute carrier |
+| A host that strips `data-*` (GitHub READMEs and issues) | the picture carrier with a committed `.jai` file, or the src carrier with a relative `.jai` image |
+| No pixels at all, or Markdown | the src carrier: `<img src="castle.jai" alt="…">` or `![…](castle.jai)` |
 
-1. **Attribute form, the default when there is an image.** Write a real
-   description in `alt`; it is what screen readers speak and the first line
-   the model receives. Put settings, extra detail and per-model refinements in
-   `data-jai`, never repeating the `alt`:
-   ```html
-   <img src="castle.png" alt="A magical castle at dusk, lit windows, mist in the valley"
-        data-jai="style=watercolor;aspect=16:9" width="1200" height="675">
-   ```
-   An empty `data-jai` is enough to mark the image: `<img src="castle.png" alt="…" data-jai>`.
-2. **Picture form, the path native browsers take.** Browsers without JAI show
-   the PNG. The description lives in the `.jai` file (or an inline `data:`
-   URL); the `alt` is the page's own text and can be shorter:
-   ```html
-   <picture>
-     <source type="image/jai" srcset="castle.jai">
-     <img src="castle.png" alt="A castle at dusk" width="1200" height="675">
-   </picture>
-   ```
-3. **Src form, for images with no pixels.** The image itself is JAI, as a file
-   or inline. Everywhere without a viewer it is an unavailable image, so the
-   `alt` must be real prose (it need not repeat the description) and the size
-   must be set:
-   ```html
-   <img src="castle.jai" alt="A castle at dusk" width="800" height="600">
-   <img src="data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%20afternoon%20sun"
-        alt="A leaning red bicycle, afternoon sun" width="1024" height="1024">
-   ```
-   In Markdown: `![A castle at dusk](castle.jai)`. Save the file with the
-   reference library's `encode()` (gzip JSON) and serve it as `image/jai` if
-   you can.
+- **Attribute carrier, the default when there is an image.** `data-jai`
+  marks the image and holds the text form. **The `alt` is the description
+  unless `data-jai` gives one.** The convenient default writes the
+  description once, in `alt`, where screen readers speak it as written and
+  the model draws from it; `data-jai` holds the settings and per-model
+  refinements:
+  ```html
+  <img src="castle.png" alt="A magical castle at dusk, seen from below"
+       data-jai="style=anime;prompt/flux=Lit windows glow warm" width="1200" height="675">
+  ```
+  For that, `data-jai` starts with a setting (`style=`, `aspect=`,
+  `prompt/<family>=` …) or is empty: `<img src="castle.png" alt="…" data-jai>`.
+  A `prompt/<family>=` refinement is not a description.
 
-On a page, the image's own shape wins: `width` and `height`, or else the
-original's ratio. Make `aspect` agree with them; a differing `aspect` is ignored there.
+  When the page's `alt` should stay shorter or different, start `data-jai`
+  with the description. The `alt` is then page text only and plays no part
+  in the document:
+  ```html
+  <img src="castle.png" alt="A magical castle"
+       data-jai="A magical castle at dusk, seen from below. Mist fills the valley;style=anime">
+  ```
+  Prose after a setting continues that setting:
+  `data-jai="style=anime;Mist fills the valley"` makes the style
+  `anime;Mist fills the valley`, and the `alt` stays the description. Put
+  extra description in the `alt`, or the whole description at the start of
+  `data-jai`.
 
-Never put JAI syntax in `alt`. It is the text screen readers speak; viewers
-ignore an `alt` that begins with `jai:`, and readers would hear the syntax.
+  The `alt` is never parsed. Write plain prose there, never settings:
+  `alt="A castle;style=anime"` is a description that literally reads
+  `A castle;style=anime`, and screen readers speak the syntax.
+- **Picture carrier, the path native browsers take.** Browsers without JAI
+  show the PNG. The description lives in the `.jai` file (or an inline
+  `data:` URL); the `alt` is the page's own text and can be shorter:
+  ```html
+  <picture>
+    <source type="image/jai" srcset="castle.jai">
+    <img src="castle.png" alt="A castle at dusk" width="1200" height="675">
+  </picture>
+  ```
+- **Src carrier, for images with no pixels.** The image itself is JAI, as a
+  file or inline. Everywhere without a viewer it is an unavailable image, so
+  the `alt` must be real prose (it need not repeat the description). Set
+  `width` and `height` wherever the markup allows:
+  ```html
+  <img src="castle.jai" alt="A castle at dusk" width="800" height="600">
+  <img src="data:image/jai,A%20red%20bicycle%20leaning%20against%20a%20whitewashed%20wall,%20afternoon%20sun"
+       alt="A leaning red bicycle, afternoon sun" width="1024" height="1024">
+  ```
+  In Markdown, `![A castle at dusk](castle.jai)` renders to an `<img>` with
+  this `src` and `alt` but no size, so the document's `aspect` sets the
+  shape: give it one. Make the file as in "Making a .jai file", or with the
+  reference library's `encode()`.
 
-In any URL (`src`, `srcset`, Markdown links) percent-encode spaces as `%20`,
-tabs and line breaks as `%09` and `%0A`, `%` as `%25`, `#` as `%23`, `"` as
-`%22`, `'` as `%27`, a final `,` as `%2C` and a leading `/` as `%2F`. Leave `;`
-and `=` literal. A `jai:` string is never a URL: do not write `src="jai:…"`.
+On a page, the image's own shape wins: `width` and `height` or a CSS
+`aspect-ratio`, else the original's ratio. Make `aspect` agree with them; a
+differing `aspect` is ignored there.
+
+The canonical URL form is `data:image/jai,` followed by the canonical text,
+with these characters percent-encoded: space as `%20`, tab and line break as
+`%09` and `%0A` (and any other control character likewise), `%` as `%25`, `#`
+as `%23`, `"` as `%22`, `&` as `%26`, `'` as `%27`, `<` as `%3C`, `>` as `%3E`,
+a final `,` as `%2C` and a leading `/` as `%2F`. Leave `;`, `=` and non-ASCII
+characters literal. Write `data:image/jai,` exactly, with no `;base64` and no
+`;charset=`.
 
 Inside an HTML attribute, the attribute's own quoting applies on top of JAI. A
 `"` inside a double-quoted attribute ends it and silently cuts the document
@@ -304,36 +362,44 @@ you single-quote the attribute, the same applies to `'` (`&#39;` or `%27`).
 Examples: `data-jai="A sign reading &quot;OPEN&quot;;style=photo"`,
 `srcset="data:image/jai,A%20sign%20reading%20%22OPEN%22;style=photo"`.
 
-Keep the human `alt` text human. Never replace a meaningful `alt` with JAI.
+Keep a meaningful human `alt` as it is. When the description should differ
+from it, put the description at the start of `data-jai`.
 
 ## Validate and normalise
 
 Before you hand a document back, check:
 
-- [ ] It starts with `jai:` (unless it goes inside `data-jai` or a `data:` URL).
-- [ ] The description comes first, or is introduced with `prompt=`.
+- [ ] The description comes first, or is introduced with `prompt=`. In
+      `data-jai`, it is there only when it replaces the `alt`.
 - [ ] Every parameter is `;key=value` with a known key or a dotted vendor key;
       only `prompt`, `style` and `avoid` take a `/target`.
 - [ ] No text after a parameter was meant as more description (text after
       `;style=anime;` belongs to `style` until the next `;key=`).
 - [ ] `aspect` is `W:H` or a keyword; `strength` only with `mode=transform`.
 - [ ] `avoid` values are positive items, one per value.
-- [ ] No quotes around values, no Markdown fences inside attributes, no
+- [ ] No quotes around values, nothing wrapped around the whole document, no
       full-width delimiters.
-- [ ] Inside URLs, spaces, `%`, `#`, quotes and line breaks are percent-encoded.
+- [ ] The `alt` is plain prose, with no settings in it.
+- [ ] Inside URLs, spaces, `%`, `#`, quotes and line breaks are
+      percent-encoded, and `data:image/jai,` carries no parameters.
 - [ ] Inside an HTML attribute there is no raw `"`: use `&quot;` in `data-jai`
       and `alt`, `%22` in URLs.
+- [ ] A `.jai` file is gzip-compressed canonical JSON: `gzip -dc` prints one
+      JSON object that starts with `{"jai":1`.
 
-The canonical spelling puts `jai:`, then the description, then any
-`prompt/<target>` keys, then the other keys in code point order, with no spaces around `;` and `=`. When a JavaScript
-runtime is available, the reference library normalises and validates exactly
+The canonical text puts the description first (as `prompt=…` when it starts
+with `word=`), then any `prompt/<target>` keys, then the other keys in code
+point order, with no spaces around `;` and `=`. When a JavaScript runtime is
+available, the reference library normalises, validates and encodes exactly
 (browsers and Deno import the URL directly; in Node, download `jai.js` and
 import the local file):
 
 ```js
-import { parse, serialize, validate } from 'https://jai.gnist.ai/assets/js/jai.js';
+import { parse, serialize, validate, toDataURL, encode } from 'https://jai.gnist.ai/assets/js/jai.js';
 const { document, diagnostics, info } = parse(text);
 console.log(serialize(document), diagnostics, validate(document, info));
+console.log(toDataURL(document));     // the canonical data:image/jai, URL
+const bytes = await encode(document); // the bytes of a .jai file
 ```
 
 ## Explaining ambiguity
@@ -345,7 +411,7 @@ Tell the user, briefly, when:
 - they ask for a specific model, seed or exact reproduction: JAI renders are
   never pixel-identical across renderers or over time;
 - a parameter will be ignored (for example `strength` without
-  `mode=transform`, or `animate` on a still-image renderer);
+  `mode=transform`);
 - their text contains something that parses differently from what they
   likely meant (a description starting with `word=`, a `;` followed by
   `word=` inside the description, prose after a parameter, a full-width
@@ -354,13 +420,18 @@ Tell the user, briefly, when:
 ## Quick reference
 
 ```
-jai:A lighthouse on a cliff in a storm, waves breaking below;style=oil painting;aspect=3:2
-jai:prompt=x=1 written in chalk on a blackboard;style=photo
-jai:A narrow cobbled street at night, shopfronts lit by pink and blue neon signs, wet reflections;mode=transform;strength=0.6
-jai:App icon of a paper plane, centred, flat colours;style=flat vector;aspect=1:1;avoid=text
+A lighthouse on a cliff in a storm, waves breaking below;style=oil painting;aspect=3:2
+prompt=x=1 written in chalk on a blackboard;style=photo
+A narrow cobbled street at night, shopfronts lit by pink and blue neon signs, wet reflections;mode=transform;strength=0.6
+App icon of a paper plane, centred, flat colours;style=flat vector;aspect=1:1;avoid=text
 ```
 
-JSON form (the content of a `.jai` file, gzip-compressed):
+```html
+<img src="lighthouse.png" alt="A lighthouse on a cliff in a storm, waves breaking below" data-jai="style=oil painting;aspect=3:2">
+<img src="lighthouse.jai" alt="A lighthouse in a storm" width="1200" height="800">
+```
+
+The content of `lighthouse.jai`, before `gzip -n`:
 
 ```json
 {"jai":1,"prompt":"A lighthouse on a cliff in a storm, waves breaking below","aspect":"3:2","style":"oil painting"}

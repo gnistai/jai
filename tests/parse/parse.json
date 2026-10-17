@@ -4,33 +4,9 @@
  "note": "input -> document + exact parser diagnostics; advisories are validator codes that must be present when a validator runs.",
  "cases": [
   {
-   "id": "parse-bare",
+   "id": "parse-sentence",
    "rationale": "The simplest document is a sentence.",
    "input": "A magical castle",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-prefix",
-   "rationale": "Optional prefix.",
-   "input": "jai:A magical castle",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-prefix-upper",
-   "rationale": "Prefix is ASCII case-insensitive.",
-   "input": "JAI:A magical castle",
    "document": {
     "prompt": [
      "A magical castle"
@@ -52,21 +28,9 @@
    "since": "1.0-draft"
   },
   {
-   "id": "parse-prefix-prompt-eq",
-   "rationale": "Prefix and prompt=.",
-   "input": "jai:prompt=A magical castle",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
    "id": "parse-params",
    "rationale": "Brief example.",
-   "input": "jai:A magical castle;model=flux;style=anime",
+   "input": "A magical castle;model=flux;style=anime",
    "document": {
     "prompt": [
      "A magical castle"
@@ -99,7 +63,7 @@
   {
    "id": "parse-repeated",
    "rationale": "Repeated keys keep order.",
-   "input": "jai:A castle;model=flux;model=sdxl",
+   "input": "A castle;model=flux;model=sdxl",
    "document": {
     "prompt": [
      "A castle"
@@ -159,9 +123,48 @@
    "since": "1.0-draft"
   },
   {
+   "id": "parse-jai-colon-prose",
+   "rationale": "There is no prefix: jai: is ordinary prose and draws no diagnostic.",
+   "input": "jai:A castle",
+   "document": {
+    "prompt": [
+     "jai:A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-jai-colon-params",
+   "rationale": "A leading jai: is part of the prompt; the parameters are unaffected.",
+   "input": "jai:A castle;style=anime",
+   "document": {
+    "prompt": [
+     "jai:A castle"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-jai-colon-assignment",
+   "rationale": "jai:prompt is not a key (a colon is not a key character), so the segment is prose.",
+   "input": "jai:prompt=A castle",
+   "document": {
+    "prompt": [
+     "jai:prompt=A castle"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
    "id": "parse-prose-semicolon",
    "rationale": "Brief: semicolons in prose.",
-   "input": "jai:A wizard stands in a doorway; behind him, a dragon sleeps;model=flux",
+   "input": "A wizard stands in a doorway; behind him, a dragon sleeps;model=flux",
    "document": {
     "prompt": [
      "A wizard stands in a doorway; behind him, a dragon sleeps"
@@ -230,7 +233,7 @@
   {
    "id": "parse-empty-continued-style",
    "rationale": "Same, inside a document.",
-   "input": "jai:A castle;style=;anime",
+   "input": "A castle;style=;anime",
    "document": {
     "prompt": [
      "A castle"
@@ -524,77 +527,6 @@
    "since": "1.0-draft"
   },
   {
-   "id": "parse-prefix-only",
-   "rationale": "Prefix only.",
-   "input": "jai:",
-   "document": {},
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-leading-ws-prefix",
-   "rationale": "Leading whitespace is skipped before the prefix test.",
-   "input": "\n  jai:A castle",
-   "document": {
-    "prompt": [
-     "A castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-prefix-ws",
-   "rationale": "Whitespace after the prefix is trimmed.",
-   "input": "jai:   A castle",
-   "document": {
-    "prompt": [
-     "A castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-prefix-once",
-   "rationale": "The prefix is removed once.",
-   "input": "jai: jai:A castle",
-   "document": {
-    "prompt": [
-     "jai:A castle"
-    ]
-   },
-   "diagnostics": [],
-   "advisories": [
-    "prefix-in-prompt"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-prefix-not-dotted-i",
-   "rationale": "U+0130 is not I: ASCII case-insensitivity only.",
-   "input": "JAİ:A castle",
-   "document": {
-    "prompt": [
-     "JAİ:A castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-prefix-space-before-colon",
-   "rationale": "Not the prefix.",
-   "input": "JAI :A castle",
-   "document": {
-    "prompt": [
-     "JAI :A castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
    "id": "parse-nbsp-before-key",
    "rationale": "NBSP is JAI whitespace (rich-text paste).",
    "input": "A castle; style=anime",
@@ -691,6 +623,21 @@
    "since": "1.0-draft"
   },
   {
+   "id": "parse-interior-ff-kept",
+   "rationale": "FF inside a value is content; validators report it like any control character other than TAB and LF.",
+   "input": "A castle\fwith a moat",
+   "document": {
+    "prompt": [
+     "A castle\fwith a moat"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "control-character"
+   ],
+   "since": "1.0-draft"
+  },
+  {
    "id": "parse-trailing-zwnbsp-kept",
    "rationale": "U+FEFF is not whitespace except at the very start.",
    "input": "A castle﻿",
@@ -708,7 +655,7 @@
   {
    "id": "parse-leading-bom",
    "rationale": "Leading U+FEFF is removed.",
-   "input": "﻿jai:A castle",
+   "input": "﻿A castle",
    "document": {
     "prompt": [
      "A castle"
@@ -719,8 +666,8 @@
   },
   {
    "id": "parse-leading-boms",
-   "rationale": "Every leading U+FEFF, then whitespace, then the prefix.",
-   "input": "﻿﻿\n jai:A castle",
+   "rationale": "Every leading U+FEFF is removed, then the value is trimmed.",
+   "input": "﻿﻿\n A castle",
    "document": {
     "prompt": [
      "A castle"
@@ -961,23 +908,9 @@
    "since": "1.0-draft"
   },
   {
-   "id": "parse-semicolon-ws-prefix",
-   "rationale": "Whitespace segment after the prefix.",
-   "input": "jai:  ;A castle",
-   "document": {
-    "prompt": [
-     "A castle"
-    ]
-   },
-   "diagnostics": [
-    "empty-segment"
-   ],
-   "since": "1.0-draft"
-  },
-  {
    "id": "parse-reserved-jai",
    "rationale": "The key jai is reserved.",
-   "input": "jai:jai=1;prompt=x",
+   "input": "jai=1;prompt=x",
    "document": {
     "prompt": [
      "x"
@@ -991,7 +924,7 @@
   {
    "id": "parse-reserved-jai-continuation",
    "rationale": "Prose continuing a dropped assignment is dropped with it.",
-   "input": "jai:A castle;jai=2;more",
+   "input": "A castle;jai=2;more",
    "document": {
     "prompt": [
      "A castle"
@@ -1187,7 +1120,7 @@
   {
    "id": "parse-unicode",
    "rationale": "RTL prompt.",
-   "input": "jai:قلعة سحرية;style=anime",
+   "input": "قلعة سحرية;style=anime",
    "document": {
     "prompt": [
      "قلعة سحرية"
@@ -1334,6 +1267,36 @@
    "since": "1.0-draft"
   },
   {
+   "id": "parse-json-is-prose",
+   "rationale": "The text form is never sniffed for JSON: a JSON object is prose.",
+   "input": "{\"jai\":1,\"prompt\":\"x\"}",
+   "document": {
+    "prompt": [
+     "{\"jai\":1,\"prompt\":\"x\"}"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "parse-animate-unknown",
+   "rationale": "animate is not a standard key: an unknown key like any other.",
+   "input": "A castle;animate=true",
+   "document": {
+    "prompt": [
+     "A castle"
+    ],
+    "animate": [
+     "true"
+    ]
+   },
+   "diagnostics": [],
+   "advisories": [
+    "unknown-key:animate"
+   ],
+   "since": "1.0-draft"
+  },
+  {
    "id": "parse-empty-prompt-assignment",
    "rationale": "empty-value carries the key of the assignment, prompt included (R2-2).",
    "input": "prompt=;style=x",
@@ -1344,20 +1307,6 @@
    },
    "diagnostics": [
     "empty-value:prompt"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-reserved-key-keyed",
-   "rationale": "reserved-key always concerns the key jai (R2-2).",
-   "input": "A castle;JAI=2",
-   "document": {
-    "prompt": [
-     "A castle"
-    ]
-   },
-   "diagnostics": [
-    "reserved-key:jai"
    ],
    "since": "1.0-draft"
   },
@@ -1382,10 +1331,10 @@
   {
    "id": "parse-bare-key",
    "rationale": "A prose segment that is exactly a standard key (S-22).",
-   "input": "A castle;animate",
+   "input": "A castle;style",
    "document": {
     "prompt": [
-     "A castle;animate"
+     "A castle;style"
     ]
    },
    "diagnostics": [],
@@ -1421,27 +1370,6 @@
    "diagnostics": [],
    "advisories": [
     "negated-avoid:avoid"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "parse-data-uri-charset-advisory",
-   "rationale": "An unescaped ;charset= splits a data: URL (S-23).",
-   "input": "x;source=data:image/svg+xml;charset=utf-8;base64,PHN2Zz4=",
-   "document": {
-    "prompt": [
-     "x"
-    ],
-    "source": [
-     "data:image/svg+xml"
-    ],
-    "charset": [
-     "utf-8;base64,PHN2Zz4="
-    ]
-   },
-   "diagnostics": [],
-   "advisories": [
-    "split-data-uri"
    ],
    "since": "1.0-draft"
   },

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>JAI playground</title>
-<meta name="description" content="Parse, validate and normalise JAI documents in your browser. Copy canonical JAI, JSON, data: URLs and HTML snippets; download .jai files.">
+<meta name="description" content="Parse, validate and normalise JAI documents in your browser. Copy the canonical text, the canonical data: URL and HTML snippets; open and download .jai files.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c2410c'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='12' font-weight='700' fill='white' text-anchor='middle'%3Ejai%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="../assets/css/site.css">
 <script type="module" src="../assets/js/site.js"></script>
@@ -32,20 +32,31 @@
   <div class="wrap">
     <div class="eyebrow">Playground</div>
     <h1>Parse, check and normalise JAI</h1>
-    <p class="lede">Type or paste JAI text, JSON, a <code>data:image/jai</code> URL or a piece of HTML. Everything runs in your browser on <a href="https://github.com/gnistai/jai/blob/master/docs/assets/js/jai.js">jai.js</a>, the reference implementation; nothing is sent anywhere and no image is rendered.</p>
+    <p class="lede">Write a document in the text form, paste a <code>data:image/jai,</code> URL or a piece of HTML, or open a <code>.jai</code> file. Everything runs in your browser on <a href="https://github.com/gnistai/jai/blob/master/docs/assets/js/jai.js">jai.js</a>, the reference implementation; nothing is sent anywhere and no image is rendered.</p>
   </div>
 </section>
 
 <section style="padding-top:0">
   <div class="wrap pg">
     <div>
-      <label for="input" class="out-head" style="margin-top:0"><h3>Input</h3><span class="muted" id="detected" style="font-size:.85rem"></span></label>
-      <textarea id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="detected"></textarea>
+      <div class="out-head" style="margin-top:0"><h3><label for="input">Input</label></h3><span class="muted" id="detected" style="font-size:.85rem"></span></div>
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend class="muted" style="font-size:.9rem">Read the input as</legend>
+        <div class="radio-row" style="margin:6px 0 10px">
+          <label><input type="radio" name="read-as" value="text" checked>text form</label>
+          <label><input type="radio" name="read-as" value="data">data: URL</label>
+          <label><input type="radio" name="read-as" value="html">HTML</label>
+        </div>
+      </fieldset>
+      <textarea id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="mode-note detected"></textarea>
+      <p class="muted" id="mode-note" style="margin:6px 0 0;font-size:.85rem"></p>
+      <p id="mode-hint" style="margin:8px 0 0" hidden><button class="btn small secondary" id="mode-switch" type="button"></button></p>
       <div class="actions" style="margin-top:10px">
         <label class="muted" for="examples" style="align-self:center;font-size:.9rem">Load an example</label>
         <select id="examples" style="font:inherit;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--bg-raised);color:var(--text);max-width:100%"></select>
+        <button class="btn small secondary" id="share" type="button">Copy a link to this playground</button>
       </div>
-      <div class="drop" id="drop">Drop a <code>.jai</code> file here, or <label style="color:var(--accent);cursor:pointer;text-decoration:underline">choose one<input type="file" id="file" accept=".jai,image/jai,application/json,text/plain" hidden></label></div>
+      <div class="drop" id="drop">Drop a <code>.jai</code> file here, or <label style="color:var(--accent);cursor:pointer;text-decoration:underline">choose one<input type="file" id="file" accept=".jai,image/jai" hidden></label></div>
 
       <div class="out-head"><h3>What a viewer reads</h3></div>
       <div class="panel"><div class="panel-body"><dl class="plain-parse" id="plain"></dl></div></div>
@@ -60,12 +71,16 @@
     </div>
 
     <div>
-      <div class="out-head" style="margin-top:0"><h3>Canonical JAI</h3><button class="btn small secondary" data-copy="#out-text" type="button">Copy</button></div>
-      <div class="panel"><div class="panel-body"><pre><code id="out-text"></code></pre></div></div>
+      <div class="out-head" style="margin-top:0"><h3>Canonical text</h3><button class="btn small secondary" data-copy="#out-text" type="button">Copy</button></div>
+      <div class="panel"><div class="panel-body"><pre><code id="out-text"></code></pre><p class="muted" style="margin:10px 0 0;font-size:.85rem">The text form, as it goes in a <code>data-jai</code> attribute.</p></div></div>
+
+      <div class="out-head"><h3>Canonical URL</h3><button class="btn small secondary" data-copy="#out-url" type="button">Copy</button></div>
+      <div class="panel"><div class="panel-body"><pre><code id="out-url"></code></pre><p class="muted" style="margin:10px 0 0;font-size:.85rem">For <code>src</code>, or the <code>srcset</code> of a <code>&lt;source type="image/jai"&gt;</code>.</p></div></div>
 
       <div class="out-head"><h3>HTML</h3><button class="btn small secondary" data-copy="#out-html" type="button">Copy</button></div>
       <div class="tabs" role="tablist" aria-label="HTML form">
-        <button role="tab" aria-selected="true" data-html="datajai" type="button">alt + data-jai</button>
+        <button role="tab" aria-selected="true" data-html="alt" type="button">alt + data-jai</button>
+        <button role="tab" aria-selected="false" data-html="inside" type="button">description in data-jai</button>
         <button role="tab" aria-selected="false" data-html="picture" type="button">picture</button>
         <button role="tab" aria-selected="false" data-html="srcfile" type="button">src: .jai file</button>
         <button role="tab" aria-selected="false" data-html="src" type="button">src: data URL</button>
@@ -73,19 +88,14 @@
       </div>
       <div class="panel" style="border-top-left-radius:0;border-top-right-radius:0"><div class="panel-body"><pre><code id="out-html"></code></pre><p class="muted" id="html-note" style="margin:10px 0 0;font-size:.85rem"></p></div></div>
 
-      <div class="out-head"><h3>JSON</h3><button class="btn small secondary" data-copy="#out-json" type="button">Copy</button></div>
-      <div class="panel"><div class="panel-body"><pre><code id="out-json"></code></pre></div></div>
-
-      <div class="out-head"><h3>data: URL</h3><button class="btn small secondary" data-copy="#out-url" type="button">Copy</button></div>
-      <div class="panel"><div class="panel-body"><pre><code id="out-url"></code></pre></div></div>
-
-      <div class="out-head"><h3>File</h3></div>
+      <div class="out-head"><h3>.jai file</h3></div>
       <div class="panel"><div class="panel-body">
         <p style="margin:0 0 8px;font-size:.92rem"><span id="sizes" class="muted"></span></p>
-        <p style="margin:0 0 10px;font-size:.85rem" class="muted">Identity (SHA-256 of canonical JSON): <code id="out-id" style="overflow-wrap:anywhere"></code></p>
+        <p style="margin:0 0 6px;font-size:.85rem" class="muted">Content: the canonical JSON, gzip-compressed in the file.</p>
+        <pre style="margin:0 0 10px"><code id="out-json"></code></pre>
+        <p style="margin:0 0 10px;font-size:.85rem" class="muted">Identity (SHA-256 of the canonical JSON): <code id="out-id" style="overflow-wrap:anywhere"></code></p>
         <div class="actions" style="margin-top:0">
           <button class="btn small" id="download" type="button">Download .jai</button>
-          <button class="btn small secondary" id="share" type="button">Copy link to this document</button>
         </div>
       </div></div>
     </div>

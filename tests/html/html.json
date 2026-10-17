@@ -122,7 +122,7 @@
   },
   {
    "id": "html-data-jai",
-   "rationale": "The alt text is the first prompt value; data-jai adds the rest.",
+   "rationale": "data-jai gives no prompt, so the alt text is the prompt.",
    "html": "<img src=\"castle.png\" alt=\"A magical castle\" data-jai=\"style=anime\">",
    "discovered": [
     {
@@ -215,40 +215,63 @@
      "diagnostics": []
     }
    ],
+   "no_advisories": [
+    "data-url-parameter",
+    "unencoded-url-text"
+   ],
    "since": "1.0-draft"
   },
   {
-   "id": "html-src-jai-scheme",
-   "rationale": "jai: in src is not a carrier.",
-   "html": "<img src=\"jai:A castle\" alt=\"A castle\">",
-   "discovered": [],
+   "id": "html-src-data-charset",
+   "rationale": "A charset parameter has no meaning; validators report it.",
+   "html": "<img src=\"data:image/jai;charset=utf-8,A%20castle\" alt=\"A castle\" width=\"1\" height=\"1\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "document": {
+      "prompt": [
+       "A castle"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "data-url-parameter"
+   ],
    "since": "1.0-draft"
   },
   {
-   "id": "html-alt",
-   "rationale": "alt is never a carrier, even when it begins with jai: (it is the screen-reader text).",
-   "html": "<img src=\"castle.png\" alt=\"jai:A magical castle;style=anime\">",
-   "discovered": [],
+   "id": "html-src-data-base64",
+   "rationale": "base64 is decoded by the data: URL processor and the bytes read as text; validators report the parameter.",
+   "html": "<img src=\"data:image/jai;base64,QSBjYXN0bGU=\" alt=\"A castle\" width=\"1\" height=\"1\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "document": {
+      "prompt": [
+       "A castle"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "advisories": [
+    "data-url-parameter"
+   ],
    "since": "1.0-draft"
   },
   {
    "id": "html-alt-plain",
-   "rationale": "An ordinary alt is never JAI.",
+   "rationale": "alt alone is never JAI: without data-jai it is just the screen-reader text.",
    "html": "<img src=\"castle.png\" alt=\"A magical castle\">",
-   "discovered": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "html-alt-jai-word",
-   "rationale": "Only the exact prefix counts.",
-   "html": "<img src=\"castle.png\" alt=\"Jaipur at night\">",
    "discovered": [],
    "since": "1.0-draft"
   },
   {
    "id": "html-order-picture-wins",
    "rationale": "The picture carrier takes precedence over the attribute carrier; alt is ignored.",
-   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,one\"><img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\"></picture>",
+   "html": "<picture><source type=\"image/jai\" srcset=\"data:image/jai,one\"><img src=\"a.png\" alt=\"four\" data-jai=\"two\"></picture>",
    "discovered": [
     {
      "carrier": "picture",
@@ -263,27 +286,9 @@
    "since": "1.0-draft"
   },
   {
-   "id": "html-order-data-jai-before-alt",
-   "rationale": "data-jai is the carrier; its alt is plain text, taken literally as the first prompt line.",
-   "html": "<img src=\"a.png\" alt=\"jai:four\" data-jai=\"two\">",
-   "discovered": [
-    {
-     "carrier": "attribute",
-     "document": {
-      "prompt": [
-       "jai:four",
-       "two"
-      ]
-     },
-     "diagnostics": []
-    }
-   ],
-   "since": "1.0-draft"
-  },
-  {
    "id": "html-order-src-before-alt",
    "rationale": "src is the carrier; alt is ignored.",
-   "html": "<img src=\"data:image/jai,three\" alt=\"jai:four\">",
+   "html": "<img src=\"data:image/jai,three\" alt=\"four\">",
    "discovered": [
     {
      "carrier": "src",
@@ -299,15 +304,17 @@
   },
   {
    "id": "html-multiple",
-   "rationale": "Tree order; an alt beginning with jai: carries nothing.",
-   "html": "<p><img src=\"a.png\" alt=\"a\"><img src=\"b.png\" alt=\"A bee\" data-jai=\"on a sunflower\"><img src=\"c.png\" alt=\"jai:sea\"></p>",
+   "rationale": "Tree order; images without a carrier carry nothing.",
+   "html": "<p><img src=\"a.png\" alt=\"a\"><img src=\"b.png\" alt=\"A bee\" data-jai=\"style=macro photo\"><img src=\"c.png\" alt=\"The sea\"></p>",
    "discovered": [
     {
      "carrier": "attribute",
      "document": {
       "prompt": [
-       "A bee",
-       "on a sunflower"
+       "A bee"
+      ],
+      "style": [
+       "macro photo"
       ]
      },
      "diagnostics": []
@@ -485,6 +492,36 @@
    "since": "1.0-draft"
   },
   {
+   "id": "html-src-jai-style-aspect-ratio",
+   "rationale": "An aspect-ratio in the style attribute sizes the layout box.",
+   "html": "<img src=\"castle.jai\" alt=\"A castle\" style=\"aspect-ratio: 4 / 3\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "castle.jai"
+    }
+   ],
+   "no_advisories": [
+    "missing-size"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-src-jai-style-aspect-ratio-auto",
+   "rationale": "aspect-ratio: auto sets no ratio for an image without pixels.",
+   "html": "<img src=\"castle.jai\" alt=\"A castle\" style=\"aspect-ratio: auto\">",
+   "discovered": [
+    {
+     "carrier": "src",
+     "url": "castle.jai"
+    }
+   ],
+   "advisories": [
+    "missing-size"
+   ],
+   "since": "1.0-draft"
+  },
+  {
    "id": "html-img-srcset-jai-not-carrier",
    "rationale": "Only src is examined on the img; its own srcset is not a carrier.",
    "html": "<img srcset=\"castle.jai\" alt=\"x\">",
@@ -522,25 +559,109 @@
    "since": "1.0-draft"
   },
   {
-   "id": "html-alt-first-prompt",
-   "rationale": "alt first, then the prose in data-jai.",
-   "html": "<img src=\"c.png\" alt=\"Twelve colleagues in ski gear laughing on a slope in a white-out\" data-jai=\"One raises a beer;style=35mm film photo;aspect=3:2\">",
+   "id": "html-alt-is-prompt",
+   "rationale": "data-jai gives no prompt value (a qualified prompt/flux does not count), so the alt text is the prompt.",
+   "html": "<img src=\"castle.png\" alt=\"A magical castle at dusk, seen from below\" data-jai=\"style=anime;prompt/flux=Lit windows glow warm\">",
    "discovered": [
     {
      "carrier": "attribute",
      "document": {
       "prompt": [
-       "Twelve colleagues in ski gear laughing on a slope in a white-out",
-       "One raises a beer"
+       "A magical castle at dusk, seen from below"
       ],
       "style": [
-       "35mm film photo"
+       "anime"
       ],
-      "aspect": [
-       "3:2"
+      "prompt/flux": [
+       "Lit windows glow warm"
       ]
      },
      "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-prompt-ignores-alt",
+   "rationale": "data-jai gives a prompt, so alt plays no part.",
+   "html": "<img src=\"castle.png\" alt=\"A magical castle\" data-jai=\"A magical castle at dusk, seen from below. Mist fills the valley;style=anime;prompt/flux=Lit windows glow warm\">",
+   "discovered": [
+    {
+     "carrier": "attribute",
+     "document": {
+      "prompt": [
+       "A magical castle at dusk, seen from below. Mist fills the valley"
+      ],
+      "style": [
+       "anime"
+      ],
+      "prompt/flux": [
+       "Lit windows glow warm"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-data-jai-prompt-eq-ignores-alt",
+   "rationale": "prompt= anywhere in data-jai gives a prompt, so alt plays no part.",
+   "html": "<img src=\"c.png\" alt=\"A castle\" data-jai=\"style=anime;prompt=A castle on a hill\">",
+   "discovered": [
+    {
+     "carrier": "attribute",
+     "document": {
+      "style": [
+       "anime"
+      ],
+      "prompt": [
+       "A castle on a hill"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-continuation",
+   "rationale": "Prose after an assignment continues it, so data-jai still has no prompt and the alt is the prompt.",
+   "html": "<img src=\"c.png\" alt=\"A castle\" data-jai=\"style=anime;Mist fills the valley\">",
+   "discovered": [
+    {
+     "carrier": "attribute",
+     "document": {
+      "prompt": [
+       "A castle"
+      ],
+      "style": [
+       "anime;Mist fills the valley"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-empty-prompt-value",
+   "rationale": "A prompt dropped as empty-value does not count: the alt is the prompt.",
+   "html": "<img src=\"c.png\" alt=\"A castle\" data-jai=\"prompt=;style=anime\">",
+   "discovered": [
+    {
+     "carrier": "attribute",
+     "document": {
+      "prompt": [
+       "A castle"
+      ],
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": [
+      "empty-value:prompt"
+     ]
     }
    ],
    "since": "1.0-draft"
@@ -587,14 +708,31 @@
   },
   {
    "id": "html-alt-empty",
-   "rationale": "An empty alt (decorative image) adds nothing.",
-   "html": "<img src=\"c.png\" alt=\"\" data-jai=\"A castle\">",
+   "rationale": "An empty alt (decorative image) gives no prompt.",
+   "html": "<img src=\"c.png\" alt=\"\" data-jai=\"style=anime\">",
    "discovered": [
     {
      "carrier": "attribute",
      "document": {
-      "prompt": [
-       "A castle"
+      "style": [
+       "anime"
+      ]
+     },
+     "diagnostics": []
+    }
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "html-alt-whitespace",
+   "rationale": "An alt that is empty after value normalisation gives no prompt.",
+   "html": "<img src=\"c.png\" alt=\" &#9; \" data-jai=\"style=anime\">",
+   "discovered": [
+    {
+     "carrier": "attribute",
+     "document": {
+      "style": [
+       "anime"
       ]
      },
      "diagnostics": []
@@ -604,7 +742,7 @@
   },
   {
    "id": "html-alt-not-src-carrier",
-   "rationale": "Only the attribute carrier takes its first prompt line from alt.",
+   "rationale": "Only the attribute carrier takes its prompt from alt.",
    "html": "<img src=\"data:image/jai,style=anime\" alt=\"A castle\" width=\"10\" height=\"10\">",
    "discovered": [
     {
@@ -620,26 +758,25 @@
    "since": "1.0-draft"
   },
   {
-   "id": "html-alt-repeated",
-   "rationale": "Repeating the alt in data-jai sends it twice; validators warn.",
-   "html": "<img src=\"c.png\" alt=\"A castle\" data-jai=\"A castle;style=anime\">",
+   "id": "html-keep-in-source-interpreted",
+   "rationale": "keep-in-source uses the interpreted mode: quotes, a trailing full stop and case do not hide keep.",
+   "html": "<img src=\"data:image/jai,A%20team%20photo;mode=%22Keep.%22\" alt=\"The team\" width=\"4\" height=\"3\">",
    "discovered": [
     {
-     "carrier": "attribute",
+     "carrier": "src",
      "document": {
       "prompt": [
-       "A castle",
-       "A castle"
+       "A team photo"
       ],
-      "style": [
-       "anime"
+      "mode": [
+       "\"Keep.\""
       ]
      },
      "diagnostics": []
     }
    ],
    "advisories": [
-    "alt-repeated"
+    "keep-in-source"
    ],
    "since": "1.0-draft"
   },
@@ -730,8 +867,8 @@
   },
   {
    "id": "html-src-data-bad-base64",
-   "rationale": "A src carrier data: URL the processor rejects: the element carries no document (alt is never a carrier).",
-   "html": "<img src=\"data:image/jai;base64,!!!\" alt=\"jai:fallback\">",
+   "rationale": "A src carrier data: URL the processor rejects: the element carries no document, and alt without data-jai is never JAI.",
+   "html": "<img src=\"data:image/jai;base64,!!!\" alt=\"fallback\">",
    "discovered": [],
    "since": "1.0-draft"
   },
@@ -852,9 +989,6 @@
    ],
    "advisories": [
     "missing-size"
-   ],
-   "no_advisories": [
-    "non-canonical-encoding"
    ],
    "since": "1.0-draft"
   },

@@ -95,11 +95,11 @@
     <div class="grid grid-2" style="margin-top:20px">
       <div class="card use">
         <h3><span class="n">01</span> Readable without seeing</h3>
-        <p>A JAI image is text first. A vision-impaired reader's screen reader speaks the author's own description, the same words the model draws from, so the text alternative is always there and always matches the picture. A text-only AI agent reads and writes images directly, with no vision model: it can understand, search, translate, compare and edit a picture in the medium it already uses.</p>
+        <p>A JAI image is text all the way down. By default the image's alt is its description, so a vision-impaired reader's screen reader speaks the author's own words, the same words the model draws from, and the text alternative is always present and describes the picture. An AI agent reads and writes images directly, with no vision model: it can understand, search, translate, compare and edit a picture in the medium it already uses.</p>
       </div>
       <div class="card use">
         <h3><span class="n">02</span> Little bandwidth, enough compute</h3>
-        <p>Ships and aircraft, satellite plans with data caps, rural and disaster-zone networks, and text-only channels such as SMS, packet radio and mesh networks can carry a sentence where they cannot carry a photograph. A receiver with a GPU draws the picture. This suits illustrative and situational images, not measurements: where the pixels are the data, send the pixels.</p>
+        <p>Ships and aircraft, satellite plans with data caps, rural and disaster-zone networks, packet radio and mesh networks can carry a few hundred bytes where they cannot carry a photograph. A page whose images are JAI costs a few hundred bytes per image, and a receiver with a GPU draws the pictures. This suits illustrative and situational images, not measurements: where the pixels are the data, send the pixels.</p>
       </div>
       <div class="card use">
         <h3><span class="n">03</span> Local generation</h3>
@@ -153,7 +153,7 @@
       </svg>
       <figcaption id="loop-cap">The encoder spends effort once; every reader decodes locally.</figcaption>
     </figure>
-<pre style="white-space:pre-wrap;overflow-wrap:anywhere"><code>jai:A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;prompt/imagen=The balloon is glossy;model=flux;model=imagen</code></pre>
+<pre style="white-space:pre-wrap;overflow-wrap:anywhere"><code>A girl holding a red balloon in a park at dusk;prompt/flux=The balloon floats high above her;prompt/imagen=The balloon is glossy;model=flux;model=imagen</code></pre>
     <p class="muted">One core description, with refinements for two models in the order of preference. Any other model renders the core alone.</p>
   </div>
 </section>

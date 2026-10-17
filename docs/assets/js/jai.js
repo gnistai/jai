@@ -4,8 +4,8 @@
  * Dependency-free ES module for browsers and Node 18+. Implements the text
  * form (parse, canonical serialise), the JSON form (read, canonical JSON,
  * identity), the file form (gzip decode with a built-in inflater, encode),
- * data: URL and query carriers, HTML discovery, parameter interpretation
- * and model matching, and an advisory validator.
+ * data:image/jai URLs, HTML discovery, parameter interpretation and model
+ * matching, and an advisory validator.
  *
  * Specification: https://jai.gnist.ai/spec/   Repository: github.com/gnistai/jai
  * This file is released under CC0-1.0.
@@ -20,9 +20,7 @@ export const MEDIA_TYPE = 'image/jai';
 
 /** The 25 code points with the Unicode White_Space property, as a regex class body. */
 export const WS_CLASS = '\\t\\n\\v\\f\\r \\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000';
-const WS_RE = new RegExp(`[${WS_CLASS}]`);
 const WS_ONLY_RE = new RegExp(`^[${WS_CLASS}]*$`);
-const LEADING_WS_RE = new RegExp(`^[${WS_CLASS}]*`);
 
 const KEY_SRC = '[a-z0-9][a-z0-9_-]*(?:\\.[a-z0-9][a-z0-9_-]*)*(?:/[a-z0-9][a-z0-9_-]*)?';
 /** Names that take a per-model target (spec §Per-model refinements). */
@@ -32,8 +30,8 @@ export const KEY_RE = new RegExp(`^${KEY_SRC}$`);
 const ASSIGNMENT_PATTERN_RE = new RegExp(`^[${WS_CLASS}]*${KEY_SRC}[${WS_CLASS}]*=`, 'i');
 const ESCAPE_VALUE_RE = new RegExp(`\\\\(?=[;=\\\\]|$)|^;|;(?=[${WS_CLASS}]*(?:$|;|${KEY_SRC}[${WS_CLASS}]*=))`, 'gi');
 
-export const STANDARD_KEYS = ['prompt', 'style', 'avoid', 'model', 'aspect', 'mode', 'strength', 'seed', 'source', 'preview', 'animate'];
-export const SINGLE_VALUED = new Set(['aspect', 'mode', 'strength', 'seed', 'source', 'preview', 'animate']);
+export const STANDARD_KEYS = ['prompt', 'style', 'avoid', 'model', 'aspect', 'mode', 'strength', 'seed', 'source', 'preview'];
+export const SINGLE_VALUED = new Set(['aspect', 'mode', 'strength', 'seed', 'source', 'preview']);
 export const RASTER_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif']);
 
 /** One of the WS_CLASS code points (all in the BMP, so one UTF-16 code unit each). */
@@ -164,7 +162,7 @@ function indexOfUnescaped(s, ch) {
 
 /**
  * Text parsing algorithm (spec §Parsing). Returns {document, diagnostics, info}.
- * `info` is implementation detail used by validate(): prefixed, segments.
+ * `info` is implementation detail used by validate(): segments.
  */
 export function parse(input) {
   const diagnostics = [];
@@ -173,14 +171,11 @@ export function parse(input) {
   let i = 0;
   while (input.charCodeAt(i) === 0xfeff) i++;
   input = input.slice(i).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  i = LEADING_WS_RE.exec(input)[0].length;
-  let prefixed = false;
-  if (/^jai:/i.test(input.slice(i, i + 4))) { i += 4; prefixed = true; }
 
   // raw segments
   const raws = [];
   let cur = '';
-  for (let j = i; j < input.length; j++) {
+  for (let j = 0; j < input.length; j++) {
     const c = input[j];
     if (c === '\\' && j + 1 < input.length) { cur += c + input[j + 1]; j++; continue; }
     if (c === ';') { raws.push(cur); cur = ''; continue; }
@@ -208,29 +203,29 @@ export function parse(input) {
           segments.push({ kind: 'reserved', key });
           continue;
         }
-        const p = { key, text: raw.slice(eq + 1), kind: 'assignment', continued: 0 };
+        const p = { key, text: raw.slice(eq + 1) };
         pending.push(p); current = p;
-        segments.push({ kind: 'assignment', key, index: pending.length - 1 });
+        segments.push({ kind: 'assignment', key });
         continue;
       }
     }
     if (current === null) {
-      const p = { key: 'prompt', text: raw, kind: 'prose', continued: 0 };
+      const p = { key: 'prompt', text: raw };
       pending.push(p); current = p;
-      segments.push({ kind: 'prompt', key: 'prompt', index: pending.length - 1 });
+      segments.push({ kind: 'prompt', key: 'prompt' });
     } else if (current === DISCARD) {
       segments.push({ kind: 'dropped' });
     } else {
-      current.text += ';' + raw; current.continued++;
-      segments.push({ kind: 'continuation', key: current.key, index: pending.indexOf(current), raw });
+      current.text += ';' + raw;
+      segments.push({ kind: 'continuation', key: current.key, raw });
     }
   }
   for (const p of pending) {
     const v = normalizeValue(unescapeText(p.text));
-    if (v === null) { diagnostics.push(diag('empty-value', p.key)); p.dropped = true; }
-    else { addValue(doc, p.key, v); p.value = v; }
+    if (v === null) diagnostics.push(diag('empty-value', p.key));
+    else addValue(doc, p.key, v);
   }
-  return { document: doc, diagnostics, info: { prefixed, segments, pending } };
+  return { document: doc, diagnostics, info: { segments } };
 }
 
 const byCP = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -246,17 +241,19 @@ export function escapeValue(v) { return v.replace(ESCAPE_VALUE_RE, m => '\\' + m
 /** escape-prose (spec §Escaping arbitrary text): escape every \ ; = . */
 export function escapeProse(s) { return s.replace(/[\\;=]/g, m => '\\' + m); }
 
-/** Canonical text serialisation; {bare: true} omits the prefix (with its extra protections). */
-export function serialize(doc, { bare = false } = {}) {
+/**
+ * Canonical text serialisation (spec §Canonical text serialisation). The first prompt
+ * value is written as prompt=… when it matches the assignment pattern or begins with
+ * U+FEFF (which the parser removes); later prompt values always are.
+ */
+export function serialize(doc) {
   const segments = [];
-  const prompts = doc.get('prompt') || [];
-  prompts.forEach((v, n) => {
-    let needsPromptForm = n > 0 || ASSIGNMENT_PATTERN_RE.test(v);
-    if (!needsPromptForm && bare && (/^jai:/i.test(v) || v.charCodeAt(0) === 0xfeff || v[0] === '{')) needsPromptForm = true;
-    segments.push(needsPromptForm ? 'prompt=' + escapeValue(v) : escapeValue(v));
+  (doc.get('prompt') || []).forEach((v, n) => {
+    const promptForm = n > 0 || ASSIGNMENT_PATTERN_RE.test(v) || v.charCodeAt(0) === 0xfeff;
+    segments.push(promptForm ? 'prompt=' + escapeValue(v) : escapeValue(v));
   });
   for (const k of orderedKeys(doc)) for (const v of doc.get(k)) segments.push(k + '=' + escapeValue(v));
-  return (bare ? '' : 'jai:') + segments.join(';');
+  return segments.join(';');
 }
 
 /* ------------------------------------------------------------------ *
@@ -279,26 +276,21 @@ function jsonDepthExceeds(s, max) {
   return false;
 }
 
-/**
- * JSON reading algorithm (spec §Reading). `text` is a string or an already
- * parsed object. {inContext} says whether the input is in a JAI context.
- */
-export function readJSON(text, { inContext = true } = {}) {
+/** JSON reading algorithm (spec §Reading) on a JSON text. Returns {document, diagnostics}. */
+export function readJSON(text) {
   const diagnostics = [];
   const doc = createDocument();
-  const fail = () => { diagnostics.push(diag('invalid-json')); return { document: createDocument(), diagnostics, isJAI: false }; };
+  const fail = () => { diagnostics.push(diag('invalid-json')); return { document: createDocument(), diagnostics }; };
+  text = String(text);
+  if (jsonDepthExceeds(text, 32)) return fail();
   let obj;
-  if (typeof text === 'string') {
-    if (jsonDepthExceeds(text, 32)) return fail();
-    try {
-      // A number that rounds to an infinite binary64 value makes the text invalid.
-      obj = JSON.parse(text, (k, v) => { if (typeof v === 'number' && !Number.isFinite(v)) throw new RangeError('overflow'); return v; });
-    } catch { return fail(); }
-  } else obj = text;
+  try {
+    // A number that rounds to an infinite binary64 value makes the text invalid.
+    obj = JSON.parse(text, (k, v) => { if (typeof v === 'number' && !Number.isFinite(v)) throw new RangeError('overflow'); return v; });
+  } catch { return fail(); }
   if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return fail();
   // JSON.parse already applied "an exact repeat replaces in place"; readers do not diagnose it.
   if (!Object.prototype.hasOwnProperty.call(obj, 'jai')) {
-    if (!inContext) return { document: doc, diagnostics, isJAI: false };
     diagnostics.push(diag('missing-marker'));
   } else {
     const m = obj.jai;
@@ -328,7 +320,7 @@ export function readJSON(text, { inContext = true } = {}) {
       addValue(doc, key, v);
     }
   }
-  return { document: doc, diagnostics, isJAI: true };
+  return { document: doc, diagnostics };
 }
 
 /** Canonical JSON form (spec §Canonical JSON). */
@@ -585,48 +577,30 @@ export async function encode(doc) {
  * Decoding algorithm
  * ------------------------------------------------------------------ */
 
-const JSON_WS = /^[\t\n\r ]*/;
+/** Strict UTF-8 decoding that keeps a leading U+FEFF; null for bytes that are not well-formed UTF-8. */
+function utf8OrNull(bytes) {
+  try { return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); } catch { return null; }
+}
 
 /**
- * Decoding algorithm (spec §Decoding). `bytes` is a Uint8Array.
- * Returns {document, diagnostics, form} where form is 'gzip', 'json', 'text' or null.
+ * Decoding algorithm for the file form (spec §Decoding): the bytes of a .jai file or
+ * resource are exactly one gzip member holding a UTF-8 JSON text with an object at the
+ * top level. Nothing else is accepted and nothing is sniffed. Returns {document, diagnostics}.
  */
-export function decode(bytes, { inContext = true, maxInflate = 16 * 1024 * 1024, maxText = 1024 * 1024 } = {}) {
+export function decode(bytes, { maxInflate = 16 * 1024 * 1024 } = {}) {
   const diagnostics = [];
-  const empty = form => ({ document: createDocument(), diagnostics, form });
-  let fromGzip = false;
-  if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
-    try { bytes = gunzipOne(bytes, maxInflate).content; fromGzip = true; }
-    catch (e) { diagnostics.push(diag('malformed-container', null, { reason: e.message })); return empty(null); }
-  }
-  if (bytes.length > maxText && !fromGzip) { diagnostics.push(diag('undecodable', null, { reason: 'bound' })); return empty(null); }
-  // Byte input never contains 00 (binary such as headerless UTF-16 must not become a prompt).
-  let text = null;
-  if (!bytes.includes(0)) {
-    try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { text = null; }
-  }
-  if (text === null) { diagnostics.push(diag(fromGzip ? 'malformed-container' : 'undecodable', null, fromGzip ? { reason: 'not-utf8' } : undefined)); return empty(null); }
-  let i = 0;
-  while (text.charCodeAt(i) === 0xfeff) i++;
-  text = text.slice(i);
-  const ws = JSON_WS.exec(text)[0].length;
-  if (text[ws] === '{') {
-    const after = JSON_WS.exec(text.slice(ws + 1))[0].length;
-    const next = text[ws + 1 + after];
-    if (next === '"' || next === '}') {
-      const r = readJSON(text, { inContext });
-      diagnostics.push(...r.diagnostics);
-      return { document: r.document, diagnostics, form: fromGzip ? 'gzip' : 'json' };
-    }
-  }
-  if (fromGzip) { diagnostics.push(diag('malformed-container', null, { reason: 'not-json' })); return empty(null); }
-  const r = parse(text);
+  const empty = (code, reason) => { diagnostics.push(diag(code, null, { reason })); return { document: createDocument(), diagnostics }; };
+  let content;
+  try { content = gunzipOne(bytes, maxInflate).content; } catch (e) { return empty('malformed-container', e.message); }
+  const text = utf8OrNull(content);
+  if (text === null) return empty('invalid-json', 'not-utf8');
+  const r = readJSON(text);
   diagnostics.push(...r.diagnostics);
-  return { document: r.document, diagnostics, form: 'text', info: r.info };
+  return { document: r.document, diagnostics };
 }
 
 /* ------------------------------------------------------------------ *
- * URLs: data: URLs, query forms
+ * data:image/jai URLs
  * ------------------------------------------------------------------ */
 
 /** Lenient byte-level percent-decode (URL Standard). Returns Uint8Array. */
@@ -684,11 +658,21 @@ export function parseDataURL(url) {
   return { mime: mimeType, essence: fetchMimeEssence(mimeType), bytes };
 }
 
-/** Decode a data:image/jai URL. Returns null when it is not one. */
-export function decodeDataURL(url, opts) {
+/**
+ * Decode a data:image/jai URL (spec §Decoding): the body, as the data: URL processor
+ * leaves it (percent-decoded, or base64-decoded), is the text form. Returns null when
+ * the URL is not a data:image/jai URL or the processor fails; otherwise the parse result
+ * {document, diagnostics, info}, or the empty document with `undecodable` when the body
+ * exceeds `maxText` bytes, is not well-formed UTF-8 or contains a 00 byte.
+ */
+export function decodeDataURL(url, { maxText = 1024 * 1024 } = {}) {
   const d = parseDataURL(url);
   if (!d || d.essence !== MEDIA_TYPE) return null;
-  return decode(d.bytes, { inContext: true, ...opts });
+  const undecodable = reason => ({ document: createDocument(), diagnostics: [diag('undecodable', null, { reason })] });
+  if (d.bytes.length > maxText) return undecodable('bound');
+  if (d.bytes.includes(0)) return undecodable('nul');
+  const text = utf8OrNull(d.bytes);
+  return text === null ? undecodable('not-utf8') : parse(text);
 }
 
 /** Percent-encode text for the body of a data:image/jai, URL (spec encoding profile). */
@@ -705,28 +689,8 @@ export function encodeURLBody(text) {
   return out;
 }
 
-/** Canonical URL form: data:image/jai, + encoded bare serialisation. */
-export function toDataURL(doc) { return 'data:image/jai,' + encodeURLBody(serialize(doc, { bare: true })); }
-
-/**
- * Query forms (spec §Query forms). kind 'query': the whole query is the
- * document (percent-decoded once, + literal). kind 'param': the first `jai`
- * pair in form encoding. Returns {document, diagnostics} or null when the URL
- * carries no document (no query, or no jai parameter).
- */
-export function fromQuery(url, kind = 'query') {
-  let href;
-  try { href = new URL(String(url)).href; } catch { return null; }
-  const hash = href.indexOf('#'); if (hash >= 0) href = href.slice(0, hash);
-  const q = href.indexOf('?');
-  if (q < 0) return null; // the query is null
-  const query = href.slice(q + 1);
-  if (kind === 'param') {
-    const v = new URLSearchParams(query).get('jai');
-    return v === null ? null : parse(v);
-  }
-  return parse(new TextDecoder().decode(percentDecode(query)));
-}
+/** Canonical URL form: data:image/jai, + the percent-encoded canonical text. */
+export function toDataURL(doc) { return 'data:image/jai,' + encodeURLBody(serialize(doc)); }
 
 /* ------------------------------------------------------------------ *
  * HTML discovery (needs a DOM)
@@ -921,7 +885,7 @@ export function parseAspect(v) {
  */
 export function interpret(doc, { catalog = [], families = {}, hasOriginal = false, governingRatio = null, selected = null } = {}) {
   const diagnostics = [];
-  const out = { prompt: null, description: '', style: [], avoid: [], model: [], aspect: null, mode: 'generate', strength: null, seed: null, source: null, preview: null, animate: false };
+  const out = { prompt: null, description: '', style: [], avoid: [], model: [], aspect: null, mode: 'generate', strength: null, seed: null, source: null, preview: null };
   const single = key => {
     const vals = doc.get(key);
     if (!vals) return null;
@@ -970,12 +934,6 @@ export function interpret(doc, { catalog = [], families = {}, hasOriginal = fals
   if ((v = single('preview')) !== null) {
     const d = /^data:/i.test(v) ? parseDataURL(v) : null;
     if (d && RASTER_TYPES.has(d.essence)) out.preview = v; else diagnostics.push(diag('unsupported-preview', 'preview'));
-  }
-  if ((v = single('animate')) !== null) {
-    const lv = asciiLower(v);
-    if (['true', 'yes', '1', 'on'].includes(lv)) out.animate = true;
-    else if (['false', 'no', '0', 'off'].includes(lv)) out.animate = false;
-    else diagnostics.push(diag('invalid-value', 'animate'));
   }
   // Ratio to render at (spec §Size and aspect): the governing ratio wins over aspect.
   out.ratio = out.aspect ? out.aspect.width / out.aspect.height : null;
@@ -1075,7 +1033,6 @@ export function matchModel(values, { catalog = [], families = {}, needsImage = f
 
 const CONFUSABLE_DELIM = new RegExp(`[\\uff1b\\u061b][${WS_CLASS}]*[A-Za-z0-9][A-Za-z0-9_.-]*(?:/[A-Za-z0-9][A-Za-z0-9_-]*)?[${WS_CLASS}]*[=\\uff1d]`);
 const CONFUSABLE_EQ = /[A-Za-z0-9][\t ]*\uff1d/;
-const KNOWN_FOREIGN = /(^|\s)--(ar|no|seed|niji|style|v|q|chaos|stylize)\b|^Negative prompt:|<lora:/i;
 
 /** Advisory diagnostics for a parsed document; `info` from parse() enables segment-level checks. */
 export function validate(doc, info) {
@@ -1087,14 +1044,12 @@ export function validate(doc, info) {
     if (!base.includes('.') && !stdset.has(base)) d.push(diag('unknown-key', k));
     if (k.includes('/') && !QUALIFIABLE.has(base)) d.push(diag('invalid-qualifier', k));
     for (const v of vals) {
-      if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f-\u009f]/.test(v)) d.push(diag('control-character', k));
+      if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(v)) d.push(diag('control-character', k));
       if (/[​-‍⁠]|.﻿/s.test(v)) d.push(diag('invisible-char', k));
       if (/[‪-‮⁦-⁩]/.test(v)) d.push(diag('bidi-control', k));
       if (utf8(v) > 8192) d.push(diag('large-payload', k));
       // No \n after the first one: the same matches, in linear time (a run of newlines made this quadratic).
       if (/\n[\t\f\r ]*[A-Za-z0-9][A-Za-z0-9_.-]*(?:\/[A-Za-z0-9][A-Za-z0-9_-]*)?[\t\n\f\r ]*=/.test(v)) d.push(diag('newline-assignment', k));
-      if (k === 'prompt' && /^jai:/i.test(v)) d.push(diag('prefix-in-prompt', k));
-      if (k === 'prompt' && KNOWN_FOREIGN.test(v)) d.push(diag('foreign-syntax', k));
       if (CONFUSABLE_DELIM.test(v)) d.push(diag('confusable-delimiter', k));
       else if (CONFUSABLE_EQ.test(v)) d.push(diag('confusable-equals', k));
       if (!['source', 'preview', 'model'].includes(k) && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /%[0-9A-Fa-f]{2}/.test(v) && !/%25/i.test(v)) d.push(diag('percent-encoded-text', k));
@@ -1134,48 +1089,57 @@ export function validate(doc, info) {
   return d;
 }
 
-/** Checks on a data:image/jai URL written in a carrier (validator codes). */
-function dataURLAdvisories(url) {
+/** Validator advisories for a data:image/jai URL itself: a missing comma, media-type parameters (`;base64` included), unencoded text. Empty for any other URL. */
+export function validateDataURL(url) {
   const d = [];
   const s = trimBy(String(url), c => c <= 0x20); // C0 controls and space
   if (!/^data:image\/jai(?=[;,]|$)/i.test(s)) return d;
   const comma = s.indexOf(',');
   if (comma < 0) { d.push(diag('data-url-missing-comma')); return d; }
-  const params = s.slice(5, comma).split(';').slice(1).map(p => asciiLower(p.trim().split('=')[0]));
-  if (params.some(p => p && p !== 'base64' && p !== 'charset')) d.push(diag('data-url-parameter'));
+  // Media-type parameters have no meaning in a data:image/jai URL, base64 and charset included.
+  if (s.slice(5, comma).split(';').slice(1).some(p => trim(p))) d.push(diag('data-url-parameter'));
   if (/[\t\n\r ]|#/.test(s.slice(comma + 1)) || /%(?![0-9A-Fa-f]{2})/.test(s.slice(comma + 1))) d.push(diag('unencoded-url-text'));
   return d;
 }
 
 /**
- * Attribute carrier (spec §Carriers): the element's alt text, taken literally and never
- * parsed, is the first prompt value; the prose in data-jai follows it.
+ * Attribute carrier (spec §Carriers): when the document parsed from data-jai has no
+ * prompt value (qualified prompt/<target> keys do not count), the element's alt text,
+ * after value normalisation and if not empty, is its single prompt value, taken
+ * literally and never parsed. Otherwise alt plays no part.
  */
 export function withAltPrompt(doc, alt) {
-  const a = alt === null || alt === undefined ? null : normalizeValue(alt);
-  if (!a) return doc;
-  const out = new Map([['prompt', [a, ...(doc.get('prompt') || [])]]]);
-  for (const [k, v] of doc) if (k !== 'prompt') out.set(k, v);
-  return out;
+  if (doc.has('prompt')) return doc;
+  const a = alt === null || alt === undefined ? null : normalizeValue(String(alt));
+  return a ? new Map([['prompt', [a]], ...doc]) : doc;
 }
 
 /**
- * Advisories about how a document was delivered: a decode() result (bytes from
- * a file or a fetched resource; pass viaDataURL for the body of a data: URL),
- * and/or a discovery carrier with its element.
+ * Whether the element sizes its layout box itself, as far as its attributes show:
+ * both `width` and `height`, or an `aspect-ratio` other than `auto` in `style`.
  */
-export function validateDelivery({ decoded, carrier, element, viaDataURL = false } = {}) {
+function hasAuthorSize(el) {
+  if (el.getAttribute('width') && el.getAttribute('height')) return true;
+  return (el.getAttribute('style') || '').split(';').some(decl => {
+    const m = /^\s*aspect-ratio\s*:(.*)$/is.exec(decl);
+    return !!m && !/^\s*(?:auto\s*)?(?:!\s*important\s*)?$/i.test(m[1]);
+  });
+}
+
+/**
+ * Advisories about how a document was delivered: a discovery carrier with its
+ * element, and the document it carried ({document}, as decoded or discovered).
+ */
+export function validateDelivery({ decoded, carrier, element } = {}) {
   const d = [];
-  if (decoded && !viaDataURL && (decoded.form === 'json' || decoded.form === 'text')) d.push(diag('non-canonical-encoding'));
   const doc = decoded && decoded.document;
-  if (carrier === 'src' && element && !(element.getAttribute('width') && element.getAttribute('height'))) d.push(diag('missing-size'));
-  if (carrier === 'attribute' && doc) { const p = doc.get('prompt'); if (p && p.length > 1 && p[0] === p[1] && element && element.getAttribute('alt') !== null) d.push(diag('alt-repeated')); }
-  if ((carrier === 'picture' || carrier === 'src') && doc) { const m = doc.get('mode'); if (m && asciiLower(trim(m[m.length - 1])) === 'keep') d.push(diag('keep-in-source')); }
+  if (carrier === 'src' && element && !hasAuthorSize(element)) d.push(diag('missing-size'));
+  if ((carrier === 'picture' || carrier === 'src') && doc && interpret(doc).interpreted.mode === 'keep') d.push(diag('keep-in-source'));
   if (element) {
     const names = typeof element.getAttributeNames === 'function' ? element.getAttributeNames() : [];
     if (names.some(n => /["';=]/.test(n))) d.push(diag('attribute-split'));
     const src = element.getAttribute('src');
-    if (src) d.push(...dataURLAdvisories(src));
+    if (src) d.push(...validateDataURL(src));
     // A JAI src that HTML's image selection would never use (own srcset, or a preceding <source>).
     if (src && !srcIsSelected(element) && (/^\s*data:image\/jai(?=[;,]|$)/i.test(src) || /\.jai(?:[?#]|$)/i.test(src))) d.push(diag('src-shadowed'));
     const parent = element.parentElement;
@@ -1191,11 +1155,10 @@ export function validateDelivery({ decoded, carrier, element, viaDataURL = false
         if (after) { if (isJai || looksJai) d.push(diag('source-after-img')); continue; }
         if (isJai && srcsetCandidates(ss).length === 0) d.push(diag('srcset-unparseable'));
         if (!type && looksJai) d.push(diag('source-missing-type'));
-        if (isJai) d.push(...dataURLAdvisories(first));
+        if (isJai) d.push(...validateDataURL(first));
       }
     }
   }
   return d;
 }
 
-export default { EDITION, parse, serialize, readJSON, canonicalJSON, identity, decode, encode, decodeDataURL, toDataURL, fromQuery, discover, discoverAll, interpret, matchModel, validate, toObject, fromObject };

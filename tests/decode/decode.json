@@ -1,7 +1,7 @@
 {
  "class": "decode",
  "edition": "1.0-draft",
- "note": "base64 bytes -> document + exact parser diagnostics.",
+ "note": "base64 bytes of a .jai file (the file form only) -> document + exact parser diagnostics.",
  "cases": [
   {
    "id": "dec-gzip",
@@ -177,41 +177,51 @@
   },
   {
    "id": "dec-gzip-nested",
-   "rationale": "A gzip member must contain JSON, not gzip.",
+   "rationale": "The content must be JSON: a gzip member inside it is not even UTF-8 text.",
    "bytes": "H4sIAAAAAAACA5Pv5mAAASbm1WGnvM6EbDK6Eqilceq8rkbgpqCikBO+Pud9/M4Eevjp6J30DL0UqKW3kuVSmFdn5cydK722Mqxeeb3MFKgdAIM0D0FHAAAA",
    "document": {},
    "diagnostics": [
-    "malformed-container"
+    "invalid-json"
    ],
    "since": "1.0-draft"
   },
   {
    "id": "dec-gzip-text-content",
-   "rationale": "A gzip member must contain JSON.",
-   "bytes": "H4sIAAAAAAACA8tKzLRyVMhNTM9MTsxRSE4sLslJBQC4Bp+FFAAAAA==",
+   "rationale": "The file form never holds the text form: text in the member is not JSON.",
+   "bytes": "H4sIAAAAAAACA3NUyE1Mz0xOzFFITiwuyUm1Li6pzEm1TczLzE0FAL0LyqEcAAAA",
    "document": {},
    "diagnostics": [
-    "malformed-container"
+    "invalid-json"
    ],
    "since": "1.0-draft"
   },
   {
    "id": "dec-gzip-empty-content",
-   "rationale": "Empty content is not JSON.",
+   "rationale": "Empty content is not a JSON text.",
    "bytes": "H4sIAAAAAAACAwMAAAAAAAAAAAA=",
    "document": {},
    "diagnostics": [
-    "malformed-container"
+    "invalid-json"
    ],
    "since": "1.0-draft"
   },
   {
    "id": "dec-gzip-array-content",
-   "rationale": "Content must be an object.",
+   "rationale": "The content must be a JSON object.",
    "bytes": "H4sIAAAAAAACA4tWykrMVNIxjAUAjIb6PQkAAAA=",
    "document": {},
    "diagnostics": [
-    "malformed-container"
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-gzip-string-content",
+   "rationale": "A JSON string is not an object.",
+   "bytes": "H4sIAAAAAAACA1NyVMhNTM9MTsxRSE4sLslJVQIAm14DgBIAAAA=",
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
    ],
    "since": "1.0-draft"
   },
@@ -227,11 +237,46 @@
   },
   {
    "id": "dec-gzip-invalid-utf8",
-   "rationale": "Content of a gzip member must be well-formed UTF-8 JSON.",
+   "rationale": "Content that is not well-formed UTF-8 is not a JSON text.",
    "bytes": "H4sIAAAAAAACA6tWykrMVLIy1FEqKMrPLShRslL6r1QLALllt/IWAAAA",
    "document": {},
    "diagnostics": [
-    "malformed-container"
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-gzip-bom",
+   "rationale": "No byte order mark is removed: a leading U+FEFF is not JSON.",
+   "bytes": "H4sIAAAAAAACA3u/e3+1UlZippKVoY5SQVF+bkGJkpWSo0JuYnpmcmKOQnJicUlOqpKOUnFJJZC2UkrMy8xNVaoFACJpHpM4AAAA",
+   "document": {},
+   "diagnostics": [
+    "invalid-json"
+   ],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-gzip-json-ws",
+   "rationale": "JSON whitespace around the object belongs to the JSON text.",
+   "bytes": "H4sIAAAAAAACA1Pg4qxWykrMVLIy1FEqKMrPLShRslJyVMhNTM9MTsxRSE4sLslJVdJRKi6pBNJWSol5mbmpSrW8XACjTi3KOgAAAA==",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "dec-gzip-empty-object",
+   "rationale": "An object without the marker is read, with missing-marker.",
+   "bytes": "H4sIAAAAAAACA6uuBQBDv6ajAgAAAA==",
+   "document": {},
+   "diagnostics": [
+    "missing-marker"
    ],
    "since": "1.0-draft"
   },
@@ -262,183 +307,43 @@
    "since": "1.0-draft"
   },
   {
-   "id": "dec-json",
-   "rationale": "Uncompressed JSON is accepted.",
+   "id": "dec-uncompressed-json",
+   "rationale": "Uncompressed JSON is not the file form; nothing falls back to it.",
    "bytes": "eyJqYWkiOjEsInByb21wdCI6IkEgbWFnaWNhbCBjYXN0bGUiLCJzdHlsZSI6ImFuaW1lIn0=",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "advisories": [
-    "non-canonical-encoding"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-json-bom",
-   "rationale": "Leading BOM.",
-   "bytes": "77u/eyJqYWkiOjEsInByb21wdCI6IkEgbWFnaWNhbCBjYXN0bGUiLCJzdHlsZSI6ImFuaW1lIn0=",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-json-ws",
-   "rationale": "Leading JSON whitespace.",
-   "bytes": "IAoJeyJqYWkiOjEsInByb21wdCI6IkEgbWFnaWNhbCBjYXN0bGUiLCJzdHlsZSI6ImFuaW1lIn0=",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-json-empty-object",
-   "rationale": "{ followed by }.",
-   "bytes": "e30=",
    "document": {},
    "diagnostics": [
-    "missing-marker"
+    "malformed-container"
    ],
    "since": "1.0-draft"
   },
   {
-   "id": "dec-json-invalid",
-   "rationale": "No fallback to the text form.",
-   "bytes": "eyJxdW90ZWQifSBwcm9zZQ==",
-   "document": {},
-   "diagnostics": [
-    "invalid-json"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-json-truncated",
-   "rationale": "No fallback to the text form.",
-   "bytes": "eyJqYWkiOjEsInByb21wdCI6Ingi",
-   "document": {},
-   "diagnostics": [
-    "invalid-json"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-text",
-   "rationale": "Text form.",
-   "bytes": "amFpOkEgbWFnaWNhbCBjYXN0bGU7c3R5bGU9YW5pbWU=",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-text-bare",
-   "rationale": "Bare text form.",
+   "id": "dec-plain-text",
+   "rationale": "Text bytes are not the file form; a .jai file is never read as text.",
    "bytes": "QSBtYWdpY2FsIGNhc3RsZTtzdHlsZT1hbmltZQ==",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-text-brace",
-   "rationale": "{ not followed by \" or } is text.",
-   "bytes": "e21hc3RlcnBpZWNlfSwgYSBjYXN0bGU=",
-   "document": {
-    "prompt": [
-     "{masterpiece}, a castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-text-brace-space",
-   "rationale": "{ then whitespace then m: text.",
-   "bytes": "eyBtYXN0ZXJwaWVjZSB9",
-   "document": {
-    "prompt": [
-     "{ masterpiece }"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-text-nul",
-   "rationale": "A 00 byte in byte input is rejected (R2-25).",
-   "bytes": "QQBjYXN0bGU=",
    "document": {},
    "diagnostics": [
-    "undecodable"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-utf16",
-   "rationale": "No UTF-16 autodetection.",
-   "bytes": "//5qAGEAaQA6AEEAIABjAGEAcwB0AGwAZQA=",
-   "document": {},
-   "diagnostics": [
-    "undecodable"
+    "malformed-container"
    ],
    "since": "1.0-draft"
   },
   {
    "id": "dec-png",
-   "rationale": "Binary is not a prompt.",
+   "rationale": "Bytes that do not begin with 1F 8B are not the file form.",
    "bytes": "iVBORw0KGgoAAAANSUhEUg==",
    "document": {},
    "diagnostics": [
-    "undecodable"
-   ],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "dec-invalid-utf8-text",
-   "rationale": "Strict UTF-8.",
-   "bytes": "QSBjYXN0bGUgwyg=",
-   "document": {},
-   "diagnostics": [
-    "undecodable"
+    "malformed-container"
    ],
    "since": "1.0-draft"
   },
   {
    "id": "dec-empty",
-   "rationale": "Empty bytes: empty text document.",
+   "rationale": "Empty input is not a gzip member.",
    "bytes": "",
    "document": {},
-   "diagnostics": [],
+   "diagnostics": [
+    "malformed-container"
+   ],
    "since": "1.0-draft"
   },
   {
@@ -526,22 +431,12 @@
    "since": "1.0-draft"
   },
   {
-   "id": "dec-utf16le-nobom",
-   "rationale": "UTF-16 without a BOM is not decoded as a garbage prompt (R2-25, S-6).",
-   "bytes": "QQAgAGMAYQBzAHQAbABlAA==",
-   "document": {},
-   "diagnostics": [
-    "undecodable"
-   ],
-   "since": "1.0-draft"
-  },
-  {
    "id": "dec-gzip-nul",
-   "rationale": "A 00 byte inside a gzip member (R2-25).",
+   "rationale": "A raw 00 byte inside a JSON string is not JSON (R2-25).",
    "bytes": "H4sIAAAAAAACA6tWykrMVLIy1FEqKMrPLShRslJyZEhOLC7JSVWqBQCaB/axHQAAAA==",
    "document": {},
    "diagnostics": [
-    "malformed-container"
+    "invalid-json"
    ],
    "since": "1.0-draft"
   },

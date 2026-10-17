@@ -1,13 +1,12 @@
 {
  "class": "url",
  "edition": "1.0-draft",
- "note": "kind data: a data: URL string; query: whole-query form; param: the jai parameter.",
+ "note": "data: URL string -> document + exact parser diagnostics (the text form only), or no document.",
  "cases": [
   {
    "id": "url-data-text",
    "rationale": "Canonical URL form.",
    "url": "data:image/jai,A%20magical%20castle;style=anime",
-   "kind": "data",
    "document": {
     "prompt": [
      "A magical castle"
@@ -23,7 +22,6 @@
    "id": "url-data-raw-space",
    "rationale": "Raw spaces survive the data: URL processor in src (not in srcset).",
    "url": "data:image/jai,A magical castle;style=anime",
-   "kind": "data",
    "document": {
     "prompt": [
      "A magical castle"
@@ -36,48 +34,49 @@
    "since": "1.0-draft"
   },
   {
-   "id": "url-data-base64",
-   "rationale": "Base64 file form.",
+   "id": "url-data-base64-text",
+   "rationale": "The data: URL processor removes base64; the bytes are then read as text like any other body (validators report data-url-parameter).",
+   "url": "data:image/jai;base64,QSBtYWdpY2FsIGNhc3RsZTtzdHlsZT1hbmltZQ==",
+   "document": {
+    "prompt": [
+     "A magical castle"
+    ],
+    "style": [
+     "anime"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-base64-gzip",
+   "rationale": "A data: body holds the text form only: the bytes of a .jai file are not UTF-8 text.",
    "url": "data:image/jai;base64,H4sIAAAAAAACA6tWykrMVLIy1FEqKMrPLShRslJyVMhNTM9MTsxRSE4sLslJVdJRKi6pBNJWSol5mbmpSrUAq6nXdjUAAAA=",
-   "kind": "data",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
+   "document": {},
+   "diagnostics": [
+    "undecodable"
+   ],
    "since": "1.0-draft"
   },
   {
-   "id": "url-data-base64-json",
-   "rationale": "Base64 JSON.",
-   "url": "data:image/jai;base64,eyJqYWkiOjEsInByb21wdCI6IkEgbWFnaWNhbCBjYXN0bGUiLCJzdHlsZSI6ImFuaW1lIn0=",
-   "kind": "data",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-data-percent-json",
-   "rationale": "Percent-encoded JSON.",
+   "id": "url-data-json-is-prose",
+   "rationale": "A JSON object in a data: body is prose, like anything else.",
    "url": "data:image/jai,{%22jai%22:1,%22prompt%22:%22A%20magical%20castle%22,%22style%22:%22anime%22}",
-   "kind": "data",
    "document": {
     "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
+     "{\"jai\":1,\"prompt\":\"A magical castle\",\"style\":\"anime\"}"
+    ]
+   },
+   "diagnostics": [],
+   "since": "1.0-draft"
+  },
+  {
+   "id": "url-data-jai-colon",
+   "rationale": "There is no prefix: jai: in a data: body is prose.",
+   "url": "data:image/jai,jai:A%20castle",
+   "document": {
+    "prompt": [
+     "jai:A castle"
     ]
    },
    "diagnostics": [],
@@ -87,7 +86,6 @@
    "id": "url-data-double-encoded",
    "rationale": "Exactly one percent-decoding.",
    "url": "data:image/jai,100%2520",
-   "kind": "data",
    "document": {
     "prompt": [
      "100%20"
@@ -100,7 +98,6 @@
    "id": "url-data-bare-percent",
    "rationale": "A % not followed by two hex digits is left in place.",
    "url": "data:image/jai,100% cotton",
-   "kind": "data",
    "document": {
     "prompt": [
      "100% cotton"
@@ -113,7 +110,6 @@
    "id": "url-data-bad-hex",
    "rationale": "%ab decodes to byte AB, which is not UTF-8 on its own; %zz is left in place. Strict UTF-8 applies.",
    "url": "data:image/jai,%ab%zz",
-   "kind": "data",
    "document": {},
    "diagnostics": [
     "undecodable"
@@ -124,7 +120,6 @@
    "id": "url-data-hash-truncates",
    "rationale": "An unencoded # ends the URL.",
    "url": "data:image/jai,Castle #3;style=anime",
-   "kind": "data",
    "document": {
     "prompt": [
      "Castle"
@@ -137,7 +132,6 @@
    "id": "url-data-hash-encoded",
    "rationale": "%23 keeps it.",
    "url": "data:image/jai,Castle%20%233;style=anime",
-   "kind": "data",
    "document": {
     "prompt": [
      "Castle #3"
@@ -153,7 +147,6 @@
    "id": "url-data-newline-encoded",
    "rationale": "%0A carries a line break.",
    "url": "data:image/jai,line%0Atwo",
-   "kind": "data",
    "document": {
     "prompt": [
      "line\ntwo"
@@ -166,7 +159,6 @@
    "id": "url-data-newline-raw",
    "rationale": "Raw line breaks are deleted by the URL parser.",
    "url": "data:image/jai,line\ntwo",
-   "kind": "data",
    "document": {
     "prompt": [
      "linetwo"
@@ -179,7 +171,6 @@
    "id": "url-data-escaped-semicolon-encoded",
    "rationale": "%3B and %3D become ; and = and parse as delimiters.",
    "url": "data:image/jai,a%3Bstyle%3Dx",
-   "kind": "data",
    "document": {
     "prompt": [
      "a"
@@ -193,9 +184,8 @@
   },
   {
    "id": "url-data-charset-param",
-   "rationale": "Media type parameters are ignored.",
+   "rationale": "Media-type parameters have no meaning (validators report data-url-parameter).",
    "url": "data:image/jai;charset=utf-8,A%20castle",
-   "kind": "data",
    "document": {
     "prompt": [
      "A castle"
@@ -208,7 +198,6 @@
    "id": "url-data-other-type",
    "rationale": "Not image/jai: not discovered.",
    "url": "data:image/png,abc",
-   "kind": "data",
    "discovered": false,
    "since": "1.0-draft"
   },
@@ -216,7 +205,6 @@
    "id": "url-data-missing-comma",
    "rationale": "No comma: not a data URL body.",
    "url": "data:image/jai;A castle",
-   "kind": "data",
    "discovered": false,
    "since": "1.0-draft"
   },
@@ -224,270 +212,11 @@
    "id": "url-data-upper",
    "rationale": "Scheme and essence are case-insensitive.",
    "url": "DATA:IMAGE/JAI,A%20castle",
-   "kind": "data",
    "document": {
     "prompt": [
      "A castle"
     ]
    },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-jai-scheme",
-   "rationale": "jai: is not a URL scheme.",
-   "url": "jai:A magical castle",
-   "kind": "data",
-   "discovered": false,
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query",
-   "rationale": "Whole-query form.",
-   "url": "https://example.org/play?prompt=A%20magical%20castle;style=anime",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-plus",
-   "rationale": "+ is literal in the whole-query form.",
-   "url": "https://example.org/play?C++ code on a screen",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "C++ code on a screen"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-amp",
-   "rationale": "& is text.",
-   "url": "https://example.org/play?salt & pepper;style=x",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "salt & pepper"
-    ],
-    "style": [
-     "x"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-hash",
-   "rationale": "# ends the query.",
-   "url": "https://example.org/play?A castle#frag",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "A castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-utm",
-   "rationale": "Other parameters become part of the document (do not mix).",
-   "url": "https://example.org/play?utm_source=x&prompt=A castle",
-   "kind": "query",
-   "document": {
-    "utm_source": [
-     "x&prompt=A castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param",
-   "rationale": "Parameter form uses form encoding.",
-   "url": "https://example.org/render?w=800&jai=A+magical+castle%3Bstyle%3Danime",
-   "kind": "param",
-   "document": {
-    "prompt": [
-     "A magical castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param-raw-semicolon",
-   "rationale": "Form parsers do not split on ;.",
-   "url": "https://example.org/render?jai=A%20castle;style=anime&w=1",
-   "kind": "param",
-   "document": {
-    "prompt": [
-     "A castle"
-    ],
-    "style": [
-     "anime"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param-absent",
-   "rationale": "No jai parameter.",
-   "url": "https://example.org/render?w=800",
-   "kind": "param",
-   "discovered": false,
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-no-query",
-   "rationale": "A null query carries no document (R2-12).",
-   "url": "https://example.org/play",
-   "kind": "query",
-   "discovered": false,
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-empty",
-   "rationale": "An empty query is the empty document (R2-12).",
-   "url": "https://example.org/play?",
-   "kind": "query",
-   "document": {},
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-question-in-fragment",
-   "rationale": "? inside the fragment is not a query (R2-12).",
-   "url": "https://example.org/page#frag?A castle",
-   "kind": "query",
-   "discovered": false,
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-latin1",
-   "rationale": "Query bytes are UTF-8 decoded with replacement (R2-12, S-48).",
-   "url": "https://example.org/play?caf%E9;style=x",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "caf�"
-    ],
-    "style": [
-     "x"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-pct2B",
-   "rationale": "%2B is a plus sign (S-48).",
-   "url": "https://example.org/play?A%2Bcastle",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "A+castle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-pct26",
-   "rationale": "%26 is an ampersand (S-48).",
-   "url": "https://example.org/play?Salt%26pepper",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "Salt&pepper"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-query-json-is-text",
-   "rationale": "The whole-query form is text; it is never sniffed as JSON (R2-12).",
-   "url": "https://example.org/play?{%22jai%22:1,%22prompt%22:%22x%22}",
-   "kind": "query",
-   "document": {
-    "prompt": [
-     "{\"jai\":1,\"prompt\":\"x\"}"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param-raw-lf",
-   "rationale": "The URL parser deletes raw LF before the form parser runs (R2-12).",
-   "url": "https://example.org/r?jai=A\ncastle",
-   "kind": "param",
-   "document": {
-    "prompt": [
-     "Acastle"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param-raw-tab",
-   "rationale": "The URL parser deletes raw TAB before the form parser runs (R2-12).",
-   "url": "https://example.org/r?jai=A\tcastle;style=x",
-   "kind": "param",
-   "document": {
-    "prompt": [
-     "Acastle"
-    ],
-    "style": [
-     "x"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param-question-in-fragment",
-   "rationale": "? inside the fragment is not a query (R2-12).",
-   "url": "https://example.org/r#x?jai=A",
-   "kind": "param",
-   "discovered": false,
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param-first-wins",
-   "rationale": "The first jai parameter is used.",
-   "url": "https://example.org/r?jai=a&jai=b",
-   "kind": "param",
-   "document": {
-    "prompt": [
-     "a"
-    ]
-   },
-   "diagnostics": [],
-   "since": "1.0-draft"
-  },
-  {
-   "id": "url-param-empty",
-   "rationale": "An empty jai parameter is the empty document.",
-   "url": "https://example.org/r?jai=&w=800",
-   "kind": "param",
-   "document": {},
    "diagnostics": [],
    "since": "1.0-draft"
   },
@@ -495,7 +224,6 @@
    "id": "url-data-nbsp-mime",
    "rationale": "Fetch's MIME parsing: NBSP is not whitespace, so the essence is not image/jai (R2-27).",
    "url": "data:image/jai ,x",
-   "kind": "data",
    "discovered": false,
    "since": "1.0-draft"
   },
@@ -503,7 +231,6 @@
    "id": "url-data-ff-mime",
    "rationale": "The URL parser percent-encodes FF in the path, so the essence is not image/jai (R2-27).",
    "url": "data:image/jai\f,x",
-   "kind": "data",
    "discovered": false,
    "since": "1.0-draft"
   },
@@ -511,7 +238,6 @@
    "id": "url-data-space-mime",
    "rationale": "ASCII whitespace around the media type is stripped by Fetch.",
    "url": "data:image/jai ,x",
-   "kind": "data",
    "document": {
     "prompt": [
      "x"
@@ -524,7 +250,6 @@
    "id": "url-data-bad-base64",
    "rationale": "A body that forgiving-base64 rejects: no document (R2-27).",
    "url": "data:image/jai;base64,!!!!",
-   "kind": "data",
    "discovered": false,
    "since": "1.0-draft"
   },
@@ -532,7 +257,6 @@
    "id": "url-data-base64-bad-padding",
    "rationale": "Wrong padding fails forgiving-base64: no document (R2-27).",
    "url": "data:image/jai;base64,eyJqYWkiOjEsInByb21wdCI6IngifQ=",
-   "kind": "data",
    "discovered": false,
    "since": "1.0-draft"
   },
@@ -540,7 +264,6 @@
    "id": "url-data-nul",
    "rationale": "%00 decodes to a 00 byte, which byte input rejects (R2-25).",
    "url": "data:image/jai,A%00castle",
-   "kind": "data",
    "document": {},
    "diagnostics": [
     "undecodable"
@@ -551,7 +274,6 @@
    "id": "url-data-question",
    "rationale": "? is part of a data: URL body (S-8).",
    "url": "data:image/jai,What%3F%20now?;style=x",
-   "kind": "data",
    "document": {
     "prompt": [
      "What? now?"
@@ -567,7 +289,6 @@
    "id": "url-data-tab-raw",
    "rationale": "Raw TAB is deleted by the URL parser (S-8).",
    "url": "data:image/jai,A\tcastle",
-   "kind": "data",
    "document": {
     "prompt": [
      "Acastle"
@@ -580,7 +301,6 @@
    "id": "url-data-trailing-comma-encoded",
    "rationale": "An encoded final comma survives (S-8).",
    "url": "data:image/jai,a%2C",
-   "kind": "data",
    "document": {
     "prompt": [
      "a,"
@@ -593,7 +313,6 @@
    "id": "url-data-slash",
    "rationale": "An encoded leading slash survives (S-8).",
    "url": "data:image/jai,%2Fimagine%20a%20cat",
-   "kind": "data",
    "document": {
     "prompt": [
      "/imagine a cat"
@@ -606,7 +325,6 @@
    "id": "url-qualified-escaped",
    "rationale": "An escaped semicolon before word/word= in a data: URL.",
    "url": "data:image/jai,A%20ratio\\;%20a/b=c",
-   "kind": "data",
    "document": {
     "prompt": [
      "A ratio; a/b=c"

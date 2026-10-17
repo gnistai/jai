@@ -49,13 +49,10 @@ export async function copyText(text) {
 export function highlightInto(el, text) {
   el.textContent = '';
   const add = (cls, s) => { if (!s) return; const span = document.createElement('span'); if (cls) span.className = cls; span.textContent = s; el.append(span); };
-  const m = /^(\s*)(jai:)?/i.exec(text);
-  let i = m[0].length;
-  add('', m[1]); add('tok-prefix', m[2] || '');
   const { info } = parse(text);
   // Re-split the raw text the same way the parser does, to colour keys.
   const segs = []; let cur = '';
-  for (let j = i; j < text.length; j++) {
+  for (let j = 0; j < text.length; j++) {
     const c = text[j];
     if (c === '\\' && j + 1 < text.length) { cur += c + text[j + 1]; j++; continue; }
     if (c === ';') { segs.push(cur); cur = ''; continue; }
@@ -99,7 +96,7 @@ if (sentEls.length) {
       if (!rec) continue;
       if (el.matches('details.sent')) {
         const pre = document.createElement('pre');
-        pre.textContent = `renderer   ${rec.renderer}\nsize       ${rec.width}×${rec.height}\nidentity   ${rec.identity.slice(0, 16)}… (SHA-256 of the document text; contains nothing else)\nsent       ${JSON.stringify(rec.sent, null, 2)}`;
+        pre.textContent = `renderer   ${rec.renderer}\nsize       ${rec.width}×${rec.height}\nidentity   ${rec.identity.slice(0, 16)}… (SHA-256 of the document's canonical JSON; contains nothing else)\nsent       ${JSON.stringify(rec.sent, null, 2)}`;
         el.append(pre);
       }
       if (el.matches('[data-image-meta]')) el.textContent = `${rec.renderer.split('/')[1]} · ${rec.width}×${rec.height}`;
