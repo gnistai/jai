@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0-draft, reference implementation fix — 2026-10-17
+
+- The reference implementation no longer takes quadratic time on long runs of
+  whitespace or commas. The `newline-assignment` check and every trim (values,
+  media types, URLs, `srcset` candidates) now run in linear time: a value of
+  200,000 newlines validates in under a tenth of a second instead of minutes.
+  Results are unchanged. Found by the JAI Studio code review.
+
 ## 1.0-draft, an encoder that measures — 2026-10-16
 
 - *Encoding images* now describes the loop that works: measure the original

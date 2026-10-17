@@ -22,7 +22,6 @@ export const MEDIA_TYPE = 'image/jai';
 export const WS_CLASS = '\\t\\n\\v\\f\\r \\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000';
 const WS_RE = new RegExp(`[${WS_CLASS}]`);
 const WS_ONLY_RE = new RegExp(`^[${WS_CLASS}]*$`);
-const TRIM_RE = new RegExp(`^[${WS_CLASS}]+|[${WS_CLASS}]+$`, 'g');
 const LEADING_WS_RE = new RegExp(`^[${WS_CLASS}]*`);
 
 const KEY_SRC = '[a-z0-9][a-z0-9_-]*(?:\\.[a-z0-9][a-z0-9_-]*)*(?:/[a-z0-9][a-z0-9_-]*)?';
@@ -37,8 +36,26 @@ export const STANDARD_KEYS = ['prompt', 'style', 'avoid', 'model', 'aspect', 'mo
 export const SINGLE_VALUED = new Set(['aspect', 'mode', 'strength', 'seed', 'source', 'preview', 'animate']);
 export const RASTER_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif']);
 
+/** One of the WS_CLASS code points (all in the BMP, so one UTF-16 code unit each). */
+function isJaiSpace(c) {
+  return (c >= 0x09 && c <= 0x0d) || c === 0x20 || c === 0x85 || c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a) ||
+    c === 0x2028 || c === 0x2029 || c === 0x202f || c === 0x205f || c === 0x3000;
+}
+/** ASCII whitespace as HTML and the URL standard define it: tab, LF, FF, CR, space. */
+const isAsciiSpace = c => c === 0x09 || c === 0x0a || c === 0x0c || c === 0x0d || c === 0x20;
+/**
+ * s without the leading (unless `start` is false) and trailing UTF-16 code
+ * units that `strip` accepts. A loop, not `/^[…]+|[…]+$/g`: a regex retries
+ * `[…]+$` from every position of an inner run, in time quadratic in its length.
+ */
+function trimBy(s, strip, start = true) {
+  let i = 0, j = s.length;
+  if (start) while (i < j && strip(s.charCodeAt(i))) i++;
+  while (j > i && strip(s.charCodeAt(j - 1))) j--;
+  return i === 0 && j === s.length ? s : s.slice(i, j);
+}
 /** Trim exactly the JAI whitespace code points. */
-export function trim(s) { return s.replace(TRIM_RE, ''); }
+export function trim(s) { return trimBy(s, isJaiSpace); }
 /** ASCII lowercase only. */
 export function asciiLower(s) { return s.replace(/[A-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + 32)); }
 export function isKey(s) { return KEY_RE.test(s); }
@@ -639,7 +656,7 @@ function forgivingBase64(s) {
 
 /** Essence of a MIME type as the Fetch Standard's MIME type parser computes it; text/plain on failure. */
 function fetchMimeEssence(mimeType) {
-  const t = mimeType.replace(/^[\t\n\r ]+|[\t\n\r ]+$/g, '');
+  const t = trimBy(mimeType, c => c === 0x09 || c === 0x0a || c === 0x0d || c === 0x20); // HTTP whitespace
   const m = /^([!#$%&'*+.^_`|~0-9A-Za-z-]+)\/([!#$%&'*+.^_`|~0-9A-Za-z-]+)[\t\n\r ]*(?:;|$)/.exec(t);
   return m ? asciiLower(m[1] + '/' + m[2]) : 'text/plain';
 }
@@ -655,7 +672,7 @@ export function parseDataURL(url) {
   let s = href.slice(5);
   const hash = s.indexOf('#'); if (hash >= 0) s = s.slice(0, hash);
   const comma = s.indexOf(','); if (comma < 0) return null;
-  let mimeType = s.slice(0, comma).replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, '');
+  let mimeType = trimBy(s.slice(0, comma), isAsciiSpace);
   let bytes = percentDecode(s.slice(comma + 1));
   const m = /;[ ]*base64$/i.exec(mimeType);
   if (m) {
@@ -717,7 +734,7 @@ export function fromQuery(url, kind = 'query') {
 
 function mimeEssence(type) {
   if (!type) return '';
-  return asciiLower(type.split(';')[0].replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, ''));
+  return asciiLower(trimBy(type.split(';')[0], isAsciiSpace));
 }
 
 /** HTML's "parse a srcset attribute": the candidates that survive, in order. */
@@ -733,7 +750,7 @@ export function srcsetCandidates(input) {
     while (pos < s.length && !isWS(s[pos])) pos++;
     let url = s.slice(start, pos);
     const descriptors = [];
-    if (url.endsWith(',')) url = url.replace(/,+$/, '');
+    if (url.endsWith(',')) url = trimBy(url, c => c === 0x2c, false);
     else {
       while (pos < s.length && isWS(s[pos])) pos++;
       let current = '', state = 'in';
@@ -1074,7 +1091,8 @@ export function validate(doc, info) {
       if (/[​-‍⁠]|.﻿/s.test(v)) d.push(diag('invisible-char', k));
       if (/[‪-‮⁦-⁩]/.test(v)) d.push(diag('bidi-control', k));
       if (utf8(v) > 8192) d.push(diag('large-payload', k));
-      if (/\n[\t\n\f\r ]*[A-Za-z0-9][A-Za-z0-9_.-]*(?:\/[A-Za-z0-9][A-Za-z0-9_-]*)?[\t\n\f\r ]*=/.test(v)) d.push(diag('newline-assignment', k));
+      // No \n after the first one: the same matches, in linear time (a run of newlines made this quadratic).
+      if (/\n[\t\f\r ]*[A-Za-z0-9][A-Za-z0-9_.-]*(?:\/[A-Za-z0-9][A-Za-z0-9_-]*)?[\t\n\f\r ]*=/.test(v)) d.push(diag('newline-assignment', k));
       if (k === 'prompt' && /^jai:/i.test(v)) d.push(diag('prefix-in-prompt', k));
       if (k === 'prompt' && KNOWN_FOREIGN.test(v)) d.push(diag('foreign-syntax', k));
       if (CONFUSABLE_DELIM.test(v)) d.push(diag('confusable-delimiter', k));
@@ -1119,7 +1137,7 @@ export function validate(doc, info) {
 /** Checks on a data:image/jai URL written in a carrier (validator codes). */
 function dataURLAdvisories(url) {
   const d = [];
-  const s = String(url).replace(/^[\u0000- ]+|[\u0000- ]+$/g, '');
+  const s = trimBy(String(url), c => c <= 0x20); // C0 controls and space
   if (!/^data:image\/jai(?=[;,]|$)/i.test(s)) return d;
   const comma = s.indexOf(',');
   if (comma < 0) { d.push(diag('data-url-missing-comma')); return d; }
@@ -1168,7 +1186,7 @@ export function validateDelivery({ decoded, carrier, element, viaDataURL = false
         if (ch.localName !== 'source') continue;
         const type = ch.getAttribute('type'), ss = ch.getAttribute('srcset') || '';
         const isJai = mimeEssence(type) === MEDIA_TYPE;
-        const first = (ss.replace(/^[\t\n\f\r ,]+/, '').split(/[\t\n\f\r ]/)[0] || '').replace(/,+$/, '');
+        const first = trimBy(ss.replace(/^[\t\n\f\r ,]+/, '').split(/[\t\n\f\r ]/)[0] || '', c => c === 0x2c, false);
         const looksJai = /^data:image\/jai(?=[;,]|$)/i.test(first) || /\.jai(?:[?#]|$)/i.test(first);
         if (after) { if (isJai || looksJai) d.push(diag('source-after-img')); continue; }
         if (isJai && srcsetCandidates(ss).length === 0) d.push(diag('srcset-unparseable'));
