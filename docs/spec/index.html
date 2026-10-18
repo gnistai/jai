@@ -1490,7 +1490,7 @@ Possible extra rowspan handling
 </style>
   <meta content="Bikeshed version 49e9fdd4f, updated Tue Oct 13 14:27:53 2026 -0700" name="generator">
   <link href="https://jai.gnist.ai/spec/" rel="canonical">
-  <meta content="b9ab917372e436ed8db7dc2fc32bf3becd6ed7cf" name="revision">
+  <meta content="b2310a6a599d08529d73c61807179ff8f5df0df8" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 table.keys td:first-child, table.codes td:first-child { white-space: nowrap; font-family: monospace; }
@@ -4171,9 +4171,10 @@ the original, using the target models themselves as the decoder:</p>
    <ol>
     <li data-md>
      <p><strong>Measure the original.</strong> A vision model lists the main subjects with
-their bounding boxes, the horizon’s height and shape, the camera, the
-light and the medium; the palette and lightness come from the pixels.
-This measurement is the yardstick for every render.</p>
+their bounding boxes, the prominent people with their boxes and what can
+be seen of them, the horizon’s height and shape, the camera, the light
+and the medium; the palette and lightness come from the pixels. This
+measurement is the yardstick for every render.</p>
     <li data-md>
      <p><strong>Describe.</strong> The vision model writes first descriptions of the original,
 following <a href="#authoring">§ 15 Writing JAI by hand</a>: medium first, subject and counts, composition,
@@ -4185,7 +4186,7 @@ and a lucky seed does not decide.</p>
     <li data-md>
      <p><strong>Measure the renders.</strong> Each render is measured the same way, looking for
 the original’s subjects by name. The fitness is computed from the
-differences (positions, sizes, horizon, palette, lightness), not judged:
+differences (positions, sizes, people, horizon, palette, lightness), not judged:
 computed scores are stable between calls and comparable across runs. A
 candidate’s fitness blends its mean and its worst score across the target
 models, so that the core does not sacrifice one model.</p>
@@ -4204,6 +4205,25 @@ their own measurements, kept only when they raise that model’s score.</p>
      <p><strong>Stop.</strong> At a target fitness, on a plateau, a time limit or the budget.
 Independent restarts can share the budget; the best by fitness wins.</p>
    </ol>
+   <p>People need more than boxes. Viewers look at people first and notice at
+once when a render changes who is in the picture, though not that a face
+differs in detail: what has to survive encoding is the same kind of person,
+not the same face. Each prominent person is therefore read for visible traits
+from closed lists, such as apparent age and gender, skin tone, hair, eye
+colour, the shape of the eyelids, nose, lips and face, clothing and pose, so
+that two readings compare word for word, and facial detail is read only where
+the face is clear. Render people pair with the original’s by place and look
+together. A person weighs more the taller they appear in the frame, a person
+of another kind counts as much as a missing one, and people together weigh at
+most as much as everything else measured, so that a crowd does not drown the
+composition. The descriptions name those features, never an ethnicity or
+nationality in their place: a group label pulls a render toward a stereotype
+of the group, the features toward this person. They name skin tone and hair
+colour for every person in whom they are visible, light skin as much as dark,
+because a model fills in its own default for whatever a description leaves
+out. A candidate that names a group or likens someone to a named person is
+not rendered at all, so the loop cannot select it. Nothing in the loop
+identifies anyone.</p>
    <p>This resembles the loop a CELP speech coder runs, with a description in place
 of codebook indices and a generative model in place of the synthesis filter,
 except that the decoders are a set of likely models rather than one known
@@ -5336,7 +5356,10 @@ sentence: a listener can stop once they have heard enough, and models
 with a short prompt window read only the beginning. Prefer visible facts
 to mood words ("warm lamplight on a wooden desk" rather than "an
 empowering atmosphere"). A content image’s <code>alt</code> should say what the image
-shows, not only why it is there.</p>
+shows, not only why it is there. Describe people by what can be seen of
+them (age, gender, skin tone, hair, eyes, clothing), not by a group they
+might belong to. Name skin tone for everyone, light skin as much as dark:
+a model fills in its own default for whatever is left out.</p>
     <li data-md>
      <p>If your description itself starts with a word followed by <code>=</code>, start with
 <code>prompt=</code> instead. If you need a literal <code>;</code> right before something that

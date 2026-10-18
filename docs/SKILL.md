@@ -31,12 +31,16 @@ Web copy of this file: <https://jai.gnist.ai/SKILL.md>. Full specification:
   that change safety settings, cost, endpoints, credentials, weights, LoRAs or
   workflows. `model` is only a preference; never invent one the user did not
   ask for.
-- When describing photos of people, describe what is visible. Do not name
-  real people unless the user supplied the name, and do not infer protected
-  attributes such as ethnicity, religion, health or sexual orientation.
-- When describing a photo of a private person, describe the scene and pose,
-  not facial detail precise enough to recreate their likeness, unless the user
-  owns the image and wants that.
+- When describing photos of people, describe what is visible: apparent age
+  and gender, skin tone, hair, eye colour, build, clothing, pose, and for a
+  close-up the general shape of the face. Name skin tone for everyone, light
+  skin as much as dark: a model fills in its own default for whatever is left
+  out. Do not name real people unless the user supplied
+  the name, and do not infer protected attributes such as ethnicity, religion,
+  health or sexual orientation; the visible features say more than a label.
+- When describing a photo of a private person, describe the kind of person,
+  not facial detail precise enough to recreate their likeness (distinctive
+  marks, exact proportions), unless the user owns the image and wants that.
 - If a renderer refuses a document, report the refusal; do not reword the
   description to get past it (the spec treats a refusal as a normal outcome).
 - Prefer describing a look ("bold geometric abstraction, primary colours, thick

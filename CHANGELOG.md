@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.0-draft, people in encoded images — 2026-10-18
+
+- *Encoding images* (informative) measures people on their own. Each
+  prominent person is read for visible traits from closed lists, such as
+  apparent age and gender, skin tone, hair, eye colour, the shape of the
+  eyelids, nose, lips and face, clothing and pose; a person weighs more the
+  taller they appear in the frame, someone of another kind counts as much as
+  someone missing, and people together weigh at most as much as everything
+  else measured. The aim is the same kind of person, not the same face, and
+  descriptions name features, never an ethnicity or nationality in their
+  place, with skin tone and hair colour for every person, light skin as much
+  as dark; a candidate that names a group or likens someone to a named person
+  is not rendered.
+- *Writing JAI by hand* asks for people to be described by what can be seen of
+  them, not by a group they might belong to, with skin tone named for everyone;
+  the skill says the same and separates describing the kind of person from
+  recreating a likeness.
+
 ## 1.0-draft, HTML and files — 2026-10-17
 
 JAI now does two things, HTML and files, and every place that holds a document

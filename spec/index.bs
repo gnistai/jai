@@ -1594,9 +1594,10 @@ An image encoder searches for the description whose renders look most like
 the original, using the target models themselves as the decoder:
 
 1. **Measure the original.** A vision model lists the main subjects with
-    their bounding boxes, the horizon's height and shape, the camera, the
-    light and the medium; the palette and lightness come from the pixels.
-    This measurement is the yardstick for every render.
+    their bounding boxes, the prominent people with their boxes and what can
+    be seen of them, the horizon's height and shape, the camera, the light
+    and the medium; the palette and lightness come from the pixels. This
+    measurement is the yardstick for every render.
 2. **Describe.** The vision model writes first descriptions of the original,
     following [[#authoring]]: medium first, subject and counts, composition,
     light and colour, literal text in quotes.
@@ -1605,7 +1606,7 @@ the original, using the target models themselves as the decoder:
     and a lucky seed does not decide.
 4. **Measure the renders.** Each render is measured the same way, looking for
     the original's subjects by name. The fitness is computed from the
-    differences (positions, sizes, horizon, palette, lightness), not judged:
+    differences (positions, sizes, people, horizon, palette, lightness), not judged:
     computed scores are stable between calls and comparable across runs. A
     candidate's fitness blends its mean and its worst score across the target
     models, so that the core does not sacrifice one model.
@@ -1620,6 +1621,26 @@ the original, using the target models themselves as the decoder:
     their own measurements, kept only when they raise that model's score.
 7. **Stop.** At a target fitness, on a plateau, a time limit or the budget.
     Independent restarts can share the budget; the best by fitness wins.
+
+People need more than boxes. Viewers look at people first and notice at
+once when a render changes who is in the picture, though not that a face
+differs in detail: what has to survive encoding is the same kind of person,
+not the same face. Each prominent person is therefore read for visible traits
+from closed lists, such as apparent age and gender, skin tone, hair, eye
+colour, the shape of the eyelids, nose, lips and face, clothing and pose, so
+that two readings compare word for word, and facial detail is read only where
+the face is clear. Render people pair with the original's by place and look
+together. A person weighs more the taller they appear in the frame, a person
+of another kind counts as much as a missing one, and people together weigh at
+most as much as everything else measured, so that a crowd does not drown the
+composition. The descriptions name those features, never an ethnicity or
+nationality in their place: a group label pulls a render toward a stereotype
+of the group, the features toward this person. They name skin tone and hair
+colour for every person in whom they are visible, light skin as much as dark,
+because a model fills in its own default for whatever a description leaves
+out. A candidate that names a group or likens someone to a named person is
+not rendered at all, so the loop cannot select it. Nothing in the loop
+identifies anyone.
 
 This resembles the loop a CELP speech coder runs, with a description in place
 of codebook indices and a generative model in place of the synthesis filter,
@@ -2427,7 +2448,10 @@ is a new case id with an erratum, never a silent edit.
     with a short prompt window read only the beginning. Prefer visible facts
     to mood words ("warm lamplight on a wooden desk" rather than "an
     empowering atmosphere"). A content image's `alt` should say what the image
-    shows, not only why it is there.
+    shows, not only why it is there. Describe people by what can be seen of
+    them (age, gender, skin tone, hair, eyes, clothing), not by a group they
+    might belong to. Name skin tone for everyone, light skin as much as dark:
+    a model fills in its own default for whatever is left out.
 5. If your description itself starts with a word followed by `=`, start with
     `prompt=` instead. If you need a literal `;` right before something that
     looks like `name=`, write `\;`.

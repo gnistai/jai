@@ -271,8 +271,8 @@ the text:
   converge on its own: the scores were noise, and the reviser had no memory.
   What worked when done by hand was measuring geometry and feeding back exact
   differences. The encoder now does exactly that: a vision model measures
-  subjects' boxes, the horizon and the medium in the original and in every
-  render; fitness is computed from the differences; an OPRO-style optimiser
+  subjects' boxes, the horizon and the medium (and, since 6h, the prominent
+  people) in the original and in every render; fitness is computed from the differences; an OPRO-style optimiser
   sees the best earlier candidates with their measured errors, largest first.
   On Earthrise with FLUX.1 schnell this climbed from 0.50 to 0.73 by itself.
   GPT-5.6 luna measured the original's boxes within about half a percent;
@@ -342,6 +342,79 @@ text form; a `.jai` file or resource holds the file form.
   emitted and no fixture tested.
 - Kept: personalisation (an endorsed use case), refinements, model matching,
   `preview`, `source`, `seed`, the value grammars, the encoding loop.
+
+## 6h. People in encoded images (owner decision, 2026-10-18)
+
+The owner's view, adopted: viewers are most sensitive to people, and a render
+that changes who is in the picture reads as wrong at once, whatever its layout
+score. What should survive is the same kind of person, not the same face (the
+owner's example: a blue-eyed, Nordic-looking woman must not come back a
+brown-eyed, southern European-looking one), and features vary within regions,
+so colouring alone is not enough. The measured loop had no term for this. A
+Lower Manhattan street photograph showed it: the vision model listed four
+buildings and the street as the subjects, so renders that put a few tiny
+figures far away lost nothing. On a test portrait of an older man with
+medium-dark skin, the description named his hair, beard, glasses and suit but
+not his skin, and both renders showed a light-skinned man.
+
+- People are listed apart from the subjects, each with a box and traits from
+  closed lists, so that two readings compare word for word. One step on an
+  ordered scale costs a quarter of the trait's weight (a reading's usual
+  wobble), two steps three quarters, the two ends of a scale or more steps in
+  full (skin tone keeps counting up to four steps); a few listed pairs
+  (auburn and red, grey and blue eyes) also cost a quarter. Facial detail
+  (eye colour; the eyelids, nose, mouth, lips, face width and cheekbones;
+  undertone; freckles) counts only from a clear face, so a guess at a small
+  face never counts. A trait the original shows and a render does not costs
+  half its weight, so hiding a feature never comes free; a turned-away face
+  costs at most three quarters of a different person. A detail left unread on
+  a clear face costs nothing, since a clear face hides none: the inspector
+  skipped the shape of the face on 3 of 16 clear faces in the test runs, and
+  charging those skips scored one render of the right kind of person as a
+  different person.
+- The first readings put nearly every nose, mouth and face at the middle
+  value. The inspector now judges each feature against the same face (nose
+  width against the gap between the eyes, mouth width against the irises),
+  never against other people, which would make one population the norm; it
+  first writes a few words on what stands out, which are never read back.
+- A person weighs 1 to 3 by height; render people pair with the original's at
+  the lowest cost to the fitness, by place and look together; a person's error
+  is 1 − (1 − 0.6 × layout)(1 − traits), so someone of another kind costs as
+  much as someone missing while the right person in the wrong place still beats
+  no one. In a one-person portrait, brown eyes for blue cost between a ninth
+  and a sixth of the fitness, grey for blue a twenty-fourth or less, a gender
+  swap or a change from very light to medium-dark skin a quarter to three
+  eighths, a missing person a third to a half. People together weigh at most
+  as much as everything else measured.
+- Features, never ethnicity or nationality labels. The skill already said not
+  to infer protected attributes; beyond that, text-to-image models render a
+  group label as the group's stereotype, while features reproduce this person,
+  including a dark-haired person from a mostly fair-haired region.
+- Skin tone and hair colour are named for every person in whom they are
+  visible, light skin as much as dark: left out, each model fills in its own
+  default, which is how the man above came back light-skinned. The writer
+  needed this said outright. In the test runs it left light skin out of all
+  four first drafts for a light-skinned woman in close-up, and out of 12 of
+  17 candidates for a beach scene. With the rule, all 23 candidates in reruns
+  of those two pictures named it.
+- The skill's rule against "facial detail precise enough to recreate their
+  likeness" stays, and the encoder's own instructions now carry it: the traits
+  are coarse categories shared by millions of people, which describe a kind of
+  person, not a likeness, and descriptions name only what stands out.
+- A group label is the most compressive description of a face there is, so a
+  loop that rendered it would select it, and it would ship as alt text. The
+  encoder therefore never renders a candidate that names a group (ethnicity,
+  nationality, region, religion; colour words only before a word for people)
+  or likens someone to a named person; it goes back to the optimiser with the
+  reason.
+- Result on seven test pictures (five generated portraits and scenes, two
+  photographs), encoded for FLUX schnell with the same settings by the old
+  loop and the new one and judged against the same reading of each original:
+  people rendered as a different kind of person fell from 9 of 24 to 1 (a
+  small figure at the back of a street), the mean trait error from 0.47 to
+  0.14, and the mean measured fitness from 0.47 to 0.62. The old loop had
+  turned the man above light-skinned and a long-haired, bearded man into a
+  woman; the new one kept both.
 
 ## 7. Extensibility
 
